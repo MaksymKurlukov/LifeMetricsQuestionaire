@@ -7,10 +7,9 @@
 (function () {
   'use strict';
 
-  const GOOGLE_ENDPOINT = "https://script.google.com/macros/s/AKfycbz3x_FdyEao2Tch1VcFTP9gTOmlqcVN0WWjvX3_rxpe8LmStM-gokfsIMLLoTnMT7EC/exec";
-  
-  console.log('🔧 PSS-10 initialized');
-  console.log('🔗 Google Endpoint:', GOOGLE_ENDPOINT || 'NOT CONFIGURED');
+  var GOOGLE_ENDPOINT = (typeof window.PSS_CONFIG !== 'undefined' && window.PSS_CONFIG.googleScriptUrl)
+    ? window.PSS_CONFIG.googleScriptUrl
+    : '';
 
   // ---------- Données PSS-10 (questions en français) ----------
   const PSS_QUESTIONS = [
@@ -145,68 +144,56 @@
     };
   }
 
-  /** Construit le payload pour Google Sheets : created_at, session_id, q1..q10, final_score, category */
+  /** Констатирует payload для Google Sheets : created_at, session_id, q1..q10, final_score, category */
   function buildPayload(result) {
     var row = {
       created_at: new Date().toISOString(),
       session_id: state.sessionId,
-      q1: state.answers[1] || '',
-      q2: state.answers[2] || '',
-      q3: state.answers[3] || '',
-      q4: state.answers[4] || '',
-      q5: state.answers[5] || '',
-      q6: state.answers[6] || '',
-      q7: state.answers[7] || '',
-      q8: state.answers[8] || '',
-      q9: state.answers[9] || '',
-      q10: state.answers[10] || '',
+      q1: (state.answers[1] != null && REVERSE_QUESTIONS.indexOf(1) >= 0) ? (6 - state.answers[1]) : (state.answers[1] || ''),
+      q2: (state.answers[2] != null && REVERSE_QUESTIONS.indexOf(2) >= 0) ? (6 - state.answers[2]) : (state.answers[2] || ''),
+      q3: (state.answers[3] != null && REVERSE_QUESTIONS.indexOf(3) >= 0) ? (6 - state.answers[3]) : (state.answers[3] || ''),
+      q4: (state.answers[4] != null && REVERSE_QUESTIONS.indexOf(4) >= 0) ? (6 - state.answers[4]) : (state.answers[4] || ''),
+      q5: (state.answers[5] != null && REVERSE_QUESTIONS.indexOf(5) >= 0) ? (6 - state.answers[5]) : (state.answers[5] || ''),
+      q6: (state.answers[6] != null && REVERSE_QUESTIONS.indexOf(6) >= 0) ? (6 - state.answers[6]) : (state.answers[6] || ''),
+      q7: (state.answers[7] != null && REVERSE_QUESTIONS.indexOf(7) >= 0) ? (6 - state.answers[7]) : (state.answers[7] || ''),
+      q8: (state.answers[8] != null && REVERSE_QUESTIONS.indexOf(8) >= 0) ? (6 - state.answers[8]) : (state.answers[8] || ''),
+      q9: (state.answers[9] != null && REVERSE_QUESTIONS.indexOf(9) >= 0) ? (6 - state.answers[9]) : (state.answers[9] || ''),
+      q10: (state.answers[10] != null && REVERSE_QUESTIONS.indexOf(10) >= 0) ? (6 - state.answers[10]) : (state.answers[10] || ''),
       final_score: result.final_score,
       category: result.category
     };
+    if (typeof window.PSS_CONFIG !== 'undefined' && window.PSS_CONFIG.pssSecret) {
+      row._secret = window.PSS_CONFIG.pssSecret;
+    }
     return row;
   }
 
   /** Envoi unique vers Google Apps Script (doPost). */
   function sendToSheets(payload) {
     if (!GOOGLE_ENDPOINT) {
-      console.error('❌ GOOGLE_ENDPOINT not configured');
       return Promise.reject(new Error('No endpoint configured'));
     }
-    
-    console.log('📤 Sending to Google Sheets:', payload);
-    console.log('🔗 Endpoint:', GOOGLE_ENDPOINT);
-    
     return fetch(GOOGLE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       mode: 'no-cors'
-    }).then(function (r) {
-      console.log('✅ Response received:', r);
-      // Important: mode no-cors ne permet pas de lire le corps de la réponse
-      // On considère que c'est OK si pas d'erreur de réseau
-      return r;
-    }).catch(function(err) {
-      console.error('❌ Fetch error:', err);
-      throw err;
     });
   }
+
   function submitResultToBackend(result) {
     var payload = buildPayload(result);
-    console.log('📊 Submitting result to backend:', payload);
     state.lastPayload = payload;
     state.saveFailed = false;
     if (resultSaveAlert) {
       resultSaveAlert.hidden = true;
     }
     sendToSheets(payload).then(function () {
-      console.log('✅ Successfully saved to Google Sheets');
       state.saveFailed = false;
       if (resultSaveAlert) resultSaveAlert.hidden = true;
       showToast('Résultat enregistré.');
       setTimeout(hideToast, 2500);
-    }).catch(function (err) {
-      console.error('❌ Failed to save to Google Sheets:', err);
+    }).catch(function () {
       state.saveFailed = true;
       showToast('Résultat non sauvegardé.');
       if (resultSaveAlert) {
@@ -321,7 +308,7 @@
     if (analysisText) analysisText.textContent = data.analysis_text;
 
     var circumference = Math.PI * 80;
-    var ratio = Math.max(0.05, (score - 10) / 40);
+    var ratio = score / 50;
     gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
     var angle = 180 - ratio * 180;
     gaugeNeedle.setAttribute('transform', 'rotate(' + angle + ', 100, 100)');
@@ -379,4 +366,16 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeModal();
   });
+
+  // Expose for tests (when window.__PSS_RUN_TESTS__ is set)
+  if (typeof window.__PSS_RUN_TESTS__ !== 'undefined') {
+    window.__PSS_TEST__ = {
+      setState: function (s) {
+        if (s.answers !== undefined) state.answers = s.answers;
+        if (s.sessionId !== undefined) state.sessionId = s.sessionId;
+      },
+      computeScoreLocal: computeScoreLocal,
+      buildPayload: buildPayload
+    };
+  }
 })();

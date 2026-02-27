@@ -89,6 +89,10 @@
         <div class="analysis-block">
           <p class="analysis-text" id="analysis-text"></p>
         </div>
+        <div class="result-save-alert" id="result-save-alert" hidden>
+          <p class="result-save-alert__text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>
+          <button type="button" class="btn btn--secondary btn--retry" id="btn-retry-send">Réessayer</button>
+        </div>
         <div class="result-actions">
           <button type="button" class="btn btn--primary" id="btn-programme">Voir mon programme personnalisé</button>
           <button type="button" class="btn btn--secondary" id="btn-praticien">Contacter un praticien certifié</button>
@@ -122,6 +126,7 @@
   <!-- Toast pour feedback sauvegarde -->
   <div id="toast" class="toast" aria-live="polite" hidden>Sauvegarde en cours…</div>
 
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

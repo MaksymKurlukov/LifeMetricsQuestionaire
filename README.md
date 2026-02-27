@@ -18,21 +18,35 @@ Mini-projet SPA (une seule page) : échelle PSS-10 (Cohen & Williamson, 1983) av
 
 ### 1. Créer une Google Sheet
 
-1. Créez une nouvelle Google Sheet nommée **PSS_Results**
+1. Créez une nouvelle Google Sheet nommée **results**
 2. Ajoutez les colonnes suivantes dans la première ligne :
    - `created_at`, `session_id`, `q1`, `q2`, `q3`, `q4`, `q5`, `q6`, `q7`, `q8`, `q9`, `q10`, `final_score`, `category`
 
 ### 2. Ajouter le Google Apps Script
 
 1. Dans votre Google Sheet : **Extensions** → **Apps Script**
-2. Collez le code du script doPost
+2. Collez le code du fichier **`google-apps-script.gs`** (à la racine du projet) — fonction `doPost(e)` avec validation, rate limit et option secret.
 3. **Deploy** → **New deployment** → Type: **Web app**
 4. Copiez l'URL générée
 
 ### 3. Configurer l'URL dans le projet
 
-1. Ouvrez `assets/js/app.js`
-2. Modifiez la ligne 10 avec votre URL Google Apps Script
+1. Ouvrez **`assets/js/config.js`** et remplacez `VOTRE_SCRIPT_ID` par l’ID de votre déploiement Web App.
+2. Ou bien, modifiez directement la constante `GOOGLE_ENDPOINT` au début de `assets/js/app.js` (ligne ~10).
+
+### 4. Format requête / réponse (API Google Apps Script)
+
+**Corps de la requête POST (JSON)** envoyé en fin de test :
+- `created_at` — date/heure ISO (ex. `2025-02-26T12:00:00.000Z`)
+- `session_id` — UUID généré côté client
+- `q1` … `q10` — réponses brutes 1–5 pour les questions normales ; pour les questions inversées (4, 5, 7, 8), l’app envoie déjà la valeur de score `6 - selected_value`
+- `final_score` — score total (10–50)
+- `category` — `low` | `medium` | `high`
+
+**Réponse du script** : avec `fetch(..., { mode: 'no-cors' })` le corps de la réponse n’est pas lisible côté client. En cas de succès, l’app considère qu’il n’y a pas d’erreur réseau. 
+### 5. Vérification de la sauvegarde
+
+- **Envoi** : l'app utilise `fetch` en `no-cors`. En cas de succès, un toast « Résultat enregistré » s'affiche. En cas d'échec, un message et le bouton « Réessayer » permettent de renvoyer les données.
 
 ---
 
@@ -52,8 +66,11 @@ Mini-projet SPA (une seule page) : échelle PSS-10 (Cohen & Williamson, 1983) av
 
 ```
 pss/
-├── index.html          # Page unique (intro + test + résultat + modal)
-├── README.md           # Ce fichier
+├── index.html              # Page unique (intro + test + résultat + modal)
+├── README.md               # Ce fichier
+├── google-apps-script.gs   # Code à coller dans Apps Script (doPost)
+├── tests/
+│   └── pss-test.html      # Tests QUnit (computeScoreLocal, buildPayload)
 └── assets/
     ├── css/
     │   └── style.css   # Styles
@@ -84,6 +101,13 @@ pss/
 - Catégories : **0–20** low, **21–26** medium, **≥27** high
 
 ---
+
+## Tests (QUnit)
+
+Ouvrez **`tests/pss-test.html`** dans le navigateur (via le même serveur web que l’app, ex. `http://localhost/pss/tests/pss-test.html`). Les tests vérifient :
+
+- **computeScoreLocal()** : somme avec reverse pour les questions 4, 5, 7, 8 ; catégories low / medium / high.
+- **buildPayload(result)** : présence des champs `created_at`, `session_id`, `q1`…`q10`, `final_score`, `category` ; valeurs de score correctes pour les questions inversées.
 
 ## Références
 
