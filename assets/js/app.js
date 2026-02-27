@@ -7,9 +7,10 @@
 (function () {
   'use strict';
 
-  var GOOGLE_ENDPOINT = (typeof window.PSS_CONFIG !== 'undefined' && window.PSS_CONFIG.googleScriptUrl)
-    ? window.PSS_CONFIG.googleScriptUrl
-    : '';
+  const GOOGLE_ENDPOINT = "https://script.google.com/macros/s/AKfycbz3x_FdyEao2Tch1VcFTP9gTOmlqcVN0WWjvX3_rxpe8LmStM-gokfsIMLLoTnMT7EC/exec";
+  
+  console.log('🔧 PSS-10 initialized');
+  console.log('🔗 Google Endpoint:', GOOGLE_ENDPOINT || 'NOT CONFIGURED');
 
   // ---------- Données PSS-10 (questions en français) ----------
   const PSS_QUESTIONS = [
@@ -168,30 +169,44 @@
   /** Envoi unique vers Google Apps Script (doPost). */
   function sendToSheets(payload) {
     if (!GOOGLE_ENDPOINT) {
+      console.error('❌ GOOGLE_ENDPOINT not configured');
       return Promise.reject(new Error('No endpoint configured'));
     }
+    
+    console.log('📤 Sending to Google Sheets:', payload);
+    console.log('🔗 Endpoint:', GOOGLE_ENDPOINT);
+    
     return fetch(GOOGLE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      mode: 'no-cors'
     }).then(function (r) {
-      if (!r.ok) throw new Error('Server error');
+      console.log('✅ Response received:', r);
+      // Important: mode no-cors ne permet pas de lire le corps de la réponse
+      // On considère que c'est OK si pas d'erreur de réseau
       return r;
+    }).catch(function(err) {
+      console.error('❌ Fetch error:', err);
+      throw err;
     });
   }
   function submitResultToBackend(result) {
     var payload = buildPayload(result);
+    console.log('📊 Submitting result to backend:', payload);
     state.lastPayload = payload;
     state.saveFailed = false;
     if (resultSaveAlert) {
       resultSaveAlert.hidden = true;
     }
     sendToSheets(payload).then(function () {
+      console.log('✅ Successfully saved to Google Sheets');
       state.saveFailed = false;
       if (resultSaveAlert) resultSaveAlert.hidden = true;
       showToast('Résultat enregistré.');
       setTimeout(hideToast, 2500);
-    }).catch(function () {
+    }).catch(function (err) {
+      console.error('❌ Failed to save to Google Sheets:', err);
       state.saveFailed = true;
       showToast('Résultat non sauvegardé.');
       if (resultSaveAlert) {
@@ -225,8 +240,18 @@
 
     answersContainer.innerHTML = '';
     var selected = state.answers[n];
+    var isReverse = REVERSE_QUESTIONS.indexOf(n) >= 0;
+    
     ANSWER_LABELS.forEach(function (label, index) {
       var value = index + 1;
+      var displayLabel = label;
+      
+      // Pour les questions inversées (4, 5, 7, 8), afficher les scores inversés
+      if (isReverse) {
+        var reverseScore = 6 - value;
+        displayLabel = label.replace(/\(\d\)/, '(' + reverseScore + ')');
+      }
+      
       var card = document.createElement('label');
       card.className = 'answer-card' + (selected === value ? ' answer-card--selected' : '');
       card.setAttribute('data-value', value);
@@ -236,7 +261,7 @@
       input.value = value;
       if (selected === value) input.checked = true;
       card.appendChild(input);
-      card.appendChild(document.createTextNode(label));
+      card.appendChild(document.createTextNode(displayLabel));
       card.addEventListener('click', onAnswerClick);
       answersContainer.appendChild(card);
     });
@@ -249,12 +274,22 @@
     var value = parseInt(card.getAttribute('data-value'), 10);
     var questionId = state.currentQuestion;
 
+    // Si une réponse a déjà été donnée pour cette question, ignorer le clic
+    if (state.answers[questionId] === value) {
+      return;
+    }
+
     answersContainer.querySelectorAll('.answer-card').forEach(function (c) {
       c.classList.remove('answer-card--selected');
     });
     card.classList.add('answer-card--selected');
 
     state.answers[questionId] = value;
+
+    // Désactiver tous les clics pour éviter les doubles envois
+    answersContainer.querySelectorAll('.answer-card').forEach(function (c) {
+      c.style.pointerEvents = 'none';
+    });
 
     if (questionId < PSS_QUESTIONS.length) {
       setTimeout(function () {
