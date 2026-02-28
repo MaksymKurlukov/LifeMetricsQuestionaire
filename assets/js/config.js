@@ -1,4 +1,4 @@
 window.PSS_CONFIG = {
-  googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxx_1m0E5-8bJNQgkahzAoqkX7crRCqm8rQULyDm62bYFhgOBAMEVUCU2guak-uywPb/exec',
-   pssSecret: '2d3d6a77-0c7f-4a3d-bc2f-5f2d3a9b8c11'  // Décommenter et remplir si PSS_SECRET est défini dans Apps Script
+  googleScriptUrl: 'https://script.google.com/macros/s/AKfycbwBoW3UFzmKhZ3SYMttlx3VAqmYvk9n8gn2_WrimwhKqxafr5ajDuoo_px0CmdDfWzc/exec'
+  // pssSecret : ne pas utiliser en prod, ne pas commiter (sécurité : le secret en clair côté client = illusoire)
 };

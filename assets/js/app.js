@@ -26,11 +26,11 @@
   ];
 
   const ANSWER_LABELS = [
-    'Jamais (1)',
-    'Presque jamais (2)',
-    'Parfois (3)',
-    'Assez souvent (4)',
-    'Très souvent (5)'
+    'Jamais',
+    'Presque jamais',
+    'Parfois',
+    'Assez souvent',
+    'Très souvent'
   ];
 
   const REVERSE_QUESTIONS = [4, 5, 7, 8]; // PSS-10 : score_value = 6 - selected_value
@@ -69,6 +69,7 @@
   const modalClose = document.getElementById('modal-close');
   const resultSaveAlert = document.getElementById('result-save-alert');
   const btnRetrySend = document.getElementById('btn-retry-send');
+  const btnRefaireTest = document.getElementById('btn-refaire-test');
 
   // ---------- Utilitaires ----------
   function generateSessionId() {
@@ -160,7 +161,7 @@
       q9: (state.answers[9] != null && REVERSE_QUESTIONS.indexOf(9) >= 0) ? (6 - state.answers[9]) : (state.answers[9] || ''),
       q10: (state.answers[10] != null && REVERSE_QUESTIONS.indexOf(10) >= 0) ? (6 - state.answers[10]) : (state.answers[10] || ''),
       final_score: result.final_score,
-      category: result.category
+      category: result.category === 'low' ? 'Stress bas' : result.category === 'medium' ? 'Stress assez élevé' : 'Stress très élevé'
     };
     if (typeof window.PSS_CONFIG !== 'undefined' && window.PSS_CONFIG.pssSecret) {
       row._secret = window.PSS_CONFIG.pssSecret;
@@ -188,11 +189,14 @@
     if (resultSaveAlert) {
       resultSaveAlert.hidden = true;
     }
+    if (!GOOGLE_ENDPOINT) {
+      showToast('Enregistrement non configuré.');
+      setTimeout(hideToast, 2500);
+      return;
+    }
     sendToSheets(payload).then(function () {
       state.saveFailed = false;
       if (resultSaveAlert) resultSaveAlert.hidden = true;
-      showToast('Résultat enregistré.');
-      setTimeout(hideToast, 2500);
     }).catch(function () {
       state.saveFailed = true;
       showToast('Résultat non sauvegardé.');
@@ -204,11 +208,14 @@
 
   function retrySend() {
     if (!state.lastPayload) return;
+    if (!GOOGLE_ENDPOINT) {
+      showToast('Enregistrement non configuré.');
+      setTimeout(hideToast, 2500);
+      return;
+    }
     if (resultSaveAlert) resultSaveAlert.hidden = true;
     sendToSheets(state.lastPayload).then(function () {
       state.saveFailed = false;
-      showToast('Résultat enregistré.');
-      setTimeout(hideToast, 2500);
       if (resultSaveAlert) resultSaveAlert.hidden = true;
     }).catch(function () {
       showToast('Résultat non sauvegardé.');
@@ -227,18 +234,9 @@
 
     answersContainer.innerHTML = '';
     var selected = state.answers[n];
-    var isReverse = REVERSE_QUESTIONS.indexOf(n) >= 0;
-    
+
     ANSWER_LABELS.forEach(function (label, index) {
       var value = index + 1;
-      var displayLabel = label;
-      
-      // Pour les questions inversées (4, 5, 7, 8), afficher les scores inversés
-      if (isReverse) {
-        var reverseScore = 6 - value;
-        displayLabel = label.replace(/\(\d\)/, '(' + reverseScore + ')');
-      }
-      
       var card = document.createElement('label');
       card.className = 'answer-card' + (selected === value ? ' answer-card--selected' : '');
       card.setAttribute('data-value', value);
@@ -248,7 +246,7 @@
       input.value = value;
       if (selected === value) input.checked = true;
       card.appendChild(input);
-      card.appendChild(document.createTextNode(displayLabel));
+      card.appendChild(document.createTextNode(label));
       card.addEventListener('click', onAnswerClick);
       answersContainer.appendChild(card);
     });
@@ -335,6 +333,15 @@
     renderQuestion();
   }
 
+  function restartTest() {
+    state.sessionId = null;
+    state.currentQuestion = 1;
+    state.answers = {};
+    state.lastPayload = null;
+    state.saveFailed = false;
+    showSection('intro');
+  }
+
   // ---------- Modal ----------
   function openModal() {
     modalOverlay.classList.add('modal--open');
@@ -362,6 +369,7 @@
     });
   }
   if (btnRetrySend) btnRetrySend.addEventListener('click', retrySend);
+  if (btnRefaireTest) btnRefaireTest.addEventListener('click', restartTest);
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeModal();

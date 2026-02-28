@@ -68,8 +68,10 @@
       <div class="card card--result">
         <h2 class="result-title">Mon score stress</h2>
         <div class="result-badge" id="result-badge"></div>
-        <p class="result-score" id="result-score"><span class="result-score__value">0</span> / 50</p>
         <div class="gauge-wrap" id="gauge-wrap">
+          <div class="gauge-score" id="result-score" aria-live="polite">
+            <span class="result-score__value">0</span><span class="gauge-score__max">/50</span>
+          </div>
           <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
             <defs>
               <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -96,6 +98,7 @@
         <div class="result-actions">
           <button type="button" class="btn btn--primary" id="btn-programme">Voir mon programme personnalisé</button>
           <button type="button" class="btn btn--secondary" id="btn-praticien">Contacter un praticien certifié</button>
+          <button type="button" class="btn btn--tertiary" id="btn-refaire-test">Refaire le test</button>
         </div>
       </div>
     </section>

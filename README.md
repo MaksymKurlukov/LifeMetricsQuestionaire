@@ -1,114 +1,153 @@
 # PSS-10 — Questionnaire de stress perçu
 
-Mini-projet SPA (une seule page) : échelle PSS-10 (Cohen & Williamson, 1983) avec sections Intro → Test → Résultat, sans rechargement.
+Application **standalone** (SPA) : échelle PSS-10 (Cohen, Kamarck & Mermelstein). Une seule page HTML, logique en JavaScript, sauvegarde des résultats via **Google Apps Script** dans **Google Sheets**. Aucun serveur applicatif, aucune base de données tierce.
 
-**Stack :** HTML / CSS / JavaScript (vanilla) + Google Apps Script (Google Sheets). Aucun framework.
-
----
-
-## Prérequis
-
-- Un navigateur moderne
-- Un serveur web local (XAMPP, MAMP, ou `python -m http.server`)
-- Google Apps Script configuré (voir ci-dessous)
+**Stack :** HTML5, CSS3, JavaScript (vanilla), Google Apps Script, Google Sheets.
 
 ---
 
-## Configuration Google Sheets
+## Documentation
 
-### 1. Créer une Google Sheet
-
-1. Créez une nouvelle Google Sheet nommée **results**
-2. Ajoutez les colonnes suivantes dans la première ligne :
-   - `created_at`, `session_id`, `q1`, `q2`, `q3`, `q4`, `q5`, `q6`, `q7`, `q8`, `q9`, `q10`, `final_score`, `category`
-
-### 2. Ajouter le Google Apps Script
-
-1. Dans votre Google Sheet : **Extensions** → **Apps Script**
-2. Collez le code du fichier **`google-apps-script.gs`** (à la racine du projet) — fonction `doPost(e)` avec validation, rate limit et option secret.
-3. **Deploy** → **New deployment** → Type: **Web app**
-4. Copiez l'URL générée
-
-### 3. Configurer l'URL dans le projet
-
-1. Ouvrez **`assets/js/config.js`** et remplacez `VOTRE_SCRIPT_ID` par l’ID de votre déploiement Web App.
-2. Ou bien, modifiez directement la constante `GOOGLE_ENDPOINT` au début de `assets/js/app.js` (ligne ~10).
-
-### 4. Format requête / réponse (API Google Apps Script)
-
-**Corps de la requête POST (JSON)** envoyé en fin de test :
-- `created_at` — date/heure ISO (ex. `2025-02-26T12:00:00.000Z`)
-- `session_id` — UUID généré côté client
-- `q1` … `q10` — réponses brutes 1–5 pour les questions normales ; pour les questions inversées (4, 5, 7, 8), l’app envoie déjà la valeur de score `6 - selected_value`
-- `final_score` — score total (10–50)
-- `category` — `low` | `medium` | `high`
-
-**Réponse du script** : avec `fetch(..., { mode: 'no-cors' })` le corps de la réponse n’est pas lisible côté client. En cas de succès, l’app considère qu’il n’y a pas d’erreur réseau. 
-### 5. Vérification de la sauvegarde
-
-- **Envoi** : l'app utilise `fetch` en `no-cors`. En cas de succès, un toast « Résultat enregistré » s'affiche. En cas d'échec, un message et le bouton « Réessayer » permettent de renvoyer les données.
+| Public | Fichier | Contenu |
+|--------|---------|---------|
+| **Équipe LifeMetrics (non-dev)** | [LIFEMETRICS-GUIDE.md](./LIFEMETRICS-GUIDE.md) | Où ouvrir la Sheet, déployer le script, dépanner « données ne s’écrivent pas », changer l’URL. |
+| **Développeurs** | Ce README | Architecture, configuration, API, structure, déploiement. |
 
 ---
 
-## Lancer le projet
+## Prérequis techniques
 
-1. Placez le dossier **`pss`** dans votre serveur web :
-   - **XAMPP (macOS):** `/Applications/XAMPP/htdocs/pss`
-   - **XAMPP (Windows):** `C:\xampp\htdocs\pss`
-
-2. Ouvrez dans le navigateur : **`http://localhost/pss/`**
-
-3. Ou utilisez Python : `cd pss && python3 -m http.server 8000`
+- Navigateur moderne (ES5+)
+- Hébergement statique (Netlify, Vercel, GitHub Pages, ou serveur web local)
+- Compte Google (Google Workspace) pour Sheets + Apps Script
 
 ---
 
-## Structure des fichiers
+## Structure du projet
 
 ```
 pss/
-├── index.html              # Page unique (intro + test + résultat + modal)
-├── README.md               # Ce fichier
-├── google-apps-script.gs   # Code à coller dans Apps Script (doPost)
-├── tests/
-│   └── pss-test.html      # Tests QUnit (computeScoreLocal, buildPayload)
+├── index.html                 # Point d’entrée unique (intro / test / résultat + modal)
+├── README.md                  # Documentation développeur (ce fichier)
+├── LIFEMETRICS-GUIDE.md       # Guide support équipe LifeMetrics
+├── google-apps-script.gs      # Code à déployer dans Apps Script (doPost, validation, rate limit)
 └── assets/
-    ├── css/
-    │   └── style.css   # Styles
+    ├── css/style.css
     ├── js/
-    │   └── app.js      # Logique SPA, Google Sheets, jauge
-    └── icons/
-        ├── shield.svg
-        ├── lock.svg
-        └── clock.svg
+    │   ├── config.js          # URL du Web App (googleScriptUrl) — ne pas commiter de secret
+    │   └── app.js             # Logique SPA : state, scoring, envoi Sheets
+    └── icons/                 # SVG (shield, lock, clock)
 ```
 
 ---
 
-## Flow de l'application
+## Configuration
 
-1. **Intro** : Titre, description, badges, bouton « COMMENCER », modal
-2. **Questionnaire** : 10 questions avec réponses 1-5, progression, bouton retour
-3. **Résultat** : Score, catégorie, jauge demi-cercle, analyse, boutons CTA
-4. **Sauvegarde** : Envoi automatique vers Google Sheets
+### 1. Google Sheet
+
+- Créer une Google Sheet.
+- Premier onglet nommé **`results`** (ou le script utilisera le premier onglet).
+- Ligne 1 = en-têtes :  
+  `created_at` | `session_id` | `q1` | `q2` | … | `q10` | `final_score` | `category`
+
+### 2. Apps Script (Web App)
+
+1. Dans la Sheet : **Extensions** → **Apps Script**.
+2. Coller le contenu de **`google-apps-script.gs`** dans l’éditeur (remplacer le contenu par défaut). Sauvegarder.
+3. **Déployer** → **Nouveau déploiement** → type **Application Web** :
+   - Exécuter en tant que : **Moi**
+   - Qui a accès : **Toute personne** (pour accepter les requêtes du front public).
+4. Copier l’**URL du déploiement** (ex. `https://script.google.com/macros/s/.../exec`).
+
+### 3. Front : config.js
+
+Dans **`assets/js/config.js`** :
+
+```js
+window.PSS_CONFIG = {
+  googleScriptUrl: 'https://script.google.com/macros/s/VOTRE_ID/exec'
+};
+```
+
+Remplacer par l’URL réelle du déploiement. **Ne pas** ajouter de secret côté client (voir section Sécurité).
+
+---
+
+## API (contrat Google Apps Script)
+
+### Requête POST
+
+- **Content-Type :** `application/json`
+- **Corps (JSON) :**
+  - `created_at` (string, ISO 8601)
+  - `session_id` (string, UUID)
+  - `q1` … `q10` (number, 1–5 ; pour les questions inversées 4,5,7,8 le client envoie déjà `6 - value`)
+  - `final_score` (number, 10–50)
+  - `category` (string : `low` | `medium` | `high`)
+
+### Réponse
+
+- **200** + JSON `{ "ok": true }` en cas de succès.
+- **200** + JSON `{ "ok": false, "error": "..." }` en cas d’erreur (validation, rate limit, doublon session_id, etc.).
+
+Le front utilise `fetch` en **no-cors** : le corps de la réponse n’est pas lu. Succès = pas d’erreur réseau. Si `googleScriptUrl` est vide, l’app affiche « Enregistrement non configuré » et n’envoie pas.
+
+### Côté script (résumé)
+
+- Validation : champs requis, `q1`…`q10` ∈ [1,5], `final_score` ∈ [10,50], `sum(q1..q10) === final_score`.
+- Rate limit par `session_id` (CacheService, 5 s).
+- Rejet si `session_id` déjà présent dans la feuille (une ligne par session).
+- Pas de `PSS_SECRET` en production (ne pas définir dans Script Properties ; ne pas commiter de secret dans le repo).
+
+---
+
+## Lancer en local
+
+```bash
+# Depuis la racine du projet
+python3 -m http.server 8000
+# Puis ouvrir http://localhost:8000/
+```
+
+Ou placer le dossier sous un serveur web (XAMPP, MAMP, etc.) et ouvrir l’URL correspondante.
+
+---
+
+## Flow applicatif
+
+1. **Intro** — Titre, texte, bouton « COMMENCER », lien « En savoir plus » (modal).
+2. **Test** — 10 questions PSS-10, une par écran, auto-avancement au clic sur une réponse, bouton « Retour ».
+3. **Résultat** — Score (10–50), catégorie (low / medium / high), jauge, texte d’analyse, bouton « Refaire le test », CTA (stubs), « Réessayer » si l’envoi a échoué.
+4. **Sauvegarde** — Un seul POST en fin de test vers l’URL configurée ; toast « Résultat enregistré » ou « Résultat non sauvegardé » / « Enregistrement non configuré » si URL vide.
 
 ---
 
 ## Scoring PSS-10
 
-- Réponses 1–5 (Jamais → Très souvent)
-- Questions **inversées** : 4, 5, 7, 8 → `score = 6 - selected_value`
-- Score final = somme des 10 valeurs → entre **10** et **50**
-- Catégories : **0–20** low, **21–26** medium, **≥27** high
+- Réponses 1–5 (Jamais → Très souvent).
+- Questions **inversées** 4, 5, 7, 8 : `score_value = 6 - selected_value`.
+- Score final = somme des 10 scores ∈ [10, 50].
+- Catégories : **0–20** low, **21–26** medium, **≥27** high.
 
 ---
 
-## Tests (QUnit)
 
-Ouvrez **`tests/pss-test.html`** dans le navigateur (via le même serveur web que l’app, ex. `http://localhost/pss/tests/pss-test.html`). Les tests vérifient :
+## Déploiement (production)
 
-- **computeScoreLocal()** : somme avec reverse pour les questions 4, 5, 7, 8 ; catégories low / medium / high.
-- **buildPayload(result)** : présence des champs `created_at`, `session_id`, `q1`…`q10`, `final_score`, `category` ; valeurs de score correctes pour les questions inversées.
+- **Front :** déployer le contenu du dossier (HTML, CSS, JS, assets) sur un hébergement statique (Netlify, Vercel, GitHub Pages, etc.). Aucun build requis.
+- **Config :** s’assurer que `config.js` contient la bonne `googleScriptUrl` pour l’environnement (variable d’environnement au build ou fichier spécifique à l’env si besoin).
+- **Apps Script :** déjà hébergé par Google ; en cas de nouveau déploiement, mettre à jour l’URL dans le front et redéployer le site. Voir [LIFEMETRICS-GUIDE.md](./LIFEMETRICS-GUIDE.md) pour la procédure côté équipe support.
+
+---
+
+## Sécurité
+
+- **Pas de secret dans le repo.** Ne pas commiter `pssSecret` (ou équivalent) dans `config.js`. En production, nous n’utilisons pas de secret côté client.
+- Données strictement anonymes : `session_id`, réponses, score, catégorie. Pas d’email, pas d’IP, pas de login.
+- Protection côté script : validation stricte, rate limit, unicité `session_id` dans la feuille.
+
+---
 
 ## Références
 
-- Échelle PSS-10 : [psy.cmu.edu](https://www.psy.cmu.edu/~scohen/)
+- PSS-10 : [Cohen & Williamson, 1983](https://www.psy.cmu.edu/~scohen/) — [psy.cmu.edu](https://www.psy.cmu.edu/~scohen/)

@@ -35,8 +35,8 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 1) SECRET CHECK (optionnel)
-    const secretExpected = PropertiesService.getScriptProperties().getProperty("PSS_SECRET");
+    // 1) SECRET CHECK (optionnel) — en prod light ne pas définir PSS_SECRET (ne pas commiter de secret côté client)
+    var secretExpected = PropertiesService.getScriptProperties().getProperty("PSS_SECRET");
     if (secretExpected) {
       const secretGot = data._secret;
       if (!secretGot || secretGot !== secretExpected) {
@@ -56,14 +56,64 @@ function doPost(e) {
     }
     cache.put(key, "1", 5);
 
-    // 3) Validation des champs requis (final_score peut être 0)
+    // 3) Validation des champs requis
     if (!data.session_id || !data.created_at || (data.final_score === undefined || data.final_score === null) || !data.category) {
       return ContentService
         .createTextOutput(JSON.stringify({ ok: false, error: "Bad request: missing fields" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    const row = [
+    // 4) Validation q1..q10 : chaque valeur entre 1 et 5 (score_value PSS-10)
+    var qKeys = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"];
+    var sum = 0;
+    for (var i = 0; i < qKeys.length; i++) {
+      var val = data[qKeys[i]];
+      if (val === undefined || val === null || val === "") {
+        return ContentService
+          .createTextOutput(JSON.stringify({ ok: false, error: "Bad request: q1..q10 required (1-5)" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      var num = Number(val);
+      if (isNaN(num) || num < 1 || num > 5) {
+        return ContentService
+          .createTextOutput(JSON.stringify({ ok: false, error: "Bad request: q1..q10 must be 1-5" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      sum += num;
+    }
+
+    // 5) Validation final_score : 10-50
+    var finalScore = Number(data.final_score);
+    if (isNaN(finalScore) || finalScore < 10 || finalScore > 50) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: false, error: "Bad request: final_score must be 10-50" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 6) Vérification cohérence : sum(q1..q10) === final_score
+    if (sum !== finalScore) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: false, error: "Bad request: sum(q1..q10) must equal final_score" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 7) Protection doublon session_id : une seule ligne par session
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("results") || ss.getSheets()[0];
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 1) {
+      var sessionColumn = 2; // colonne B = session_id
+      var existing = sheet.getRange(2, sessionColumn, lastRow, sessionColumn).getValues();
+      for (var r = 0; r < existing.length; r++) {
+        if (existing[r][0] === data.session_id) {
+          return ContentService
+            .createTextOutput(JSON.stringify({ ok: false, error: "Duplicate session_id" }))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+
+    var row = [
       data.created_at,
       data.session_id,
       data.q1 != null ? data.q1 : "",
@@ -80,8 +130,6 @@ function doPost(e) {
       data.category || ""
     ];
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("results") || ss.getSheets()[0];
     sheet.appendRow(row);
 
     return ContentService
