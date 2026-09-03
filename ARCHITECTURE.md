@@ -1,10 +1,12 @@
 # LifeMetrics Questionnaires architecture
 
-Document version: 1.0.0-proposed
+Document version: 1.0.0
 
-Status: `PROPOSED / AWAITING_USER_APPROVAL`
+Status: `APPROVED`
 
 Last updated: 2026-09-03
+
+Approved by: Maksym Kurlukov on 2026-09-03.
 
 Authority: this file defines component boundaries and dependency direction. Project sequencing and stage gates remain authoritative in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`.
 

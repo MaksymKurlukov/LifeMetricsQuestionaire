@@ -1,10 +1,12 @@
 # LifeMetrics questionnaire inventory
 
-Inventory version: 1.0.0-proposed
+Inventory version: 1.0.0
 
-Status: `PROPOSED / AWAITING_USER_APPROVAL`
+Status: `APPROVED AS CURRENT INVENTORY STATE`
 
 Last verified: 2026-09-03
+
+Approved by: Maksym Kurlukov on 2026-09-03. This accepts the inventory contract and recorded readiness state; it does not approve questionnaire content for implementation/publication or assign questionnaire-specific owners.
 
 Search scope: repository, available Codex attachments, and `/Volumes/T7/StageBut3`.
 
@@ -109,4 +111,4 @@ PDF files are external read-only sources and are not tracked by this repository.
 |---|---|---|---|---|---|---|
 | all current entries | `UNASSIGNED` | `UNASSIGNED` | `UNASSIGNED` | `UNASSIGNED` | `PENDING` | `PENDING` |
 
-STAGE 1 cannot mark this inventory accepted until the user confirms the contract documents and identifies or accepts responsibility for decision owners. Questionnaire-level approvals occur only in their planned stages.
+The STAGE 1 inventory contract was approved by Maksym Kurlukov on 2026-09-03. Questionnaire-level content, methodology, claims, CTA, source, implementation, and publication approvals remain separate gates in their planned stages.

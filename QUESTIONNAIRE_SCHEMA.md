@@ -1,12 +1,14 @@
 # LifeMetrics questionnaire schema and scoring contract
 
-Document version: 1.0.0-proposed
+Document version: 1.0.0
 
 Schema version: `1.0.0`
 
-Status: `PROPOSED / AWAITING_USER_APPROVAL`
+Status: `APPROVED`
 
 Last updated: 2026-09-03
+
+Approved by: Maksym Kurlukov on 2026-09-03.
 
 Authority: normative questionnaire configuration, scoring, result, serialization, and submission contract. Stage sequencing remains in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`.
 

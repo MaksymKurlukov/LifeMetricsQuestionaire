@@ -10,9 +10,9 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_BLOCKED_BY_APPROVAL`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS`
 
-Next executable stage: `STAGE 1 - Contract/ADR approval completion`
+Next executable stage: `STAGE 2 - Freeze PSS10 behavior with tests`
 
 ## Status vocabulary
 
@@ -805,7 +805,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 1 - Architecture contracts and persistent documentation
 
-- **Status:** `BLOCKED` on 2026-09-03 after documentation completion. Proposed contracts, inventory, test matrix, ADRs, changelog, and evidence are in the root project documents and `STAGE_REPORTS/STAGE-01.md`. Runtime source is unchanged. Remaining acceptance gate: explicit user approval of the contracts/DEC-001 through DEC-015 and assignment or acceptance of decision ownership.
+- **Status:** `PASS` on 2026-09-03. Maksym Kurlukov approved `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, `DECISIONS.md`, and DEC-001 through DEC-015, and accepted decision ownership. Documentation checks passed; runtime source remained unchanged. Evidence is in `STAGE_REPORTS/STAGE-01.md`.
 - **Objective:** turn sections 3-9 into versioned contracts before implementation.
 - **Prerequisites:** STAGE 0 PASS.
 - **Files allowed to change:** `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, `DECISIONS.md`, `CHANGELOG.md`, this plan.
@@ -816,8 +816,8 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **PASS/FAIL:** PASS after user accepts contracts/ADRs; FAIL if storage model, score formula, public statuses, or PSS invariants remain ambiguous.
 - **Rollback criteria:** revert documentation commit only; baseline remains.
 - **Expected deliverables:** seven persistent state files per section 16 (as applicable), approved ADRs, updated plan.
-- **Blockers:** privacy owner and questionnaire approval owner may need identification.
-- **User action required:** approve contracts and named decision owners.
+- **Blockers:** none for STAGE 1. Questionnaire-specific ownership and approvals remain gates in their planned stages.
+- **User action required:** none for STAGE 1.
 - **Recommended commit checkpoint:** `docs: define questionnaire platform contracts`.
 
 ## STAGE 2 - Freeze PSS10 behavior with tests
@@ -1227,21 +1227,21 @@ The following decisions must be created/accepted in `DECISIONS.md` during STAGE 
 
 | ID | Proposed decision | Status |
 |---|---|---|
-| DEC-001 | one shared engine with versioned questionnaire configurations | proposed |
-| DEC-002 | canonical `questionnaire.php`; no per-test `config.js`; one shared template by default | proposed |
-| DEC-003 | one generic shortcode with explicit registry/lifecycle gate; no V1 aliases | proposed |
-| DEC-004 | generic same-origin REST shape `/v1/{id}/submit`; server recomputes canonical result | proposed |
-| DEC-005 | hybrid Sheet architecture: one canonical common submission append, optional derived per-questionnaire views | proposed |
-| DEC-006 | general min/max N/A normalization with half-up rounding; not hardcoded count x 4 | proposed |
-| DEC-007 | preserve `calculated_category` and `displayed_category`; guardrails affect display only | proposed |
-| DEC-008 | safety flags are non-scored and visually prioritized independently of favorable score | proposed |
-| DEC-009 | mandatory questionnaire/config/submission versioning and SemVer rules | proposed |
-| DEC-010 | lifecycle statuses `draft/review/ready/disabled`; public only `ready` | proposed |
-| DEC-011 | explicit answer points represent reverse/non-linear scoring; no ID branches | proposed |
-| DEC-012 | one canonical write with JSON snapshots to avoid Apps Script multi-tab partial commits | proposed |
-| DEC-013 | PSS10 frozen migration compatibility versus later content/UX change | proposed |
-| DEC-014 | privacy-minimal payload; path-only `source_page`, no identifiers/free text by default | proposed |
-| DEC-015 | native browser/WordPress scripts first; no bundler/new dependency without measured need | proposed |
+| DEC-001 | one shared engine with versioned questionnaire configurations | accepted 2026-09-03 |
+| DEC-002 | canonical `questionnaire.php`; no per-test `config.js`; one shared template by default | accepted 2026-09-03 |
+| DEC-003 | one generic shortcode with explicit registry/lifecycle gate; no V1 aliases | accepted 2026-09-03 |
+| DEC-004 | generic same-origin REST shape `/v1/{id}/submit`; server recomputes canonical result | accepted 2026-09-03 |
+| DEC-005 | hybrid Sheet architecture: one canonical common submission append, optional derived per-questionnaire views | accepted 2026-09-03 |
+| DEC-006 | general min/max N/A normalization with half-up rounding; not hardcoded count x 4 | accepted 2026-09-03 |
+| DEC-007 | preserve `calculated_category` and `displayed_category`; guardrails affect display only | accepted 2026-09-03 |
+| DEC-008 | safety flags are non-scored and visually prioritized independently of favorable score | accepted 2026-09-03 |
+| DEC-009 | mandatory questionnaire/config/submission versioning and SemVer rules | accepted 2026-09-03 |
+| DEC-010 | lifecycle statuses `draft/review/ready/disabled`; public only `ready` | accepted 2026-09-03 |
+| DEC-011 | explicit answer points represent reverse/non-linear scoring; no ID branches | accepted 2026-09-03 |
+| DEC-012 | one canonical write with JSON snapshots to avoid Apps Script multi-tab partial commits | accepted 2026-09-03 |
+| DEC-013 | PSS10 frozen migration compatibility versus later content/UX change | accepted 2026-09-03 |
+| DEC-014 | privacy-minimal payload; path-only `source_page`, no identifiers/free text by default | accepted 2026-09-03 |
+| DEC-015 | native browser/WordPress scripts first; no bundler/new dependency without measured need | accepted 2026-09-03 |
 
 Any deviation during implementation needs a new decision or an amended decision with date, evidence, migration consequence, and user acceptance.
 
@@ -1320,8 +1320,8 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 # 20. Next action
 
-Complete exactly the remaining approval gate in a separate run:
+Execute exactly one next stage in a separate run:
 
-`STAGE 1 - Architecture contracts and persistent documentation`
+`STAGE 2 - Freeze PSS10 behavior with tests`
 
-Review and explicitly approve, reject, or amend the proposed contracts and DEC-001 through DEC-015, and identify or accept decision ownership. Do not begin STAGE 2 until STAGE 1 is marked PASS. No runtime behavior was changed while preparing the STAGE 1 documents.
+STAGE 1 passed on 2026-09-03 after Maksym Kurlukov approved the contracts and DEC-001 through DEC-015 and accepted decision ownership. Begin STAGE 2 only in a separate run; preserve all runtime behavior while creating the characterization harness.

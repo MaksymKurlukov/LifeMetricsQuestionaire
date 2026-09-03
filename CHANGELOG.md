@@ -7,7 +7,8 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 ### Documentation
 
 - Added the authoritative staged implementation plan and recoverable WordPress plugin baseline.
-- Proposed component architecture, questionnaire schema/scoring/payload contract, source/readiness inventory, test matrix, and ADR log for STAGE 1 review.
+- Approved component architecture, questionnaire schema/scoring/payload contract, source/readiness inventory, test matrix, and DEC-001 through DEC-015 for STAGE 1.
+- Recorded Maksym Kurlukov as project owner and approval owner for DEC-001 through DEC-015.
 - Aligned Sédentarité readiness with the lifecycle definition: scoring is complete, but implementation remains blocked until explicit source approval.
 
 ### Runtime

@@ -1,14 +1,14 @@
 # LifeMetrics Questionnaires decision log
 
-Log version: 1.0.0-proposed
+Log version: 1.0.0
 
-Status: `PROPOSED / AWAITING_USER_APPROVAL`
+Status: `APPROVED`
 
 Last updated: 2026-09-03
 
-Decision owner: `UNASSIGNED` pending STAGE 1 approval.
+Decision owner and approver: Maksym Kurlukov.
 
-All entries below are proposed. They do not become accepted merely because this file is committed. Approval must record owner, date, and status change without deleting proposal history.
+DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. Future changes must preserve this approval history and use an amended or superseding ADR.
 
 Authority: this file owns architectural decisions. Sequencing remains in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`; accepted component and schema consequences are reflected in `ARCHITECTURE.md` and `QUESTIONNAIRE_SCHEMA.md`.
 
@@ -18,7 +18,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-001 - One engine, many configurations
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: duplicating PSS10 JS/CSS for every questionnaire multiplies fixes and drift.
 - Alternatives: independent applications; partially shared UI; one fully shared runtime.
 - Proposal/rationale: one shared PHP/frontend runtime and versioned data configurations. Shared behavior is implemented once.
@@ -27,7 +27,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-002 - PHP questionnaire configuration and one shared template
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: per-test `config.js` creates two sources of truth and copied templates invite divergence.
 - Alternatives: JSON files, per-test JS, per-test PHP/template, PHP data plus one template.
 - Proposal/rationale: `questionnaires/<id>/questionnaire.php` returns plain data; `templates/questionnaire.php` is shared. PHP is already the trusted WordPress runtime and safely serializes a client projection.
@@ -36,7 +36,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-003 - One generic shortcode with explicit lifecycle gate
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: aliases add registration/documentation surface without new capability.
 - Alternatives: one shortcode per questionnaire; aliases plus generic; generic only.
 - Proposal/rationale: V1 supports only `[lifemetrics_questionnaire id="..."]`; registry explicit lookup and `ready` status control exposure.
@@ -45,7 +45,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-004 - Generic same-origin REST and canonical server calculation
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: browser totals can be modified and Google must not be called directly.
 - Alternatives: browser-to-Google; per-questionnaire routes; generic same-origin route with server scoring.
 - Proposal/rationale: `POST /lifemetrics-questionnaires/v1/{id}/submit`; PHP resolves exact version and recomputes every derived field.
@@ -54,7 +54,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-005 - Hybrid Sheet model with one canonical write
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: questionnaires have variable answers/dimensions/safety, while one tab per questionnaire fragments global audit/deduplication.
 - Alternatives: one wide common tab; canonical tab per questionnaire; common ledger plus canonical detail tabs; one common canonical row plus derived views.
 - Proposal/rationale: one canonical `submissions` append with common columns and JSON snapshots; per-questionnaire views are derived/noncanonical.
@@ -63,7 +63,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-006 - General min/max N/A normalization with half-up rounding
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: count x 4 works for current proprietary tests but not PSS10 or future non-uniform scales.
 - Alternatives: questionnaire-specific formulas; raw/available-max only; general min/max affine normalization.
 - Proposal/rationale: sum applicable min/max capacity, map to configured target scale, and use one `half_up` mode. It reduces to the source 0-4 formula where applicable.
@@ -72,7 +72,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-007 - Calculated and displayed categories remain distinct
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: Sédentarité requires a category cap without changing numeric score.
 - Alternatives: hidden weighting; mutate final score; one category field; two explicit category fields.
 - Proposal/rationale: numeric score selects `calculated_category`; ordered guardrails produce `displayed_category` and message codes only.
@@ -81,7 +81,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-008 - Safety is non-scored and independently prioritized
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: favorable lifestyle scores can coexist with answers requiring professional attention.
 - Alternatives: subtract points; cap category; hide safety behind general results; separate non-scored safety path.
 - Proposal/rationale: safety triggers never enter scores/categories and render before general recommendations at any score.
@@ -90,7 +90,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-009 - Independent mandatory versioning
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: historical scores must remain interpretable after content/scoring/backend changes.
 - Alternatives: plugin version only; mutable current config; questionnaire/schema/submission versions.
 - Proposal/rationale: store questionnaire version, configuration schema version, and submission schema version independently; use documented SemVer gates.
@@ -99,7 +99,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-010 - Lifecycle statuses and public-only ready
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: incomplete/future content must coexist without accidental exposure.
 - Alternatives: directory presence means public; boolean enabled; four-state lifecycle.
 - Proposal/rationale: `draft`, `review`, `ready`, `disabled`; only `ready` is rendered/accepted publicly.
@@ -108,7 +108,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-011 - Explicit answer points encode reverse/non-linear scoring
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: reverse flags and question-ID conditions create special-case engines and can miss non-linear answers.
 - Alternatives: engine formula types; reverse question lists; explicit points for every answer.
 - Proposal/rationale: every answer defines selected `value`, public label, points, and applicability.
@@ -117,7 +117,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-012 - One canonical backend append
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: Apps Script cannot provide a robust transaction across multiple Sheet tabs.
 - Alternatives: multi-tab canonical writes with recovery; one canonical row; external database now.
 - Proposal/rationale: append exactly one versioned canonical row under lock; generate reporting views later.
@@ -126,7 +126,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-013 - Structural PSS10 migration freezes behavior
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: refactoring and content/scoring changes together make regressions unauditable.
 - Alternatives: improve PSS during migration; freeze then change separately.
 - Proposal/rationale: characterize and preserve exact current behavior; later UX/content/legal changes are separately authorized/versioned.
@@ -135,7 +135,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-014 - Privacy-minimal payload
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: answers/safety may be health-related even without direct identity.
 - Alternatives: collect analytics/identity by default; anonymous minimal fields; no persistence.
 - Proposal/rationale: store only answer/result/version/session/operational essentials; path-only source page; no IP, fingerprint, identity, free text, or query data by default.
@@ -144,7 +144,7 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-015 - Native tooling before dependencies
 
-- Status: `PROPOSED`.
+- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
 - Context: the plugin currently has no build chain and target behavior is feasible with PHP/vanilla JS/CSS.
 - Alternatives: bundler/framework/test framework immediately; native modules/scripts plus minimal Node/PHP checks.
 - Proposal/rationale: no bundler/runtime dependency until compatibility or test evidence proves native tools insufficient.
@@ -155,8 +155,8 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 | Field | Value |
 |---|---|
-| Decision owner | `UNASSIGNED` |
-| Approver | `PENDING` |
-| Approval date | `PENDING` |
-| Approved decisions | none |
-| Required action | approve, reject, or request changes for DEC-001 through DEC-015 and identify/accept decision ownership |
+| Decision owner | Maksym Kurlukov |
+| Approver | Maksym Kurlukov |
+| Approval date | 2026-09-03 |
+| Approved decisions | DEC-001 through DEC-015 |
+| Required action | none for STAGE 1; future changes require an amended or superseding ADR |

@@ -2,13 +2,13 @@
 
 STAGE = STAGE 1
 
-STATUS = BLOCKED
+STATUS = PASS
 
 DATE = 2026-09-03
 
 BASE_COMMIT = `f9d27ab`
 
-CHECKPOINT_COMMIT = `81a49ec` (`docs: propose questionnaire platform contracts`)
+CHECKPOINT_COMMIT = `81a49ec` (`docs: propose questionnaire platform contracts`); approval closure checkpoint pending.
 
 OBJECTIVE = Convert the implementation plan's proposed architecture, schema/scoring/payload, inventory, test, and decision direction into auditable persistent contracts without modifying runtime behavior.
 
@@ -38,12 +38,12 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 
 ## Implementation summary
 
-- Defined the proposed component tree, responsibilities, dependency direction, render/submit/lifecycle flows, trust boundaries, storage direction, and migration compatibility.
-- Defined the proposed schema fields, explicit answer-point model, general N/A min/max normalization, half-up parity, dimensions, result ranges/ranks, allowlisted guardrails, weakest dimensions, safety, CTA, lifecycle, payload, privacy, and SemVer rules.
+- Defined and approved the component tree, responsibilities, dependency direction, render/submit/lifecycle flows, trust boundaries, storage direction, and migration compatibility.
+- Defined and approved the schema fields, explicit answer-point model, general N/A min/max normalization, half-up parity, dimensions, result ranges/ranks, allowlisted guardrails, weakest dimensions, safety, CTA, lifecycle, payload, privacy, and SemVer rules.
 - Recorded all seven local PDF sources with SHA-256, pages, byte sizes, readiness, source-specific edge cases, blockers, and unassigned approval ownership.
 - Corrected Sédentarité from implementation-ready to `BLOCKED_BY_APPROVAL` so inventory status matches the contract definition; its scoring remains ready.
 - Defined static, unit, contract, WordPress, browser/E2E, accessibility, responsive, backend, and questionnaire-specific test IDs.
-- Expanded DEC-001 through DEC-015 with alternatives, rationale, consequences, and rollback/compatibility impact.
+- Expanded and approved DEC-001 through DEC-015 with alternatives, rationale, consequences, and rollback/compatibility impact; Maksym Kurlukov is the decision owner and approver.
 - Added a project/plugin changelog that explicitly records no runtime change.
 - Did not implement PHP/JS/CSS/configuration, install WordPress, alter Apps Script, access Google, create a database, or begin STAGE 2.
 
@@ -61,6 +61,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 | `node lifemetrics-questionnaires/tests/backend-logic.test.js` | PASS; current Apps Script VM smoke assertions execute |
 | frontend scan for direct Google URL, `document.getElementById`, `window.PSS_*`, and `/wp-content/` | PASS |
 | `git diff --check` plus no-index checks for each new Markdown file | PASS |
+| approval-state consistency scan across plan, contracts, ADR log, test matrix, inventory, changelog, and report | PASS; approval and ownership recorded consistently |
 
 ## Tests skipped
 
@@ -68,23 +69,21 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 
 ## Acceptance criteria
 
-- [x] Persistent contract documents are drafted with non-overlapping ownership.
+- [x] Persistent contract documents are approved with non-overlapping ownership.
 - [x] Component/file names, lifecycle gate, scoring/rounding/parity, payload/privacy, backend storage proposal, source hashes/readiness, test matrix, and DEC-001 through DEC-015 are documented.
 - [x] No questionnaire is made public and no incomplete example uses `ready`.
 - [x] Runtime and standalone source remain byte-identical to the STAGE 0 manifest.
-- [ ] User explicitly accepts the contracts/ADRs or requests bounded amendments.
-- [ ] Decision ownership is assigned or explicitly accepted.
+- [x] Maksym Kurlukov explicitly accepted the contracts and DEC-001 through DEC-015 on 2026-09-03.
+- [x] Maksym Kurlukov accepted project and approval ownership for DEC-001 through DEC-015.
 
 ## Known risks
 
-- Proposed contracts are not yet accepted and therefore must not govern implementation as final decisions.
 - Questionnaire approval owners, CTA destinations, PSS licensing owner, privacy/retention owner, and deployed Apps Script provenance remain unresolved for later gates.
 - WordPress/runtime feasibility remains unverified until its planned stages.
 
 ## Blockers
 
-- Explicit user approval of `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, and DEC-001 through DEC-015.
-- Assignment or explicit acceptance of decision ownership.
+NONE for STAGE 1. Questionnaire-specific gates remain in their planned stages.
 
 ## Rollback
 
@@ -92,8 +91,8 @@ Revert the STAGE 1 documentation commits newest-first with focused `git revert` 
 
 ## User action required
 
-Review the proposed contracts and respond with approval or exact requested amendments. Identify decision owners, or explicitly accept the current project owner as the decision owner for DEC-001 through DEC-015.
+NONE for STAGE 1.
 
-NEXT_STAGE_PROPOSED = `STAGE 1 - Contract/ADR approval completion`; after STAGE 1 PASS, `STAGE 2 - Freeze PSS10 behavior with tests`.
+NEXT_STAGE_PROPOSED = `STAGE 2 - Freeze PSS10 behavior with tests`.
 
 NEXT_STAGE_STARTED = NO

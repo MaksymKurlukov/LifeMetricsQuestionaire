@@ -1,10 +1,12 @@
 # LifeMetrics Questionnaires test matrix
 
-Matrix version: 1.0.0-proposed
+Matrix version: 1.0.0
 
-Status: `PROPOSED / AWAITING_USER_APPROVAL`
+Status: `APPROVED`
 
 Last updated: 2026-09-03
+
+Approved by: Maksym Kurlukov on 2026-09-03.
 
 Result vocabulary: `PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`, `NOT_APPLICABLE`. `SKIPPED` requires a recorded reason and never satisfies a mandatory gate.
 
@@ -39,6 +41,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | DOC-003 | schema example remains non-public/incomplete | `rg` for PHP/JSON `status = ready` in `QUESTIONNAIRE_SCHEMA.md` | PASS on 2026-09-03; no ready example | 1 |
 | DOC-004 | runtime source digest unchanged | sorted non-`.DS_Store` plugin manifest piped through `shasum -a 256` | PASS on 2026-09-03; `5206e7a4...d3cdb9` | 1 |
 | DOC-005 | Markdown whitespace/diff check | `git diff --check` plus `git diff --no-index --check /dev/null <new-file>` for each new Markdown file | PASS on 2026-09-03 | 1 |
+| DOC-006 | approval, ADR ownership, stage status, and next-stage consistency | `rg` assertions across approved documents, all 15 ADRs, plan, and STAGE 1 report | PASS on 2026-09-03; Maksym Kurlukov recorded as owner/approver | 1 |
 
 ## Static architecture tests
 
