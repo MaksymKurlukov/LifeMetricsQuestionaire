@@ -8,7 +8,7 @@ DATE = 2026-09-03
 
 BASE_COMMIT = `f9d27ab`
 
-CHECKPOINT_COMMIT = Pending documentation checkpoint. After creation, its exact ID will be recorded here in a metadata-only follow-up.
+CHECKPOINT_COMMIT = `81a49ec` (`docs: propose questionnaire platform contracts`)
 
 OBJECTIVE = Convert the implementation plan's proposed architecture, schema/scoring/payload, inventory, test, and decision direction into auditable persistent contracts without modifying runtime behavior.
 
