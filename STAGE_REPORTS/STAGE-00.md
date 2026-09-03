@@ -8,7 +8,7 @@ DATE = 2026-09-03
 
 BASE_COMMIT = `fd5dc7a`
 
-CHECKPOINT_COMMIT = Pending final verification. This report will be part of the checkpoint; resolve the final ID with `git rev-parse HEAD`.
+CHECKPOINT_COMMIT = `d816898` (`docs: freeze LifeMetrics questionnaire plugin baseline`)
 
 OBJECTIVE = Make the existing untracked WordPress plugin recoverable and auditable without changing any runtime source bytes.
 
@@ -98,7 +98,7 @@ Google Apps Script URL references were found in the plugin PHP entry point and p
 
 ## Acceptance criteria
 
-- [x] Every non-`.DS_Store` plugin source file is selected for the focused checkpoint; final commit verification records the checkpoint ID.
+- [x] Every non-`.DS_Store` plugin source file is recoverable from checkpoint `d816898`.
 - [x] The before/after combined source-manifest SHA-256 is identical.
 - [x] PHP lint, frontend JavaScript syntax, Apps Script VM smoke test, and diff checks pass.
 - [x] Pre-existing tracked/untracked user changes are identified and preserved.
@@ -116,7 +116,7 @@ NONE for STAGE 0 final verification.
 
 ## Rollback
 
-Before the checkpoint, remove only the newly created stage report and revert only the plan's STAGE 0 status lines. After the checkpoint, revert the focused checkpoint commit; do not reset, clean, or restore broad paths, and do not touch the preserved `.DS_Store` changes.
+Revert the STAGE 0 commits newest-first with focused `git revert` commits identified from `git log`. Do not reset, clean, or restore broad paths, and do not touch the preserved `.DS_Store` changes.
 
 ## User action required
 
