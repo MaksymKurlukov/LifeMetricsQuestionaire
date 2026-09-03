@@ -1,0 +1,59 @@
+{
+  "route": "/wp-json/lifemetrics-questionnaires/v1/pss10/submit",
+  "maximum_body_bytes": 8192,
+  "request": {
+    "created_at": "2026-09-03T12:00:00.000Z",
+    "session_id": "123e4567-e89b-42d3-a456-426614174000",
+    "q1": 3,
+    "q2": 2,
+    "q3": 2,
+    "q4": 2,
+    "q5": 2,
+    "q6": 2,
+    "q7": 2,
+    "q8": 2,
+    "q9": 2,
+    "q10": 2,
+    "final_score": 21,
+    "category": "Stress bas"
+  },
+  "forwarded": {
+    "created_at": "2026-09-03T12:00:00.000Z",
+    "session_id": "123e4567-e89b-42d3-a456-426614174000",
+    "q1": 3,
+    "q2": 2,
+    "q3": 2,
+    "q4": 2,
+    "q5": 2,
+    "q6": 2,
+    "q7": 2,
+    "q8": 2,
+    "q9": 2,
+    "q10": 2,
+    "final_score": 21,
+    "category": "Stress assez élevé"
+  },
+  "success_response": {
+    "success": true,
+    "duplicate": false
+  },
+  "duplicate_response": {
+    "success": true,
+    "duplicate": true
+  },
+  "validation_errors": {
+    "body_too_large": "lmq_payload_too_large",
+    "content_type": "lmq_invalid_content_type",
+    "json": "lmq_invalid_json",
+    "session": "lmq_invalid_session",
+    "timestamp": "lmq_invalid_created_at",
+    "answers": "lmq_invalid_answers",
+    "score": "lmq_invalid_score",
+    "category": "lmq_invalid_category"
+  },
+  "upstream_errors": {
+    "network": "lmq_upstream_network_error",
+    "http": "lmq_upstream_http_error",
+    "rejected": "lmq_upstream_rejected"
+  }
+}

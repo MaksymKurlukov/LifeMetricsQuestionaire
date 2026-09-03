@@ -1,0 +1,118 @@
+{
+  "questionnaire_id": "pss10",
+  "legacy_version": "1.0.0",
+  "questions": [
+    "Avez-vous été dérangé par un événement inattendu ?",
+    "Vous a-t-il semblé difficile de contrôler les choses importantes de votre quotidien ?",
+    "Vous êtes-vous senti nerveux et stressé ?",
+    "Vous êtes-vous senti confiant dans vos capacités à prendre en main vos problèmes personnels ?",
+    "Avez-vous senti que les choses allaient comme vous le vouliez ?",
+    "Avez-vous pensé que vous ne pouviez pas assumer toutes les choses que vous deviez faire ?",
+    "Avez-vous été capable de maîtriser votre énervement ?",
+    "Avez-vous senti que vous contrôliez la situation ?",
+    "Vous êtes-vous senti irrité parce que les événements échappaient à votre contrôle ?",
+    "Avez-vous trouvé que les difficultés s'accumulaient à un tel point que vous ne pouviez plus les surmonter ?"
+  ],
+  "answer_labels": [
+    "Jamais",
+    "Presque jamais",
+    "Parfois",
+    "Assez souvent",
+    "Très souvent"
+  ],
+  "reverse_questions": [4, 5, 7, 8],
+  "categories": {
+    "low": {
+      "stored": "Stress bas",
+      "displayed": "Stress bas",
+      "title": "Votre niveau de stress est bas, félicitations.",
+      "analysis": "0-20 : vous n'avez pas trop de souci pour gérer vos stress. En suivant votre programme personnalisé, vous pourrez encore gagner en sérénité, vous relaxer et apprendre tous les outils pour gérer le stress et les émotions liées à celui-ci."
+    },
+    "medium": {
+      "stored": "Stress assez élevé",
+      "displayed": "Stress modéré",
+      "title": "Votre niveau de stress est assez élevé.",
+      "analysis": "21-26 : il arrive que vous vous sentiez tendu et que vous ayez du mal à gérer certaines situations provoquant du stress. Cela peut vous amener à un sentiment d'impuissance qui peut affecter vos émotions. En suivant votre programme, vous aurez tous les outils pour gérer le stress et les émotions liées à celui-ci. Pensez également à contacter un de nos praticiens certifiés."
+    },
+    "high": {
+      "stored": "Stress très élevé",
+      "displayed": "Stress élevé",
+      "title": "Votre niveau de stress est très élevé.",
+      "analysis": "27 ou plus : vous êtes très affecté par le stress. Vous avez également très souvent le sentiment de ne pas contrôler certaines situations et que vos émotions prennent le dessus. Pas d'inquiétude, nous allons vous accompagner vers le mieux-être grâce au programme personnalisé conçu sur mesure pour gérer cette problématique qui importune votre quotidien. Pensez également à contacter un de nos praticiens certifiés."
+    }
+  },
+  "vectors": [
+    {
+      "name": "minimum-10",
+      "selected": [1, 1, 1, 5, 5, 1, 5, 5, 1, 1],
+      "scored": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      "final_score": 10,
+      "category": "low"
+    },
+    {
+      "name": "low-upper-20",
+      "selected": [2, 2, 2, 4, 4, 2, 4, 4, 2, 2],
+      "scored": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "final_score": 20,
+      "category": "low"
+    },
+    {
+      "name": "medium-lower-21",
+      "selected": [3, 2, 2, 4, 4, 2, 4, 4, 2, 2],
+      "scored": [3, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "final_score": 21,
+      "category": "medium"
+    },
+    {
+      "name": "medium-upper-26",
+      "selected": [3, 3, 3, 3, 3, 3, 4, 4, 2, 2],
+      "scored": [3, 3, 3, 3, 3, 3, 2, 2, 2, 2],
+      "final_score": 26,
+      "category": "medium"
+    },
+    {
+      "name": "high-lower-27",
+      "selected": [3, 3, 3, 3, 3, 3, 3, 4, 2, 2],
+      "scored": [3, 3, 3, 3, 3, 3, 3, 2, 2, 2],
+      "final_score": 27,
+      "category": "high"
+    },
+    {
+      "name": "maximum-50",
+      "selected": [5, 5, 5, 1, 1, 5, 1, 1, 5, 5],
+      "scored": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+      "final_score": 50,
+      "category": "high"
+    }
+  ],
+  "payload_snapshot": {
+    "vector": "medium-lower-21",
+    "created_at": "2026-09-03T12:00:00.000Z",
+    "session_id": "123e4567-e89b-42d3-a456-426614174000",
+    "expected": {
+      "created_at": "2026-09-03T12:00:00.000Z",
+      "session_id": "123e4567-e89b-42d3-a456-426614174000",
+      "final_score": 21,
+      "category": "Stress assez élevé",
+      "q1": 3,
+      "q2": 2,
+      "q3": 2,
+      "q4": 2,
+      "q5": 2,
+      "q6": 2,
+      "q7": 2,
+      "q8": 2,
+      "q9": 2,
+      "q10": 2
+    }
+  },
+  "ui": {
+    "auto_advance_ms": 400,
+    "configuration_error": "L'enregistrement n'est pas configuré.",
+    "validation_error": "Le résultat est invalide et ne peut pas être enregistré.",
+    "network_error": "Connexion impossible. Vérifiez votre connexion et réessayez.",
+    "backend_error": "Le service d'enregistrement est temporairement indisponible.",
+    "saving": "Sauvegarde en cours…",
+    "saved": "Résultat enregistré."
+  }
+}

@@ -10,6 +10,7 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 - Approved component architecture, questionnaire schema/scoring/payload contract, source/readiness inventory, test matrix, and DEC-001 through DEC-015 for STAGE 1.
 - Recorded Maksym Kurlukov as project owner and approval owner for DEC-001 through DEC-015.
 - Aligned Sédentarité readiness with the lifecycle definition: scoring is complete, but implementation remains blocked until explicit source approval.
+- Added an executable PSS10 characterization harness with golden scoring/payload fixtures, PHP REST/markup checks, and mutation guards; runtime behavior is unchanged.
 
 ### Runtime
 

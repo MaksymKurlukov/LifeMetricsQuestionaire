@@ -10,9 +10,9 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_BLOCKED_BY_APPROVAL`
 
-Next executable stage: `STAGE 2 - Freeze PSS10 behavior with tests`
+Next executable stage: `STAGE 2 - PSS10 frozen-baseline approval completion`
 
 ## Status vocabulary
 
@@ -822,7 +822,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 2 - Freeze PSS10 behavior with tests
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `BLOCKED` on 2026-09-03 after implementation. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Remaining gate: Maksym Kurlukov must explicitly accept the observed legacy behavior as the migration baseline, including stored/displayed label differences and non-navigating CTA buttons.
 - **Objective:** create an executable characterization harness without modifying behavior.
 - **Prerequisites:** STAGE 1 PASS.
 - **Files allowed to change:** plugin `tests/`, test-only scripts/fixtures, test documentation.
@@ -1320,8 +1320,8 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 # 20. Next action
 
-Execute exactly one next stage in a separate run:
+Complete exactly the remaining approval gate in a separate run:
 
-`STAGE 2 - Freeze PSS10 behavior with tests`
+`STAGE 2 - PSS10 frozen-baseline approval completion`
 
-STAGE 1 passed on 2026-09-03 after Maksym Kurlukov approved the contracts and DEC-001 through DEC-015 and accepted decision ownership. Begin STAGE 2 only in a separate run; preserve all runtime behavior while creating the characterization harness.
+Review and explicitly accept or reject the observed PSS10 behavior recorded in `STAGE_REPORTS/STAGE-02.md` and `lifemetrics-questionnaires/tests/fixtures/pss10-golden-v1.json`. Do not begin STAGE 3 until STAGE 2 is marked PASS. No runtime behavior changed while creating the STAGE 2 harness.

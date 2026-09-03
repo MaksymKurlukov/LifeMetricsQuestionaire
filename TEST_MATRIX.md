@@ -42,13 +42,19 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | DOC-004 | runtime source digest unchanged | sorted non-`.DS_Store` plugin manifest piped through `shasum -a 256` | PASS on 2026-09-03; `5206e7a4...d3cdb9` | 1 |
 | DOC-005 | Markdown whitespace/diff check | `git diff --check` plus `git diff --no-index --check /dev/null <new-file>` for each new Markdown file | PASS on 2026-09-03 | 1 |
 | DOC-006 | approval, ADR ownership, stage status, and next-stage consistency | `rg` assertions across approved documents, all 15 ADRs, plan, and STAGE 1 report | PASS on 2026-09-03; Maksym Kurlukov recorded as owner/approver | 1 |
+| PSS-FREEZE-001 | exact questions, labels, reverse scoring, and 10/20/21/26/27/50 vectors through actual frontend code | `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` | PASS on 2026-09-03 | 2 |
+| PSS-FREEZE-002 | endpoint scores/categories, payload, validation/upstream errors, and template instance IDs through actual PHP | XAMPP PHP `lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php` | PASS on 2026-09-03 | 2 |
+| PSS-FREEZE-003 | deliberate endpoint/reverse/payload mutations are detected | frontend characterization child runs; 13 mutation guards | PASS on 2026-09-03 | 2 |
+| PSS-FREEZE-004 | legacy Apps Script behavior remains green | `node lifemetrics-questionnaires/tests/backend-logic.test.js` | PASS on 2026-09-03 | 2 |
+| PSS-FREEZE-005 | original ten-file plugin baseline remains byte-identical | explicit original-file manifest piped through `shasum -a 256` | PASS on 2026-09-03; `5206e7a4...d3cdb9` | 2 |
+| PSS-FREEZE-006 | forbidden frontend globals/Google URL/WordPress path and final diff | `rg` static scan; `git diff --check` | PASS on 2026-09-03 | 2 |
 
 ## Static architecture tests
 
 | ID | Requirement | Planned stage | Current result |
 |---|---|---:|---|
 | STATIC-001 | all PHP files lint on PHP 7.4 and 8.2 | 3+ | NOT_RUN |
-| STATIC-002 | all JS and Apps Script parse | 2+ | partial baseline only |
+| STATIC-002 | all JS and Apps Script parse | 2+ | PASS for current legacy/test JS and VM-parsed Apps Script in STAGE 2 |
 | STATIC-003 | registry paths are explicit and within plugin | 3 | NOT_RUN |
 | STATIC-004 | no visitor-derived include path/directory traversal | 3 | NOT_RUN |
 | STATIC-005 | no frontend `script.google.com` | every source stage | baseline PASS |
@@ -60,7 +66,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STATIC-011 | CSS scoped under shared questionnaire root | 5+ | NOT_RUN |
 | STATIC-012 | assets/icons are not copied per questionnaire | 5+ | NOT_RUN |
 | STATIC-013 | no credential/secret committed | every stage | manual/static review required |
-| STATIC-014 | tracked standalone files unchanged | every migration stage | PASS through STAGE 1 start |
+| STATIC-014 | tracked standalone files unchanged | every migration stage | PASS through STAGE 2 |
 
 ## Unit scoring tests
 

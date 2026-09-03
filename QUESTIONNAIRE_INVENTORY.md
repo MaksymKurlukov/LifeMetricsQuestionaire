@@ -40,7 +40,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 
 | ID | Content | Scoring | Safety | N/A | Guardrail/attention | CTA | Implementation | Approval/blocker |
 |---|---|---|---|---|---|---|---|---|
-| `pss10` | existing plugin/standalone behavior; no separate questionnaire PDF found | freeze current 1-5, reverse Q4/Q5/Q7/Q8, 10-50, boundaries 20/21/26/27 | none | none | none | existing non-navigating stubs | `BLOCKED_BY_BEHAVIOR_FREEZE` | STAGE 2 characterization; licensing/attribution owner/date pending |
+| `pss10` | existing plugin/standalone behavior; no separate questionnaire PDF found | executable freeze complete: 1-5, reverse Q4/Q5/Q7/Q8, 10-50, boundaries 20/21/26/27 | none | none | none | existing non-navigating stubs | `BLOCKED_BY_APPROVAL` | approve observed STAGE 2 baseline; licensing/attribution owner/date remains pending for migration/release |
 | `activite-physique` | `CONTENT_READY` | ranges defined, but source requires synthetic validation/pilot | none | none | none | VitaScan | `BLOCKED_BY_SCORING` | confirm AP04 duplicate 4-point mapping; run/approve profiles; owner/date/URL pending |
 | `sommeil` | `CONTENT_READY` | model/ranges defined; completed synthetic validation evidence absent | SLSF01-SLSF03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | scoring profiles/boundaries plus owner/date/URL pending |
 | `hydratation` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation | HYSF01-HYSF03 | HY05 | weakest dimensions; no category guardrail | VitaScan | `BLOCKED_BY_APPROVAL` | source owner/date and final CTA URL pending |
@@ -59,6 +59,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 - Plugin baseline source manifest: `5206e7a4a4fff67661e21d2761fd3b2ea94f1a435f05bcd65376b844a6d3cdb9` in `STAGE_REPORTS/STAGE-00.md`.
 - Current code is the behavior source until a separately approved legal/content source is recorded.
 - Stored and displayed category labels are not identical; migration must preserve this before any later UX/content decision.
+- STAGE 2 golden fixtures and mutation guards are executable; explicit baseline acceptance is pending.
 
 ### Activité physique
 
