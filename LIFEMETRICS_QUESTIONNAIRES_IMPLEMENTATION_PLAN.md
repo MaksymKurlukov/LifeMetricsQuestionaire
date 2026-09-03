@@ -10,9 +10,9 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_NOT_STARTED`
+Current overall status: `STAGE_0_PASS / STAGE_1_BLOCKED_BY_APPROVAL`
 
-Next executable stage: `STAGE 1 - Architecture contracts and persistent documentation`
+Next executable stage: `STAGE 1 - Contract/ADR approval completion`
 
 ## Status vocabulary
 
@@ -632,7 +632,7 @@ Readiness below is evidence-based from the PDFs, not an approval claim:
 | `hydratation` | `Score_LifeMetrics_Hydratation_V1.pdf` | `CONTENT_READY` (document de travail) | `SCORING_READY` based on documented synthetic validation | HYSF01-03 | HY05 | none | VitaScan | `BLOCKED_BY_APPROVAL` | explicit content-owner approval and destination URL |
 | `nutrition` | `Score_LifeMetrics_Nutrition_V1.pdf` | `CONTENT_READY` (document de travail) | scoring specified; no completed synthetic-validation section | NTSF01-03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | synthetic scoring/boundary approval; content-owner approval |
 | `fatigue-recuperation` | `Score_LifeMetrics_Fatigue_Recuperation_V1.pdf` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation and retained ranges | FRSF01-03 | none | dimension attention only | VitaScan + Metabolism Analytics | `BLOCKED_BY_APPROVAL` | explicit content-owner approval and CTA destination |
-| `sedentarite` | `Score_LifeMetrics_Sedentarite_V1.pdf` | `CONTENT_READY` (`Document LifeMetrics`) | `SCORING_READY`; profiles A-F and mandatory D1 guardrail documented | none | SD07, SD08 | D1 <= 2/8 caps display at `SEDENTARITE_A_REDUIRE` | VitaScan + Metabolism Analytics | `IMPLEMENTATION_READY` | confirm final CTA URL and formal stage approval; still not production-ready |
+| `sedentarite` | `Score_LifeMetrics_Sedentarite_V1.pdf` | `CONTENT_READY` (`Document LifeMetrics`) | `SCORING_READY`; profiles A-F and mandatory D1 guardrail documented | none | SD07, SD08 | D1 <= 2/8 caps display at `SEDENTARITE_A_REDUIRE` | VitaScan + Metabolism Analytics | `BLOCKED_BY_APPROVAL` | confirm approved source, final CTA URL, and formal stage approval; still not production-ready |
 | `pieds-confort-postural` | `Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf` | `CONTENT_READY` | categories explicitly provisional; PF09-PF10 guardrail undecided | PFSF01-04 | none | unresolved | Podos360 | `BLOCKED_BY_SCORING` | synthetic profiles A-F; guardrail decision; approve ranges/content |
 | `stress-equilibre` | no source found | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | complete approved specification missing |
 | `composition-corporelle` | no source found | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | complete approved specification missing |
@@ -805,7 +805,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 1 - Architecture contracts and persistent documentation
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `BLOCKED` on 2026-09-03 after documentation completion. Proposed contracts, inventory, test matrix, ADRs, changelog, and evidence are in the root project documents and `STAGE_REPORTS/STAGE-01.md`. Runtime source is unchanged. Remaining acceptance gate: explicit user approval of the contracts/DEC-001 through DEC-015 and assignment or acceptance of decision ownership.
 - **Objective:** turn sections 3-9 into versioned contracts before implementation.
 - **Prerequisites:** STAGE 0 PASS.
 - **Files allowed to change:** `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, `DECISIONS.md`, `CHANGELOG.md`, this plan.
@@ -976,7 +976,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 ## STAGE 11 - First proprietary questionnaire: Sédentarité
 
 - **Status:** `NOT_STARTED`.
-- **Objective:** prove N/A, normalized dimensions, weakest output, and category guardrail using the most implementation-ready proprietary specification.
+- **Objective:** prove N/A, normalized dimensions, weakest output, and category guardrail using the most technically complete proprietary specification after approval.
 - **Prerequisites:** STAGE 10 PASS; PDF hash and owner approval recorded; CTA URLs supplied.
 - **Files allowed to change:** `questionnaires/sedentarite/questionnaire.php`, its scoring fixture/test, registry, inventory/changelog/test matrix.
 - **Files forbidden to change:** shared engine unless a contract bug is first demonstrated; PSS config; other questionnaire content; PDF; standalone.
@@ -1320,8 +1320,8 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 # 20. Next action
 
-Execute exactly one next stage in a separate run:
+Complete exactly the remaining approval gate in a separate run:
 
 `STAGE 1 - Architecture contracts and persistent documentation`
 
-Do not begin STAGE 2 or modify runtime behavior in that documentation stage. STAGE 0 passed on 2026-09-03; its evidence and baseline source manifest are recorded in `STAGE_REPORTS/STAGE-00.md`.
+Review and explicitly approve, reject, or amend the proposed contracts and DEC-001 through DEC-015, and identify or accept decision ownership. Do not begin STAGE 2 until STAGE 1 is marked PASS. No runtime behavior was changed while preparing the STAGE 1 documents.
