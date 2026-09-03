@@ -8,7 +8,7 @@ DATE = 2026-09-03
 
 BASE_COMMIT = `f9d27ab`
 
-CHECKPOINT_COMMIT = `81a49ec` (`docs: propose questionnaire platform contracts`); approval closure checkpoint pending.
+CHECKPOINT_COMMIT = `bad393a` (`docs: approve questionnaire platform contracts`); proposal checkpoint: `81a49ec`.
 
 OBJECTIVE = Convert the implementation plan's proposed architecture, schema/scoring/payload, inventory, test, and decision direction into auditable persistent contracts without modifying runtime behavior.
 
@@ -87,7 +87,7 @@ NONE for STAGE 1. Questionnaire-specific gates remain in their planned stages.
 
 ## Rollback
 
-Revert the STAGE 1 documentation commits newest-first with focused `git revert` commits. Do not reset/clean broad paths and do not alter STAGE 0 or user commit `f9d27ab`.
+Revert the STAGE 1 approval metadata commit, then `bad393a`, followed by earlier STAGE 1 documentation commits only if the contracts themselves must also be removed. Use focused `git revert` commits; do not reset/clean broad paths or alter STAGE 0/user commit `f9d27ab`.
 
 ## User action required
 
