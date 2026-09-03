@@ -8,7 +8,7 @@ DATE = 2026-09-03
 
 BASE_COMMIT = `9e96bcc`
 
-CHECKPOINT_COMMIT = Pending focused test checkpoint. Its exact ID will be recorded in a metadata-only follow-up.
+CHECKPOINT_COMMIT = `9ae9560` (`test: freeze current PSS10 behavior`)
 
 OBJECTIVE = Create an executable characterization harness for the current PSS10 WordPress plugin without changing runtime behavior.
 
@@ -92,7 +92,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 
 ## Rollback
 
-Revert the STAGE 2 test checkpoint and its metadata-only follow-up with focused `git revert` commits. Do not alter runtime, STAGE 0-1, user metadata, or standalone source.
+Revert the STAGE 2 metadata-only follow-up, then `9ae9560`, with focused `git revert` commits. Do not alter runtime, STAGE 0-1, user metadata, or standalone source.
 
 ## User action required
 
