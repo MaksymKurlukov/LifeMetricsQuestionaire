@@ -8,7 +8,7 @@ DATE = 2026-09-04
 
 BASE_COMMIT = `9e96bcc`
 
-CHECKPOINT_COMMIT = `9ae9560` (`test: freeze current PSS10 behavior`); approval closure checkpoint pending.
+CHECKPOINT_COMMIT = `9ae9560` (`test: freeze current PSS10 behavior`); approval closure: `9a768e8` (`docs: approve PSS10 migration baseline`).
 
 OBJECTIVE = Create an executable characterization harness for the current PSS10 WordPress plugin without changing runtime behavior.
 
@@ -95,7 +95,7 @@ NONE for STAGE 2. Later production/legal/UX approvals remain separate gates.
 
 ## Rollback
 
-Revert the STAGE 2 approval-closure documentation commit, then `9ae9560` only if the characterization harness must also be removed. Use focused `git revert` commits; do not alter runtime, STAGE 0-1, user metadata, or standalone source.
+Revert the metadata-only follow-up, then `9a768e8`; revert `9ae9560` only if the characterization harness must also be removed. Use focused `git revert` commits; do not alter runtime, STAGE 0-1, user metadata, or standalone source.
 
 ## User action required
 
