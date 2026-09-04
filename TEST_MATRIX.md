@@ -48,6 +48,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | PSS-FREEZE-004 | legacy Apps Script behavior remains green | `node lifemetrics-questionnaires/tests/backend-logic.test.js` | PASS on 2026-09-03 | 2 |
 | PSS-FREEZE-005 | original ten-file plugin baseline remains byte-identical | explicit original-file manifest piped through `shasum -a 256` | PASS on 2026-09-03; `5206e7a4...d3cdb9` | 2 |
 | PSS-FREEZE-006 | forbidden frontend globals/Google URL/WordPress path and final diff | `rg` static scan; `git diff --check` | PASS on 2026-09-03 | 2 |
+| PSS-FREEZE-007 | project-owner acceptance of observed migration baseline | approval record in `STAGE_REPORTS/STAGE-02.md`; scope cross-check against plan/inventory | PASS on 2026-09-04; migration/regression only | 2 |
 
 ## Static architecture tests
 

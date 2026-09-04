@@ -10,9 +10,9 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_BLOCKED_BY_APPROVAL`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS`
 
-Next executable stage: `STAGE 2 - PSS10 frozen-baseline approval completion`
+Next executable stage: `STAGE 3 - Generic PHP infrastructure in parallel`
 
 ## Status vocabulary
 
@@ -626,7 +626,7 @@ Readiness below is evidence-based from the PDFs, not an approval claim:
 
 | questionnaire_id | document/source | content_status | scoring_status | safety | N/A | guardrail | CTA | implementation_status | blockers |
 |---|---|---|---|---|---|---|---|---|---|
-| `pss10` | current plugin + tracked standalone; no local questionnaire PDF found | existing behavior to freeze | existing 1-5/reverse/10-50 behavior to freeze | none | none | none | current stub buttons | `BLOCKED_BY_BASELINE_FREEZE` | no plugin Git baseline; licensing/content approval must be recorded |
+| `pss10` | current plugin + tracked standalone; no local questionnaire PDF found | legacy behavior frozen for structural migration | executable 1-5/reverse/10-50 baseline approved on 2026-09-04 | none | none | none | current stub buttons approved only as legacy baseline | `BLOCKED_BY_APPROVAL` | licensing/attribution and any production UX/content/CTA approval remain pending for their planned stages |
 | `activite-physique` | `Score_LifeMetrics_Activite_Physique_V1.pdf` | `CONTENT_READY` (document de travail) | ranges specified, but PDF explicitly requires synthetic validation/pilot | none | none | none | VitaScan | `BLOCKED_BY_SCORING` | run/approve synthetic profiles; content-owner approval |
 | `sommeil` | `Score_LifeMetrics_Sommeil_V1.pdf` | `CONTENT_READY` (document de travail) | scoring/dimensions specified; no completed synthetic-validation evidence in document | SLSF01-03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | synthetic boundary/profile approval; content-owner approval |
 | `hydratation` | `Score_LifeMetrics_Hydratation_V1.pdf` | `CONTENT_READY` (document de travail) | `SCORING_READY` based on documented synthetic validation | HYSF01-03 | HY05 | none | VitaScan | `BLOCKED_BY_APPROVAL` | explicit content-owner approval and destination URL |
@@ -822,7 +822,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 2 - Freeze PSS10 behavior with tests
 
-- **Status:** `BLOCKED` on 2026-09-03 after implementation. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Remaining gate: Maksym Kurlukov must explicitly accept the observed legacy behavior as the migration baseline, including stored/displayed label differences and non-navigating CTA buttons.
+- **Status:** `PASS` on 2026-09-04. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Maksym Kurlukov explicitly accepted the captured legacy behavior as the structural-migration/regression baseline, without granting permanent production approval to legacy UX, content, CTA, licensing, or attribution choices.
 - **Objective:** create an executable characterization harness without modifying behavior.
 - **Prerequisites:** STAGE 1 PASS.
 - **Files allowed to change:** plugin `tests/`, test-only scripts/fixtures, test documentation.
@@ -833,8 +833,8 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **PASS/FAIL:** PASS with deterministic green harness and documented untestable runtime gaps; FAIL if tests require source behavior changes or cannot detect scoring drift.
 - **Rollback criteria:** remove only new test files/fixtures.
 - **Expected deliverables:** PSS10 golden fixture, test runner instructions, freeze report.
-- **Blockers:** browser/WordPress screenshots wait for STAGE 8; mark them pending, not falsely passed.
-- **User action required:** approve observed behavior as the migration baseline, including label inconsistencies and CTA stubs.
+- **Blockers:** none for STAGE 2. Browser/WordPress screenshots remain explicitly deferred to STAGES 8-9.
+- **User action required:** none for STAGE 2.
 - **Recommended commit checkpoint:** `test: freeze current PSS10 behavior`.
 
 ## STAGE 3 - Generic PHP infrastructure in parallel
@@ -1320,8 +1320,8 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 # 20. Next action
 
-Complete exactly the remaining approval gate in a separate run:
+Execute exactly one next stage in a separate run:
 
-`STAGE 2 - PSS10 frozen-baseline approval completion`
+`STAGE 3 - Generic PHP infrastructure in parallel`
 
-Review and explicitly accept or reject the observed PSS10 behavior recorded in `STAGE_REPORTS/STAGE-02.md` and `lifemetrics-questionnaires/tests/fixtures/pss10-golden-v1.json`. Do not begin STAGE 3 until STAGE 2 is marked PASS. No runtime behavior changed while creating the STAGE 2 harness.
+STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.

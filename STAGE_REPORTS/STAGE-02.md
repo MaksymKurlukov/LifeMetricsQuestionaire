@@ -2,13 +2,13 @@
 
 STAGE = STAGE 2
 
-STATUS = BLOCKED
+STATUS = PASS
 
-DATE = 2026-09-03
+DATE = 2026-09-04
 
 BASE_COMMIT = `9e96bcc`
 
-CHECKPOINT_COMMIT = `9ae9560` (`test: freeze current PSS10 behavior`)
+CHECKPOINT_COMMIT = `9ae9560` (`test: freeze current PSS10 behavior`); approval closure checkpoint pending.
 
 OBJECTIVE = Create an executable characterization harness for the current PSS10 WordPress plugin without changing runtime behavior.
 
@@ -36,6 +36,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 
 - The branch was clean at `9e96bcc`; its two STAGE 1 commits ahead of origin were preserved.
 - Existing plugin runtime, legacy test, standalone source, `.DS_Store`, PDFs, backend deployment, and environment were not edited.
+- The approval-closure run found task-aligned changes in the five explicitly authorized state documents plus an unrelated `.DS_Store` modification. The state changes were reviewed and completed; `.DS_Store` is preserved and excluded from the checkpoint.
 
 ## Implementation summary
 
@@ -47,6 +48,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 - Rendered the actual template twice in the PHP harness to verify isolated root, gradient, and modal identifiers plus the same-origin route shape.
 - Preserved the existing discrepancy: stored categories use `Stress assez élevé`/`Stress très élevé`, while displayed badges use `Stress modéré`/`Stress élevé`.
 - Preserved the two result CTA buttons as non-navigating stubs.
+- Maksym Kurlukov explicitly accepted all captured behavior as the structural-migration/regression baseline on 2026-09-04. This does not permanently approve legacy UX, wording, CTA behavior, licensing, or attribution for production.
 - Did not create generic runtime infrastructure or begin STAGE 3.
 
 ## Tests run
@@ -65,6 +67,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 | frontend scan for direct Google URL, `document.getElementById`, `window.PSS_*`, and `/wp-content/` | PASS |
 | explicit original ten-file manifest and `git diff` against forbidden runtime/standalone paths | PASS; digest `5206e7a4a4fff67661e21d2761fd3b2ea94f1a435f05bcd65376b844a6d3cdb9` |
 | `git diff --check` and manual final diff review | PASS |
+| approval-scope consistency across plan, inventory, test matrix, changelog, and this report | PASS; migration/regression-only acceptance recorded |
 
 ## Tests skipped
 
@@ -78,7 +81,7 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 - [x] Deliberate changes to every score clamp/category boundary, reverse question, and payload field group cause a test failure.
 - [x] Runtime, standalone, backend, and environment remain unchanged.
 - [x] Runtime-only gaps are explicitly deferred rather than falsely passed.
-- [ ] Maksym Kurlukov explicitly accepts the observed behavior as the structural migration baseline.
+- [x] Maksym Kurlukov explicitly accepted the observed behavior as the structural migration baseline on 2026-09-04.
 
 ## Known risks
 
@@ -88,16 +91,16 @@ PRE_EXISTING_CHANGES_PRESERVED = YES
 
 ## Blockers
 
-- Explicit user acceptance of the observed PSS10 migration baseline, including the stored/displayed category-label differences and non-navigating CTA buttons.
+NONE for STAGE 2. Later production/legal/UX approvals remain separate gates.
 
 ## Rollback
 
-Revert the STAGE 2 metadata-only follow-up, then `9ae9560`, with focused `git revert` commits. Do not alter runtime, STAGE 0-1, user metadata, or standalone source.
+Revert the STAGE 2 approval-closure documentation commit, then `9ae9560` only if the characterization harness must also be removed. Use focused `git revert` commits; do not alter runtime, STAGE 0-1, user metadata, or standalone source.
 
 ## User action required
 
-Approve or reject the observed PSS10 behavior as the migration baseline: exact questions/answers, Q4/Q5/Q7/Q8 reversal, 10-50 score, 20/21/26/27 category boundaries, stored/displayed label differences, request/payload behavior, 400 ms auto-next, current errors, attribution links, and non-navigating result CTA buttons.
+NONE for STAGE 2.
 
-NEXT_STAGE_PROPOSED = `STAGE 2 - PSS10 frozen-baseline approval completion`; after STAGE 2 PASS, `STAGE 3 - Generic PHP infrastructure in parallel`.
+NEXT_STAGE_PROPOSED = `STAGE 3 - Generic PHP infrastructure in parallel`.
 
 NEXT_STAGE_STARTED = NO
