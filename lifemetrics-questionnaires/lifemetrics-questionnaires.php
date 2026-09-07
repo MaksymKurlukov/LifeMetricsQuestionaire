@@ -213,7 +213,7 @@ function lmq_pss10_submit(WP_REST_Request $request)
             'headers' => array('Content-Type' => 'application/json; charset=utf-8'),
             'body' => wp_json_encode($payload),
             'timeout' => 15,
-            'redirection' => 5,
+            'redirection' => 0,
             'data_format' => 'body',
         )
     );
@@ -227,97 +227,48 @@ function lmq_pss10_submit(WP_REST_Request $request)
     }
 
     $status = wp_remote_retrieve_response_code($response);
-    $response_body = wp_remote_retrieve_body($response);
-    $backend = json_decode($response_body, true);
 
-    // LMQ_PSS10_UPSTREAM_DIAGNOSTIC: temporary; remove after one production test.
-    $location = function_exists('wp_remote_retrieve_header')
-        ? wp_remote_retrieve_header($response, 'location')
-        : '';
-    $content_type = function_exists('wp_remote_retrieve_header')
-        ? wp_remote_retrieve_header($response, 'content-type')
-        : '';
-    $location_host = is_scalar($location)
-        ? parse_url((string) $location, PHP_URL_HOST)
-        : '';
-    $response_message = function_exists('wp_remote_retrieve_response_message')
-        ? wp_remote_retrieve_response_message($response)
-        : '';
-    $diagnostic = array(
-        'status' => $status,
-        'response_message' => is_scalar($response_message) ? (string) $response_message : '',
-        'location_host' => is_string($location_host) ? $location_host : '',
-        'content_type' => is_scalar($content_type) ? (string) $content_type : '',
-        'body_length' => strlen($response_body),
-        'body_sha256' => hash('sha256', $response_body),
-    );
-    $lower_body = strtolower($response_body);
-    $html_fingerprints = array();
-    $known_html_markers = array(
-        'bad_request' => array('bad request', 'error 400'),
-        'malformed_request' => array('malformed', 'invalid request'),
-        'access_denied' => array('access denied', 'permission denied'),
-        'sign_in_required' => array('sign in', 'accounts.google.com'),
-        'file_unavailable' => array('unable to open the file', 'file you have requested does not exist'),
-        'google_error_page' => array('google', 'error 400'),
-    );
-    foreach ($known_html_markers as $label => $markers) {
-        foreach ($markers as $marker) {
-            if (strpos($lower_body, $marker) !== false) {
-                $html_fingerprints[] = $label;
-                break;
-            }
-        }
-    }
-    $diagnostic['html_fingerprints'] = $html_fingerprints;
-
-    $redirect_chain = array();
-    if (
-        isset($response['http_response']) &&
-        is_object($response['http_response']) &&
-        method_exists($response['http_response'], 'get_response_object')
-    ) {
-        $response_object = $response['http_response']->get_response_object();
-        $history = isset($response_object->history) && is_array($response_object->history)
-            ? $response_object->history
-            : array();
-        $history[] = $response_object;
-        foreach ($history as $history_response) {
-            $history_url = isset($history_response->url) ? $history_response->url : '';
-            $history_host = is_string($history_url) ? parse_url($history_url, PHP_URL_HOST) : '';
-            $redirect_chain[] = array(
-                'status' => isset($history_response->status_code) ? (int) $history_response->status_code : 0,
-                'host' => is_string($history_host) ? $history_host : '',
+    if ($status === 302) {
+        $location = wp_remote_retrieve_header($response, 'location');
+        $redirect = is_string($location) ? parse_url($location) : false;
+        if (
+            !is_array($redirect) ||
+            !isset($redirect['scheme'], $redirect['host']) ||
+            strtolower($redirect['scheme']) !== 'https' ||
+            strtolower($redirect['host']) !== 'script.googleusercontent.com' ||
+            isset($redirect['user']) ||
+            isset($redirect['pass']) ||
+            isset($redirect['port'])
+        ) {
+            return new WP_Error(
+                'lmq_upstream_http_error',
+                'Questionnaire storage returned an error.',
+                array('status' => 502)
             );
         }
-    }
-    $diagnostic['redirect_chain'] = $redirect_chain;
-    $safe_keys = array('ok', 'duplicate', 'code', 'error');
-    $safe_strings = array(
-        'validation_error', 'rate_limited', 'lock_timeout', 'internal_error',
-        'Missing JSON body', 'Invalid JSON body', 'JSON body must be an object',
-        'Invalid session_id', 'Invalid created_at', 'Invalid category',
-        'q1..q10 must be integers from 1 to 5',
-        'final_score must equal sum(q1..q10) and be between 10 and 50',
-        'Too many requests', 'Storage is busy', 'Internal storage error',
-        'Unauthorized', 'Duplicate session_id',
-    );
-    $safe_body = is_array($backend);
-    if ($safe_body) {
-        foreach ($backend as $key => $value) {
-            if (
-                !in_array($key, $safe_keys, true) ||
-                (!is_bool($value) && $value !== null && !in_array($value, $safe_strings, true))
-            ) {
-                $safe_body = false;
-                break;
-            }
+
+        $response = wp_remote_get(
+            $location,
+            array(
+                'timeout' => 15,
+                'redirection' => 0,
+                'sslverify' => true,
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return new WP_Error(
+                'lmq_upstream_network_error',
+                'Questionnaire storage is temporarily unavailable.',
+                array('status' => 502)
+            );
         }
+
+        $status = wp_remote_retrieve_response_code($response);
     }
-    if ($safe_body) {
-        $diagnostic['body_preview'] = substr($response_body, 0, 300);
-    }
-    error_log('LMQ_PSS10_UPSTREAM_DIAGNOSTIC ' . wp_json_encode($diagnostic));
+
+    $response_body = wp_remote_retrieve_body($response);
+    $backend = json_decode($response_body, true);
 
     if ($status < 200 || $status >= 300) {
         return new WP_Error(

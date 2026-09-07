@@ -55,10 +55,17 @@ function rest_ensure_response($value) { return $value; }
 function wp_json_encode($value) { return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); }
 function wp_remote_retrieve_response_code($response) { return $response['status']; }
 function wp_remote_retrieve_body($response) { return $response['body']; }
+function wp_remote_retrieve_header($response, $header) { return isset($response['headers'][$header]) ? $response['headers'][$header] : ''; }
 function wp_remote_post($url, $args)
 {
     $GLOBALS['lmq_last_remote_request'] = array('url' => $url, 'args' => $args);
+    $GLOBALS['lmq_remote_requests'][] = array('method' => 'POST', 'url' => $url, 'args' => $args);
     return $GLOBALS['lmq_remote_response'];
+}
+function wp_remote_get($url, $args)
+{
+    $GLOBALS['lmq_remote_requests'][] = array('method' => 'GET', 'url' => $url, 'args' => $args);
+    return $GLOBALS['lmq_remote_get_response'];
 }
 
 require __DIR__ . '/../lifemetrics-questionnaires.php';
@@ -74,6 +81,7 @@ function expect_same($expected, $actual, $label)
 function submit_pss10($input, $jsonContentType = true, $body = null)
 {
     $GLOBALS['lmq_last_remote_request'] = null;
+    $GLOBALS['lmq_remote_requests'] = array();
     return lmq_pss10_submit(new WP_REST_Request($input, $jsonContentType, $body));
 }
 
@@ -89,6 +97,7 @@ expect_same(true, is_array($golden), 'golden fixture parses');
 expect_same(true, is_array($contract), 'backend fixture parses');
 
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":false}');
+$GLOBALS['lmq_remote_get_response'] = null;
 
 foreach ($golden['vectors'] as $vector) {
     $request = array(
@@ -111,6 +120,7 @@ foreach ($golden['vectors'] as $vector) {
 $response = submit_pss10($contract['request']);
 expect_same($contract['success_response'], $response, 'success response snapshot');
 expect_same($contract['forwarded'], json_decode($GLOBALS['lmq_last_remote_request']['args']['body'], true), 'forwarded payload snapshot');
+expect_same(0, $GLOBALS['lmq_last_remote_request']['args']['redirection'], 'initial POST disables redirects');
 
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":true}');
 expect_same($contract['duplicate_response'], submit_pss10($contract['request']), 'duplicate response snapshot');
@@ -142,6 +152,60 @@ $GLOBALS['lmq_remote_response'] = array('status' => 500, 'body' => '{"ok":false}
 expect_error_code($contract['upstream_errors']['http'], submit_pss10($contract['request']), 'upstream HTTP');
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":false}');
 expect_error_code($contract['upstream_errors']['rejected'], submit_pss10($contract['request']), 'upstream rejection');
+
+$redirectUrl = 'https://script.googleusercontent.com/macros/echo?user_content_key=one-time';
+$GLOBALS['lmq_remote_response'] = array(
+    'status' => 302,
+    'body' => '',
+    'headers' => array('location' => $redirectUrl),
+);
+$GLOBALS['lmq_remote_get_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":false}');
+expect_same($contract['success_response'], submit_pss10($contract['request']), 'explicit ContentService redirect success');
+expect_same(2, count($GLOBALS['lmq_remote_requests']), 'one POST and one GET');
+expect_same('POST', $GLOBALS['lmq_remote_requests'][0]['method'], 'initial request method');
+expect_same(0, $GLOBALS['lmq_remote_requests'][0]['args']['redirection'], 'initial request does not auto-follow');
+expect_same('GET', $GLOBALS['lmq_remote_requests'][1]['method'], 'redirect request method');
+expect_same($redirectUrl, $GLOBALS['lmq_remote_requests'][1]['url'], 'redirect URL');
+expect_same(0, $GLOBALS['lmq_remote_requests'][1]['args']['redirection'], 'second redirect disabled');
+expect_same(true, $GLOBALS['lmq_remote_requests'][1]['args']['sslverify'], 'redirect SSL verification');
+expect_same(false, array_key_exists('body', $GLOBALS['lmq_remote_requests'][1]['args']), 'redirect has no body');
+expect_same(false, array_key_exists('headers', $GLOBALS['lmq_remote_requests'][1]['args']), 'redirect forwards no headers');
+expect_same(false, array_key_exists('cookies', $GLOBALS['lmq_remote_requests'][1]['args']), 'redirect forwards no cookies');
+
+$invalidRedirects = array(
+    'missing Location' => '',
+    'HTTP Location' => 'http://script.googleusercontent.com/macros/echo?token=x',
+    'untrusted Location' => 'https://example.test/macros/echo?token=x',
+);
+foreach ($invalidRedirects as $label => $location) {
+    $GLOBALS['lmq_remote_response'] = array(
+        'status' => 302,
+        'body' => '',
+        'headers' => array('location' => $location),
+    );
+    expect_error_code($contract['upstream_errors']['http'], submit_pss10($contract['request']), $label);
+    expect_same(1, count($GLOBALS['lmq_remote_requests']), $label . ' does not follow');
+}
+
+$GLOBALS['lmq_remote_response'] = array('status' => 302, 'body' => '', 'headers' => array('location' => $redirectUrl));
+$GLOBALS['lmq_remote_get_response'] = array(
+    'status' => 302,
+    'body' => '',
+    'headers' => array('location' => 'https://script.googleusercontent.com/second'),
+);
+expect_error_code($contract['upstream_errors']['http'], submit_pss10($contract['request']), 'second redirect');
+expect_same(2, count($GLOBALS['lmq_remote_requests']), 'second redirect is not followed');
+
+$GLOBALS['lmq_remote_get_response'] = array('status' => 400, 'body' => '<html>Bad Request</html>');
+expect_error_code($contract['upstream_errors']['http'], submit_pss10($contract['request']), 'redirect final HTTP error');
+$GLOBALS['lmq_remote_get_response'] = array('status' => 200, 'body' => '<html>not JSON</html>');
+expect_error_code($contract['upstream_errors']['rejected'], submit_pss10($contract['request']), 'redirect malformed JSON');
+$GLOBALS['lmq_remote_get_response'] = array('status' => 200, 'body' => '{"ok":false}');
+expect_error_code($contract['upstream_errors']['rejected'], submit_pss10($contract['request']), 'redirect rejected');
+$GLOBALS['lmq_remote_get_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":true}');
+expect_same($contract['duplicate_response'], submit_pss10($contract['request']), 'redirect duplicate response');
+$GLOBALS['lmq_remote_get_response'] = new WP_Error('network');
+expect_error_code($contract['upstream_errors']['network'], submit_pss10($contract['request']), 'redirect network error');
 
 function render_pss10_template($instanceId)
 {
