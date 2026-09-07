@@ -197,8 +197,9 @@ function runCharacterization(mutationName) {
   assert.match(template, /<button type="button" class="btn btn--secondary">Contacter un praticien certifié<\/button>/);
   assert.ok(css.includes('.lmq-pss10'));
   assert.match(css, /--color-bg: #faf8f5;/);
-  assert.match(css, /\.lmq-pss10 \{[\s\S]*?position: relative;[\s\S]*?isolation: isolate;[\s\S]*?width: 100%;/);
-  assert.match(css, /\.lmq-pss10::before \{[\s\S]*?position: absolute;[\s\S]*?inset: 0;[\s\S]*?background: var\(--color-bg\);[\s\S]*?box-shadow: 0 0 0 100vmax var\(--color-bg\);[\s\S]*?clip-path: inset\(0 -100vmax\);[\s\S]*?pointer-events: none;/);
+  assert.match(css, /\.lmq-pss10 \{[\s\S]*?position: relative;[\s\S]*?left: 50%;[\s\S]*?margin-left: -50vw;[\s\S]*?background: var\(--color-bg\);[\s\S]*?width: 100vw;[\s\S]*?max-width: 100vw;/);
+  assert.ok(!css.includes('.lmq-pss10::before'));
+  assert.ok(!css.includes('100vmax'));
   assert.match(css, /\.lmq-pss10 \.app \{[\s\S]*?max-width: var\(--max-width\);[\s\S]*?width: 100%;/);
   assert.ok(css.includes('.lmq-pss10 .lmq-dialog'));
   assert.ok(!css.includes('.lmq-pss10 .modal {'));
@@ -206,7 +207,7 @@ function runCharacterization(mutationName) {
   assert.match(css, /\.lmq-pss10 \.btn--secondary:focus:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
   assert.match(css, /\.lmq-pss10 \.btn--secondary:active:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
   assert.match(css, /\.lmq-pss10 \.result-actions \.btn \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/);
-  assert.match(css, /\.lmq-pss10 \.modal-close \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;[\s\S]*?width: 100%;/);
+  assert.match(css, /\.lmq-pss10 \.lmq-dialog > \.modal-close \{[\s\S]*?display: flex !important;[\s\S]*?align-items: center !important;[\s\S]*?justify-content: center !important;[\s\S]*?text-align: center !important;[\s\S]*?width: 100%;/);
 }
 
 const requestedMutation = process.env.LMQ_MUTATION || '';
