@@ -823,6 +823,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 ## STAGE 2 - Freeze PSS10 behavior with tests
 
 - **Status:** `PASS` on 2026-09-04. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Maksym Kurlukov explicitly accepted the captured legacy behavior as the structural-migration/regression baseline, without granting permanent production approval to legacy UX, content, CTA, licensing, or attribution choices.
+- **Later out-of-sequence evidence:** on 2026-09-07, before STAGE 3, the current legacy PSS10 path passed one controlled real-WordPress E2E on `lifemetrics.fr` after fix commit `1e8899c01aa79a0a9a78327f64999fb4c0c9c5c0`; see the addendum in `STAGE_REPORTS/STAGE-02.md`. This does not mark the broader STAGES 8-10 matrices complete.
 - **Objective:** create an executable characterization harness without modifying behavior.
 - **Prerequisites:** STAGE 1 PASS.
 - **Files allowed to change:** plugin `tests/`, test-only scripts/fixtures, test documentation.
@@ -1325,3 +1326,5 @@ Execute exactly one next stage in a separate run:
 `STAGE 3 - Generic PHP infrastructure in parallel`
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
+
+One out-of-sequence real-WordPress PSS10 E2E also passed on 2026-09-07 after the automatic Google ContentService redirect failure was diagnosed and fixed in `1e8899c`. Mobile, multiple-instance, Gutenberg/Elementor, deliberate backend-failure, and explicit duplicate-replay checks remain assigned to their existing later gates and do not block STAGE 3.

@@ -4,7 +4,7 @@ Matrix version: 1.0.0
 
 Status: `APPROVED`
 
-Last updated: 2026-09-03
+Last updated: 2026-09-07
 
 Approved by: Maksym Kurlukov on 2026-09-03.
 
@@ -21,7 +21,8 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | XAMPP PHP | 8.2.4 | available |
 | Shell/Homebrew PHP | 8.4.1 | available, not minimum-runtime evidence |
 | Node.js | 24.7.0 at baseline check | available |
-| WordPress test installation | absent | BLOCKED until STAGE 8 |
+| Local isolated WordPress test installation | absent | BLOCKED until STAGE 8 |
+| Real company WordPress | `lifemetrics.fr`; OVH Web Hosting; PHP 8.2; controlled legacy PSS10 test page | out-of-sequence runtime/E2E evidence recorded on 2026-09-07 |
 | WP-CLI | absent | not required for STAGE 1 |
 | Elementor | unknown/unavailable | deferred |
 | Google sandbox backend | not configured | deferred |
@@ -49,6 +50,19 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | PSS-FREEZE-005 | original ten-file plugin baseline remains byte-identical | explicit original-file manifest piped through `shasum -a 256` | PASS on 2026-09-03; `5206e7a4...d3cdb9` | 2 |
 | PSS-FREEZE-006 | forbidden frontend globals/Google URL/WordPress path and final diff | `rg` static scan; `git diff --check` | PASS on 2026-09-03 | 2 |
 | PSS-FREEZE-007 | project-owner acceptance of observed migration baseline | approval record in `STAGE_REPORTS/STAGE-02.md`; scope cross-check against plan/inventory | PASS on 2026-09-04; migration/regression only | 2 |
+| PSS-REDIRECT-001 | explicit Google ContentService redirect handling | PHP regression: one POST, trusted HTTPS 302 Location, payload-free GET, no second redirect, final response validation | PASS at fix commit `1e8899c` on 2026-09-07 | out-of-sequence |
+
+## Out-of-sequence manual real-WordPress evidence
+
+These results cover the current legacy PSS10 path only. They do not mark the planned generic/migrated STAGES 8-10 test rows complete.
+
+| Evidence | Result | Scope |
+|---|---|---|
+| Install/activate and render shortcode in real LifeMetrics theme | PASS | no activation fatal; CSS/JS/icons and one PSS10 instance loaded |
+| Ten-question runtime flow | PASS | start, 400 ms auto-navigation, Back preservation, progress, result and score |
+| Initial storage with failed acknowledgement | PASS as diagnostic evidence | one Sheet row; REST `lmq_upstream_http_error`/502; automatic redirect chain ended at Google 400 |
+| Fixed end-to-end submission | PASS | one browser submit; REST `{success:true, duplicate:false}`; exactly one Sheet row; frontend no storage error |
+| Mobile, multiple instances, Gutenberg/Elementor, deliberate backend failure, same-session replay | NOT_RUN | remains manual runtime work for existing later gates |
 
 ## Static architecture tests
 

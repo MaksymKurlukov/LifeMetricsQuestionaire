@@ -60,6 +60,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 - Current code is the behavior source until a separately approved legal/content source is recorded.
 - Stored and displayed category labels are not identical; migration must preserve this before any later UX/content decision.
 - STAGE 2 golden fixtures and mutation guards are executable and accepted as the structural-migration/regression baseline by Maksym Kurlukov on 2026-09-04.
+- The current legacy PSS10 path passed one controlled real-WordPress E2E on `lifemetrics.fr` on 2026-09-07 at fix commit `1e8899c`: REST returned `success:true, duplicate:false`, exactly one Sheet row was written, and the frontend confirmed success. This out-of-sequence evidence does not replace the broader migrated WordPress/backend gates in STAGES 8-10.
 - This baseline acceptance does not permanently approve legacy UX/content/legal choices for production; changes to wording, CTA behavior, licensing/attribution, or UX require a separate authorized stage.
 
 ### Activité physique

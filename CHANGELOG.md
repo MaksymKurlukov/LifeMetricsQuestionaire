@@ -12,10 +12,13 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 - Aligned Sédentarité readiness with the lifecycle definition: scoring is complete, but implementation remains blocked until explicit source approval.
 - Added an executable PSS10 characterization harness with golden scoring/payload fixtures, PHP REST/markup checks, and mutation guards; runtime behavior is unchanged.
 - Recorded approval of the captured PSS10 behavior strictly as a structural-migration/regression baseline; production UX/content/CTA/licensing decisions remain separate.
+- Recorded the 2026-09-07 out-of-sequence real-WordPress PSS10 runtime, redirect diagnosis, fix evidence, and successful controlled E2E without advancing the roadmap.
 
 ### Runtime
 
-- No PHP, JavaScript, CSS, template, Apps Script, WordPress, database, or production behavior change.
+- Fixed the confirmed OVH/WordPress automatic ContentService redirect failure in `1e8899c`: the Apps Script payload is POSTed once, the trusted HTTPS Google redirect is followed once with a clean GET, and final success remains strictly verified.
+- Removed the temporary PHI-safe upstream diagnostic logging after confirmation.
+- No questionnaire content, scoring, frontend UX, REST contract, Apps Script, or Sheet schema change.
 
 ## Baseline - 2026-09-03
 

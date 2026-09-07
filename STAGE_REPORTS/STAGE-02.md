@@ -104,3 +104,33 @@ NONE for STAGE 2.
 NEXT_STAGE_PROPOSED = `STAGE 3 - Generic PHP infrastructure in parallel`.
 
 NEXT_STAGE_STARTED = NO
+
+## Out-of-sequence real WordPress evidence - 2026-09-07
+
+This evidence was collected after STAGE 2 had already passed and before STAGE 3 began. It does not change stage sequencing or claim completion of the broader STAGES 8-10 matrices.
+
+Environment: real company WordPress at `lifemetrics.fr`, OVH Web Hosting, PHP 8.2, observed production root `/homez.2167/kapmlks/www`, controlled test page using `[lifemetrics_questionnaire id="pss10"]`.
+
+### Automated/local evidence
+
+- The frozen frontend characterization, PHP/REST characterization, Apps Script smoke test, PHP/JS lint, and redirect regression suite passed after the fix.
+- Fix commit `1e8899c01aa79a0a9a78327f64999fb4c0c9c5c0` sends the payload once by POST, disables automatic redirects, validates the expected HTTPS `script.googleusercontent.com` redirect, follows it once with a clean GET, and still requires final 2xx JSON with `ok=true`.
+- Temporary `LMQ_PSS10_UPSTREAM_DIAGNOSTIC` logging was removed in the fix commit.
+
+### Manual real-WordPress PASS evidence
+
+- Plugin installation and activation completed without a fatal error; the shortcode, CSS, JavaScript, icons, start screen, ten questions, 400 ms auto-navigation, Back answer preservation, progress, result rendering, and score calculation worked in the real LifeMetrics theme.
+- The initial submission wrote one Sheet row but WordPress returned `lmq_upstream_http_error`/502 and the frontend displayed `Le service d'enregistrement est temporairement indisponible.`
+- PHI-safe diagnostics established the failing boundary as `POST script.google.com -> 302 -> automatic redirect handling -> script.googleusercontent.com -> 400 Bad Request`. The exact low-level OVH/WordPress transport mutation was not identified and is not claimed.
+- After installing the fixed build, one controlled submission displayed 30/50 and stored q1-q10, `final_score = 30`, `category = Stress très élevé`, and a session ID in exactly one new Sheet row.
+- Safari showed exactly one submit request; WordPress returned `{ "success": true, "duplicate": false }`; the prior red storage error did not appear. This establishes `PSS10_END_TO_END = PASS` for the tested legacy PSS10 path.
+
+### Manual runtime checks still unverified
+
+- Mobile viewport/manual mobile behavior.
+- Multiple questionnaire instances on one page.
+- Explicit Gutenberg and Elementor editor/public compatibility.
+- Deliberate backend failure behavior in real WordPress.
+- Manual replay of the exact same session ID; exactly one row for the single final request is proven, but duplicate replay is not.
+
+These are not STAGE 2 blockers. The authoritative plan assigns the broader WordPress/browser/backend matrix to STAGES 8-10.
