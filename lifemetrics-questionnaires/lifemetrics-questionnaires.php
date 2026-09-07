@@ -237,12 +237,61 @@ function lmq_pss10_submit(WP_REST_Request $request)
     $content_type = function_exists('wp_remote_retrieve_header')
         ? wp_remote_retrieve_header($response, 'content-type')
         : '';
+    $location_host = is_scalar($location)
+        ? parse_url((string) $location, PHP_URL_HOST)
+        : '';
+    $response_message = function_exists('wp_remote_retrieve_response_message')
+        ? wp_remote_retrieve_response_message($response)
+        : '';
     $diagnostic = array(
         'status' => $status,
-        'location' => is_scalar($location) ? (string) $location : '',
+        'response_message' => is_scalar($response_message) ? (string) $response_message : '',
+        'location_host' => is_string($location_host) ? $location_host : '',
         'content_type' => is_scalar($content_type) ? (string) $content_type : '',
         'body_length' => strlen($response_body),
+        'body_sha256' => hash('sha256', $response_body),
     );
+    $lower_body = strtolower($response_body);
+    $html_fingerprints = array();
+    $known_html_markers = array(
+        'bad_request' => array('bad request', 'error 400'),
+        'malformed_request' => array('malformed', 'invalid request'),
+        'access_denied' => array('access denied', 'permission denied'),
+        'sign_in_required' => array('sign in', 'accounts.google.com'),
+        'file_unavailable' => array('unable to open the file', 'file you have requested does not exist'),
+        'google_error_page' => array('google', 'error 400'),
+    );
+    foreach ($known_html_markers as $label => $markers) {
+        foreach ($markers as $marker) {
+            if (strpos($lower_body, $marker) !== false) {
+                $html_fingerprints[] = $label;
+                break;
+            }
+        }
+    }
+    $diagnostic['html_fingerprints'] = $html_fingerprints;
+
+    $redirect_chain = array();
+    if (
+        isset($response['http_response']) &&
+        is_object($response['http_response']) &&
+        method_exists($response['http_response'], 'get_response_object')
+    ) {
+        $response_object = $response['http_response']->get_response_object();
+        $history = isset($response_object->history) && is_array($response_object->history)
+            ? $response_object->history
+            : array();
+        $history[] = $response_object;
+        foreach ($history as $history_response) {
+            $history_url = isset($history_response->url) ? $history_response->url : '';
+            $history_host = is_string($history_url) ? parse_url($history_url, PHP_URL_HOST) : '';
+            $redirect_chain[] = array(
+                'status' => isset($history_response->status_code) ? (int) $history_response->status_code : 0,
+                'host' => is_string($history_host) ? $history_host : '',
+            );
+        }
+    }
+    $diagnostic['redirect_chain'] = $redirect_chain;
     $safe_keys = array('ok', 'duplicate', 'code', 'error');
     $safe_strings = array(
         'validation_error', 'rate_limited', 'lock_timeout', 'internal_error',
