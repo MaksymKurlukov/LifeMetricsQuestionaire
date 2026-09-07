@@ -19,20 +19,21 @@ if (!defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
 /** Register assets early; enqueue them only when the shortcode is rendered. */
 function lmq_register_assets()
 {
+    $base_path = plugin_dir_path(__FILE__) . 'questionnaires/pss10/assets/';
     $base_url = plugin_dir_url(__FILE__) . 'questionnaires/pss10/assets/';
 
     wp_register_style(
         'lmq-pss10',
         $base_url . 'css/style.css',
         array(),
-        '1.0.0'
+        filemtime($base_path . 'css/style.css')
     );
 
     wp_register_script(
         'lmq-pss10',
         $base_url . 'js/app.js',
         array(),
-        '1.0.0',
+        filemtime($base_path . 'js/app.js'),
         true
     );
 }

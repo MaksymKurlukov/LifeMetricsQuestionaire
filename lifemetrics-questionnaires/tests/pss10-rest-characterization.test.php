@@ -47,6 +47,10 @@ class WP_Error
 
 function add_action() {}
 function add_shortcode() {}
+function plugin_dir_path($file) { return dirname($file) . '/'; }
+function plugin_dir_url() { return 'https://example.test/wp-content/plugins/lifemetrics-questionnaires/'; }
+function wp_register_style($handle, $src, $deps, $version) { $GLOBALS['lmq_registered_style'] = compact('handle', 'src', 'deps', 'version'); }
+function wp_register_script($handle, $src, $deps, $version, $inFooter) { $GLOBALS['lmq_registered_script'] = compact('handle', 'src', 'deps', 'version', 'inFooter'); }
 function esc_attr($value) { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }
 function esc_url($value) { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }
 function esc_url_raw($url) { return $url; }
@@ -95,6 +99,13 @@ $golden = json_decode(file_get_contents(__DIR__ . '/fixtures/pss10-golden-v1.jso
 $contract = json_decode(file_get_contents(__DIR__ . '/fixtures/pss10-backend-contract-v1.json'), true);
 expect_same(true, is_array($golden), 'golden fixture parses');
 expect_same(true, is_array($contract), 'backend fixture parses');
+
+lmq_register_assets();
+$assetRoot = realpath(__DIR__ . '/../questionnaires/pss10/assets');
+expect_same(filemtime($assetRoot . '/css/style.css'), $GLOBALS['lmq_registered_style']['version'], 'CSS version uses filemtime');
+expect_same(filemtime($assetRoot . '/js/app.js'), $GLOBALS['lmq_registered_script']['version'], 'JS version uses filemtime');
+expect_same(false, $GLOBALS['lmq_registered_style']['version'] === '1.0.0', 'CSS version is not static plugin version');
+expect_same(false, $GLOBALS['lmq_registered_script']['version'] === '1.0.0', 'JS version is not static plugin version');
 
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":false}');
 $GLOBALS['lmq_remote_get_response'] = null;

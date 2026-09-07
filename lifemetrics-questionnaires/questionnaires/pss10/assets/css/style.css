@@ -219,12 +219,17 @@
   background: linear-gradient(90deg, transparent 0%, #FFB088 20%, #FF8552 50%, #FFB088 80%, transparent 100%);
 }
 
-.lmq-pss10 .link {
-  color: var(--color-primary);
+.lmq-pss10 .link[data-lmq-role="learn-more"],
+.lmq-pss10 .link[data-lmq-role="learn-more"]:hover,
+.lmq-pss10 .link[data-lmq-role="learn-more"]:focus,
+.lmq-pss10 .link[data-lmq-role="learn-more"]:active {
+  color: var(--color-primary) !important;
   text-decoration: none;
 }
 
-.lmq-pss10 .link:hover {
+.lmq-pss10 .link[data-lmq-role="learn-more"]:hover,
+.lmq-pss10 .link[data-lmq-role="learn-more"]:focus,
+.lmq-pss10 .link[data-lmq-role="learn-more"]:active {
   text-decoration: underline;
 }
 
@@ -234,12 +239,17 @@
   color: var(--color-text-muted);
 }
 
-.lmq-pss10 .footer-link {
-  color: var(--color-text-muted);
+.lmq-pss10 .page-footer .footer-link,
+.lmq-pss10 .page-footer .footer-link:hover,
+.lmq-pss10 .page-footer .footer-link:focus,
+.lmq-pss10 .page-footer .footer-link:active {
+  color: var(--color-text-muted) !important;
   text-decoration: none;
 }
 
-.lmq-pss10 .footer-link:hover {
+.lmq-pss10 .page-footer .footer-link:hover,
+.lmq-pss10 .page-footer .footer-link:focus,
+.lmq-pss10 .page-footer .footer-link:active {
   text-decoration: underline;
 }
 
@@ -332,6 +342,15 @@
 
 .lmq-pss10 .btn--back {
   margin-top: var(--space-sm);
+}
+
+.lmq-pss10 .btn.btn--secondary.btn--back,
+.lmq-pss10 .btn.btn--secondary.btn--back:hover:not(:disabled),
+.lmq-pss10 .btn.btn--secondary.btn--back:focus:not(:disabled),
+.lmq-pss10 .btn.btn--secondary.btn--back:active:not(:disabled) {
+  background: var(--color-cream) !important;
+  color: var(--color-text) !important;
+  border: none !important;
 }
 
 /* ---------- Questionnaire ---------- */

@@ -36,7 +36,9 @@ function applyMutation(source, name) {
 
 function fakeElement() {
   const classes = new Set();
-  return {
+  const listeners = {};
+  const children = [];
+  const element = {
     hidden: false,
     disabled: false,
     style: {},
@@ -48,14 +50,25 @@ function fakeElement() {
       contains: (name) => classes.has(name),
       toggle: (name, active) => active ? classes.add(name) : classes.delete(name)
     },
-    addEventListener() {},
-    appendChild() {},
+    addEventListener(type, listener) { listeners[type] = listener; },
+    appendChild(child) { children.push(child); },
+    click() { if (listeners.click) listeners.click({ currentTarget: element }); },
     focus() {},
     querySelector() { return fakeElement(); },
-    querySelectorAll() { return []; },
+    querySelectorAll(selector) {
+      return selector === '.answer-card'
+        ? children.filter((child) => child.className && child.className.includes('answer-card'))
+        : [];
+    },
     setAttribute(name, value) { this[name] = String(value); },
     getAttribute(name) { return this[name] || null; }
   };
+  Object.defineProperty(element, 'innerHTML', {
+    get() { return ''; },
+    set() { children.length = 0; }
+  });
+  element.__children = children;
+  return element;
 }
 
 function fakeRoot(id) {
@@ -90,7 +103,7 @@ function instrument(source) {
 
   source = source.replace(
     listenerMarker,
-    "    root.__lmqTestHooks = { state: state, computeScoreLocal: computeScoreLocal, buildPayload: buildPayload };\n\n" + listenerMarker
+    "    root.__lmqTestHooks = { state: state, computeScoreLocal: computeScoreLocal, buildPayload: buildPayload, renderQuestion: renderQuestion, goBack: goBack };\n\n" + listenerMarker
   );
   return source.replace(
     bootstrapMarker,
@@ -107,6 +120,8 @@ function runCharacterization(mutationName) {
   if (mutationName) source = applyMutation(source, mutationName);
 
   const roots = [fakeRoot('lmq-pss10-a'), fakeRoot('lmq-pss10-b')];
+  let nextTimerId = 1;
+  const timers = new Map();
   class FixedDate extends Date {
     constructor(...args) {
       super(args.length ? args[0] : fixture.payload_snapshot.created_at);
@@ -118,12 +133,16 @@ function runCharacterization(mutationName) {
     Error,
     Math,
     Promise,
-    clearTimeout,
+    clearTimeout: (timerId) => timers.delete(timerId),
     console,
     crypto: { randomUUID: () => fixture.payload_snapshot.session_id },
     document: { querySelectorAll: () => roots },
     fetch: () => Promise.reject(new Error('network disabled in characterization test')),
-    setTimeout
+    setTimeout: (callback, delay) => {
+      const timerId = nextTimerId++;
+      timers.set(timerId, { callback, delay });
+      return timerId;
+    }
   };
   vm.createContext(context);
   vm.runInContext(instrument(source), context, { filename: appPath });
@@ -134,6 +153,29 @@ function runCharacterization(mutationName) {
   assert.notStrictEqual(roots[0].__lmqTestHooks.state, roots[1].__lmqTestHooks.state, 'instances share state');
 
   const hooks = roots[0].__lmqTestHooks;
+
+  hooks.state.currentQuestion = 2;
+  hooks.state.answers = { 2: 3 };
+  hooks.renderQuestion();
+  const answers = roots[0].querySelector('[data-lmq-role="answers"]');
+  const selectedCard = answers.__children.find((child) => child.getAttribute && child.getAttribute('data-value') === '3');
+  assert.ok(selectedCard.className.includes('answer-card--selected'), 'previous answer remains selected');
+  assert.equal(selectedCard.__children[0].checked, true, 'previous radio remains checked');
+  selectedCard.click();
+  selectedCard.click();
+  assert.equal(timers.size, 1, 'same-answer rapid reselect schedules exactly one transition');
+  const sameAnswerTimer = Array.from(timers.values())[0];
+  assert.equal(sameAnswerTimer.delay, fixture.ui.auto_advance_ms, 'same-answer reselect keeps auto-advance delay');
+  timers.clear();
+  sameAnswerTimer.callback();
+  assert.equal(hooks.state.currentQuestion, 3, 'same-answer reselect advances once');
+  hooks.goBack();
+  const replacementAnswers = roots[0].querySelector('[data-lmq-role="answers"]');
+  const replacementCard = replacementAnswers.__children.find((child) => child.getAttribute && child.getAttribute('data-value') === '4');
+  replacementCard.click();
+  assert.equal(hooks.state.answers[2], 4, 'different answer replaces stored answer');
+  assert.equal(timers.size, 1, 'different answer schedules one transition');
+  timers.clear();
   for (const vector of fixture.vectors) {
     hooks.state.answers = Object.fromEntries(vector.selected.map((value, index) => [index + 1, value]));
     hooks.state.sessionId = fixture.payload_snapshot.session_id;
@@ -178,6 +220,8 @@ function runCharacterization(mutationName) {
   assert.ok(!source.includes('/wp-content/'));
   assert.ok(source.includes('data.success !== true'));
   assert.ok(source.includes('state.lastPayload'));
+  assert.ok(!source.includes('if (state.answers[questionId] === value) return;'));
+  assert.match(source, /function onAnswerClick\(event\) \{[\s\S]*?var questionId = state\.currentQuestion;[\s\S]*?cancelAutoAdvance\(\);/);
   assert.ok(source.includes("method: 'POST'"));
   assert.ok(source.includes('body: JSON.stringify(payload)'));
   assert.ok(source.includes("showToast('Sauvegarde en cours…');"));
@@ -206,6 +250,9 @@ function runCharacterization(mutationName) {
   assert.match(css, /\.lmq-pss10 \.btn--secondary:hover:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);[\s\S]*?border: none;/);
   assert.match(css, /\.lmq-pss10 \.btn--secondary:focus:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
   assert.match(css, /\.lmq-pss10 \.btn--secondary:active:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
+  assert.match(css, /\.lmq-pss10 \.btn\.btn--secondary\.btn--back,[\s\S]*?\.btn--back:hover:not\(:disabled\),[\s\S]*?\.btn--back:focus:not\(:disabled\),[\s\S]*?\.btn--back:active:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\) !important;[\s\S]*?color: var\(--color-text\) !important;[\s\S]*?border: none !important;/);
+  assert.match(css, /\.lmq-pss10 \.link\[data-lmq-role="learn-more"\],[\s\S]*?:hover,[\s\S]*?:focus,[\s\S]*?:active \{[\s\S]*?color: var\(--color-primary\) !important;/);
+  assert.match(css, /\.lmq-pss10 \.page-footer \.footer-link,[\s\S]*?\.footer-link:hover,[\s\S]*?\.footer-link:focus,[\s\S]*?\.footer-link:active \{[\s\S]*?color: var\(--color-text-muted\) !important;/);
   assert.match(css, /\.lmq-pss10 \.result-actions \.btn \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/);
   assert.match(css, /\.lmq-pss10 \.lmq-dialog > \.modal-close \{[\s\S]*?display: flex !important;[\s\S]*?align-items: center !important;[\s\S]*?justify-content: center !important;[\s\S]*?text-align: center !important;[\s\S]*?width: 100%;/);
 }

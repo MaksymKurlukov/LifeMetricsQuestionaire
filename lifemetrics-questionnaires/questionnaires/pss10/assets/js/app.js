@@ -287,7 +287,7 @@
       var card = event.currentTarget;
       var value = parseInt(card.getAttribute('data-value'), 10);
       var questionId = state.currentQuestion;
-      if (state.answers[questionId] === value) return;
+      cancelAutoAdvance();
 
       answersContainer.querySelectorAll('.answer-card').forEach(function (answerCard) {
         answerCard.classList.remove('answer-card--selected');
