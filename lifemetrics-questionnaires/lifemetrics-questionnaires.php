@@ -227,7 +227,48 @@ function lmq_pss10_submit(WP_REST_Request $request)
     }
 
     $status = wp_remote_retrieve_response_code($response);
-    $backend = json_decode(wp_remote_retrieve_body($response), true);
+    $response_body = wp_remote_retrieve_body($response);
+    $backend = json_decode($response_body, true);
+
+    // LMQ_PSS10_UPSTREAM_DIAGNOSTIC: temporary; remove after one production test.
+    $location = function_exists('wp_remote_retrieve_header')
+        ? wp_remote_retrieve_header($response, 'location')
+        : '';
+    $content_type = function_exists('wp_remote_retrieve_header')
+        ? wp_remote_retrieve_header($response, 'content-type')
+        : '';
+    $diagnostic = array(
+        'status' => $status,
+        'location' => is_scalar($location) ? (string) $location : '',
+        'content_type' => is_scalar($content_type) ? (string) $content_type : '',
+        'body_length' => strlen($response_body),
+    );
+    $safe_keys = array('ok', 'duplicate', 'code', 'error');
+    $safe_strings = array(
+        'validation_error', 'rate_limited', 'lock_timeout', 'internal_error',
+        'Missing JSON body', 'Invalid JSON body', 'JSON body must be an object',
+        'Invalid session_id', 'Invalid created_at', 'Invalid category',
+        'q1..q10 must be integers from 1 to 5',
+        'final_score must equal sum(q1..q10) and be between 10 and 50',
+        'Too many requests', 'Storage is busy', 'Internal storage error',
+        'Unauthorized', 'Duplicate session_id',
+    );
+    $safe_body = is_array($backend);
+    if ($safe_body) {
+        foreach ($backend as $key => $value) {
+            if (
+                !in_array($key, $safe_keys, true) ||
+                (!is_bool($value) && $value !== null && !in_array($value, $safe_strings, true))
+            ) {
+                $safe_body = false;
+                break;
+            }
+        }
+    }
+    if ($safe_body) {
+        $diagnostic['body_preview'] = substr($response_body, 0, 300);
+    }
+    error_log('LMQ_PSS10_UPSTREAM_DIAGNOSTIC ' . wp_json_encode($diagnostic));
 
     if ($status < 200 || $status >= 300) {
         return new WP_Error(
