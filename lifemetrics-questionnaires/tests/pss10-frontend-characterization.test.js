@@ -196,6 +196,10 @@ function runCharacterization(mutationName) {
   assert.match(template, /<button type="button" class="btn btn--primary">Voir mon programme personnalisé<\/button>/);
   assert.match(template, /<button type="button" class="btn btn--secondary">Contacter un praticien certifié<\/button>/);
   assert.ok(css.includes('.lmq-pss10'));
+  assert.match(css, /--color-bg: #faf8f5;/);
+  assert.match(css, /\.lmq-pss10 \{[\s\S]*?position: relative;[\s\S]*?isolation: isolate;[\s\S]*?width: 100%;/);
+  assert.match(css, /\.lmq-pss10::before \{[\s\S]*?position: absolute;[\s\S]*?inset: 0;[\s\S]*?background: var\(--color-bg\);[\s\S]*?box-shadow: 0 0 0 100vmax var\(--color-bg\);[\s\S]*?clip-path: inset\(0 -100vmax\);[\s\S]*?pointer-events: none;/);
+  assert.match(css, /\.lmq-pss10 \.app \{[\s\S]*?max-width: var\(--max-width\);[\s\S]*?width: 100%;/);
   assert.ok(css.includes('.lmq-pss10 .lmq-dialog'));
   assert.ok(!css.includes('.lmq-pss10 .modal {'));
   assert.match(css, /\.lmq-pss10 \.btn--secondary:hover:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);[\s\S]*?border: none;/);
