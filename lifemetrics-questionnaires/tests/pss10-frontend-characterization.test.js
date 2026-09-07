@@ -178,6 +178,14 @@ function runCharacterization(mutationName) {
   assert.ok(!source.includes('/wp-content/'));
   assert.ok(source.includes('data.success !== true'));
   assert.ok(source.includes('state.lastPayload'));
+  assert.ok(source.includes("method: 'POST'"));
+  assert.ok(source.includes('body: JSON.stringify(payload)'));
+  assert.ok(source.includes("showToast('Sauvegarde en cours…');"));
+  assert.ok(source.includes('displaySaveError(error);'));
+  assert.ok(source.includes('showToast(message, 3500);'));
+  assert.ok(source.includes('if (resultSaveAlert) resultSaveAlert.hidden = false;'));
+  assert.ok(!source.includes('Résultat enregistré.'));
+  assert.match(source, /sendToWordPress\(payload\)\.then\(function \(\) \{[\s\S]*?hideToast\(\);[\s\S]*?\}\)\.catch\(function \(error\) \{[\s\S]*?displaySaveError\(error\);/);
   assert.ok(plugin.includes("'/pss10/submit'"));
   assert.ok(plugin.includes("wp_unique_id('lmq-pss10-')"));
   assert.ok(template.includes('$instance_id . \'-gauge-gradient\''));
@@ -194,6 +202,7 @@ function runCharacterization(mutationName) {
   assert.match(css, /\.lmq-pss10 \.btn--secondary:focus:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
   assert.match(css, /\.lmq-pss10 \.btn--secondary:active:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
   assert.match(css, /\.lmq-pss10 \.result-actions \.btn \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/);
+  assert.match(css, /\.lmq-pss10 \.modal-close \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;[\s\S]*?width: 100%;/);
 }
 
 const requestedMutation = process.env.LMQ_MUTATION || '';

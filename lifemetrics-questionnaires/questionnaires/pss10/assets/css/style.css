@@ -648,6 +648,10 @@
 }
 
 .lmq-pss10 .modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   width: 100%;
 }
 

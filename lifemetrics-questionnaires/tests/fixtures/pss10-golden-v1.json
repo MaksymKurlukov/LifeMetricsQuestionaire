@@ -112,7 +112,6 @@
     "validation_error": "Le résultat est invalide et ne peut pas être enregistré.",
     "network_error": "Connexion impossible. Vérifiez votre connexion et réessayez.",
     "backend_error": "Le service d'enregistrement est temporairement indisponible.",
-    "saving": "Sauvegarde en cours…",
-    "saved": "Résultat enregistré."
+    "saving": "Sauvegarde en cours…"
   }
 }

@@ -236,7 +236,7 @@
         state.saveFailed = false;
         if (btnRetrySend) btnRetrySend.disabled = false;
         if (resultSaveAlert) resultSaveAlert.hidden = true;
-        showToast('Résultat enregistré.', 2500);
+        hideToast();
       }).catch(function (error) {
         state.saving = false;
         if (btnRetrySend) btnRetrySend.disabled = false;
