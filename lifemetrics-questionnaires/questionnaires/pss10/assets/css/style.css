@@ -307,8 +307,23 @@
 }
 
 .lmq-pss10 .btn--secondary:hover:not(:disabled) {
+  background: var(--color-cream);
+  color: var(--color-text);
+  border: none;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.lmq-pss10 .btn--secondary:focus:not(:disabled) {
+  background: var(--color-cream);
+  color: var(--color-text);
+  border: none;
+}
+
+.lmq-pss10 .btn--secondary:active:not(:disabled) {
+  background: var(--color-cream);
+  color: var(--color-text);
+  border: none;
 }
 
 .lmq-pss10 .btn--back {
@@ -552,7 +567,10 @@
 }
 
 .lmq-pss10 .result-actions .btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   width: 100%;
   max-width: min(35rem, 100%);
   margin: 0 auto;
@@ -605,7 +623,8 @@
   visibility: visible;
 }
 
-.lmq-pss10 .modal {
+.lmq-pss10 .lmq-dialog {
+  display: block;
   background: var(--color-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -616,12 +635,12 @@
   overflow-y: auto;
 }
 
-.lmq-pss10 .modal h3 {
+.lmq-pss10 .lmq-dialog h3 {
   margin: 0 0 var(--space-sm);
   font-size: var(--text-xl);
 }
 
-.lmq-pss10 .modal p {
+.lmq-pss10 .lmq-dialog p {
   margin: 0 0 var(--space-md);
   font-size: var(--text-sm);
   color: var(--color-text-muted);

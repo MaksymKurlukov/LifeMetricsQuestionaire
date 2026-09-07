@@ -183,9 +183,17 @@ function runCharacterization(mutationName) {
   assert.ok(template.includes('$instance_id . \'-gauge-gradient\''));
   assert.ok(template.includes('$instance_id . \'-modal-title\''));
   assert.ok(template.includes('data-lmq-questionnaire="pss10"'));
+  assert.ok(template.includes('class="lmq-dialog"'));
+  assert.ok(!template.includes('class="modal"'));
   assert.match(template, /<button type="button" class="btn btn--primary">Voir mon programme personnalisé<\/button>/);
   assert.match(template, /<button type="button" class="btn btn--secondary">Contacter un praticien certifié<\/button>/);
   assert.ok(css.includes('.lmq-pss10'));
+  assert.ok(css.includes('.lmq-pss10 .lmq-dialog'));
+  assert.ok(!css.includes('.lmq-pss10 .modal {'));
+  assert.match(css, /\.lmq-pss10 \.btn--secondary:hover:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);[\s\S]*?border: none;/);
+  assert.match(css, /\.lmq-pss10 \.btn--secondary:focus:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
+  assert.match(css, /\.lmq-pss10 \.btn--secondary:active:not\(:disabled\) \{[\s\S]*?background: var\(--color-cream\);[\s\S]*?color: var\(--color-text\);/);
+  assert.match(css, /\.lmq-pss10 \.result-actions \.btn \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/);
 }
 
 const requestedMutation = process.env.LMQ_MUTATION || '';

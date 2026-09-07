@@ -105,7 +105,7 @@ $modal_title_id = $instance_id . '-modal-title';
   </div>
 
   <div class="modal-overlay" data-lmq-role="modal-overlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-labelledby="<?php echo esc_attr($modal_title_id); ?>" aria-modal="true">
+    <div class="lmq-dialog" role="dialog" aria-labelledby="<?php echo esc_attr($modal_title_id); ?>" aria-modal="true">
       <h3 id="<?php echo esc_attr($modal_title_id); ?>">À propos du PSS-10</h3>
       <p>
         Perceived Stress Scale (PSS) de Cohen, Kamarck et Mermelstein est l'une des échelles les plus utilisées pour évaluer la perception du stress.
