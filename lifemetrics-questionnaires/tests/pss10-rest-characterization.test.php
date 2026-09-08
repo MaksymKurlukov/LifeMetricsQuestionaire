@@ -45,12 +45,24 @@ class WP_Error
     }
 }
 
-function add_action() {}
-function add_shortcode() {}
+class WP_REST_Server
+{
+    const CREATABLE = 'POST';
+}
+
+function add_action($hook, $callback, $priority = 10) { $GLOBALS['lmq_actions'][] = compact('hook', 'callback', 'priority'); }
+function add_shortcode($tag, $callback) { $GLOBALS['lmq_shortcodes'][] = compact('tag', 'callback'); }
 function plugin_dir_path($file) { return dirname($file) . '/'; }
 function plugin_dir_url() { return 'https://example.test/wp-content/plugins/lifemetrics-questionnaires/'; }
+function shortcode_atts($defaults, $attributes) { return array_merge($defaults, $attributes); }
+function sanitize_key($value) { return preg_replace('/[^a-z0-9_-]/', '', strtolower((string) $value)); }
 function wp_register_style($handle, $src, $deps, $version) { $GLOBALS['lmq_registered_style'] = compact('handle', 'src', 'deps', 'version'); }
 function wp_register_script($handle, $src, $deps, $version, $inFooter) { $GLOBALS['lmq_registered_script'] = compact('handle', 'src', 'deps', 'version', 'inFooter'); }
+function wp_enqueue_style($handle) { $GLOBALS['lmq_enqueued_styles'][] = $handle; }
+function wp_enqueue_script($handle) { $GLOBALS['lmq_enqueued_scripts'][] = $handle; }
+function rest_url($path) { return 'https://example.test/wp-json/' . $path; }
+function wp_unique_id($prefix) { static $id = 0; return $prefix . ++$id; }
+function register_rest_route($namespace, $route, $args) { $GLOBALS['lmq_registered_route'] = compact('namespace', 'route', 'args'); }
 function esc_attr($value) { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }
 function esc_url($value) { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }
 function esc_url_raw($url) { return $url; }
@@ -86,7 +98,8 @@ function submit_pss10($input, $jsonContentType = true, $body = null)
 {
     $GLOBALS['lmq_last_remote_request'] = null;
     $GLOBALS['lmq_remote_requests'] = array();
-    return lmq_pss10_submit(new WP_REST_Request($input, $jsonContentType, $body));
+    $runtime = new LifeMetrics_Legacy_PSS10_Runtime();
+    return $runtime->submit(new WP_REST_Request($input, $jsonContentType, $body));
 }
 
 function expect_error_code($expectedCode, $result, $label)
@@ -100,12 +113,29 @@ $contract = json_decode(file_get_contents(__DIR__ . '/fixtures/pss10-backend-con
 expect_same(true, is_array($golden), 'golden fixture parses');
 expect_same(true, is_array($contract), 'backend fixture parses');
 
-lmq_register_assets();
+$runtime = new LifeMetrics_Legacy_PSS10_Runtime();
+$runtime->register_assets();
 $assetRoot = realpath(__DIR__ . '/../questionnaires/pss10/assets');
 expect_same(filemtime($assetRoot . '/css/style.css'), $GLOBALS['lmq_registered_style']['version'], 'CSS version uses filemtime');
 expect_same(filemtime($assetRoot . '/js/app.js'), $GLOBALS['lmq_registered_script']['version'], 'JS version uses filemtime');
 expect_same(false, $GLOBALS['lmq_registered_style']['version'] === '1.0.0', 'CSS version is not static plugin version');
 expect_same(false, $GLOBALS['lmq_registered_script']['version'] === '1.0.0', 'JS version is not static plugin version');
+expect_same(3, count($GLOBALS['lmq_actions']), 'plugin registers three actions once');
+expect_same(1, count($GLOBALS['lmq_shortcodes']), 'plugin registers one shortcode once');
+LifeMetrics_Plugin::init();
+expect_same(3, count($GLOBALS['lmq_actions']), 'plugin initialization is idempotent');
+expect_same(1, count($GLOBALS['lmq_shortcodes']), 'shortcode initialization is idempotent');
+expect_same('', $runtime->render_shortcode(array('id' => '../unknown')), 'unknown shortcode ID renders nothing');
+$shortcodeFirst = $runtime->render_shortcode(array('id' => 'pss10'));
+$shortcodeSecond = $runtime->render_shortcode(array('id' => 'pss10'));
+expect_same(true, strpos($shortcodeFirst, 'id="lmq-pss10-1"') !== false, 'first shortcode gets unique root ID');
+expect_same(true, strpos($shortcodeSecond, 'id="lmq-pss10-2"') !== false, 'second shortcode gets unique root ID');
+expect_same(array('lmq-pss10', 'lmq-pss10'), $GLOBALS['lmq_enqueued_styles'], 'shortcode preserves style handle');
+expect_same(array('lmq-pss10', 'lmq-pss10'), $GLOBALS['lmq_enqueued_scripts'], 'shortcode preserves script handle');
+$runtime->register_rest_routes();
+expect_same('lifemetrics-questionnaires/v1', $GLOBALS['lmq_registered_route']['namespace'], 'REST namespace unchanged');
+expect_same('/pss10/submit', $GLOBALS['lmq_registered_route']['route'], 'exact PSS10 REST route unchanged');
+expect_same('POST', $GLOBALS['lmq_registered_route']['args']['methods'], 'REST method unchanged');
 
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":false}');
 $GLOBALS['lmq_remote_get_response'] = null;

@@ -80,6 +80,10 @@ The shared `templates/questionnaire.php` is the default and only planned templat
 
 `class-lifemetrics-plugin.php` wires WordPress hooks and shared services once. No service container/framework is planned. It must not branch on questionnaire IDs.
 
+During the approved Stage 3 transition, `class-legacy-pss10-runtime.php` temporarily contains the validated PSS10 PHP asset, shortcode rendering, exact REST callback, and Google redirect behavior. `LifeMetrics_Plugin` owns hook registration and guards against duplicate initialization. This compatibility class is not generic architecture and remains only until the Stage 6 PSS10 cutover.
+
+The project minimum supported PHP version is 8.2. Stage 3 does not create unused Renderer, generic Assets, SchemaValidator, ScoringEngine, SubmissionService, or Google adapter shells; those remain assigned to their documented later stages.
+
 ### Questionnaire registry
 
 `class-questionnaire-registry.php` owns the explicit ID-to-file map. It loads and caches plain arrays, verifies `config.id` equals the registry key, delegates schema validation, and exposes separate internal/public lookup methods.

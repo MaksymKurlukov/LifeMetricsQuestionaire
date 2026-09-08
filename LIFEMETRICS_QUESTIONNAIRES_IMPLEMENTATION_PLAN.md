@@ -10,11 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_NOT_STARTED`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_IN_PROGRESS`
 
-Next executable stage: `STAGE 3 - Generic PHP infrastructure in parallel`
+Next executable task: `STAGE 3.2 - Explicit questionnaire registry and lifecycle public gate`
 
-Stage 3 remains paused and has not started. The out-of-sequence PSS10 production-runtime milestone is complete, but it does not advance or reorder the generic implementation stages.
+Stage 3 began with the approved bootstrap/orchestration extraction only. The registry, shortcode controller, and REST controller remain incomplete; Stage 4 has not started.
 
 ## Status vocabulary
 
@@ -697,7 +697,7 @@ Files eventually affected: bootstrap, new includes/assets/template, `questionnai
 
 ## STATIC
 
-- PHP lint for every PHP file with minimum supported PHP 7.4 and XAMPP PHP 8.2;
+- PHP lint for every PHP file with the approved minimum supported PHP 8.2;
 - JS parse checks using `.js` inputs; Apps Script parse through VM/copy-to-temporary-`.js` test;
 - registry paths remain within plugin directory and match explicit map;
 - no visitor-derived include paths;
@@ -842,19 +842,19 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 3 - Generic PHP infrastructure in parallel
 
-- **Status:** `NOT_STARTED`.
-- **Objective:** introduce bootstrap/orchestrator/registry/shortcode/renderer/assets/REST shells without switching PSS10 runtime behavior.
+- **Status:** `IN_PROGRESS`. Unit 3.1 (bootstrap, `LifeMetrics_Plugin`, temporary `LifeMetrics_Legacy_PSS10_Runtime`) passed locally; later Stage 3 units remain incomplete.
+- **Objective:** introduce only bootstrap/orchestrator/registry/shortcode/REST infrastructure without switching PSS10 runtime behavior.
 - **Prerequisites:** STAGE 2 PASS.
-- **Files allowed to change:** plugin bootstrap; new `includes/`, `templates/`, shared asset registration stubs; PHP tests; changelog/plan.
+- **Files allowed to change:** plugin bootstrap; approved `includes/` classes; PHP tests; changelog/plan/report.
 - **Files forbidden to change:** legacy PSS10 template/assets behavior; both Apps Scripts; standalone; PDFs.
-- **Exact tasks:** split bootstrap, create explicit registry map, lifecycle public gate, shared renderer shell, asset service, shortcode service, generic route registration that delegates existing PSS10 behavior unchanged; maintain late CSS behavior.
-- **Required tests:** PHP 7.4/8.2 lint, registry traversal/status cases, shortcode invalid IDs, route resolution, legacy characterization suite.
+- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 next) create explicit registry map and lifecycle public gate; (3.3 later) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. Do not register wildcard REST routing.
+- **Required tests:** PHP 8.2 lint, registry traversal/status cases, shortcode invalid IDs, exact route resolution, legacy characterization suite.
 - **Acceptance criteria:** existing shortcode and REST output remain byte/contract equivalent where frozen; new services have no questionnaire-specific branches except temporary PSS10 compatibility adapter clearly marked.
 - **PASS/FAIL:** PASS if all legacy tests pass and no new public questionnaire is exposed; FAIL on any behavior or endpoint change.
 - **Rollback criteria:** revert stage commit to baseline bootstrap.
-- **Expected deliverables:** generic PHP skeleton with tests, no frontend cutover.
-- **Blockers:** PHP 7.4 runtime may need container/CI if unavailable locally.
-- **User action required:** review class boundaries and compatibility adapter.
+- **Expected deliverables:** five approved PHP classes with tests, no frontend/config/backend cutover.
+- **Blockers:** none for the next Stage 3 unit.
+- **User action required:** none; narrowed scope, compatibility path, exact REST route, and PHP 8.2 minimum were approved before Unit 3.1.
 - **Recommended commit checkpoint:** `refactor: add generic PHP infrastructure without cutover`.
 
 ### Completed out-of-sequence PSS10 stabilization milestone
@@ -1290,6 +1290,7 @@ The following decisions must be created/accepted in `DECISIONS.md` during STAGE 
 | DEC-015 | native browser/WordPress scripts first; no bundler/new dependency without measured need | accepted 2026-09-03 |
 | DEC-016 | plugin owns questionnaire UI/runtime; WordPress owns surrounding page layout/full-width background/catalogue composition | accepted 2026-09-08 |
 | DEC-017 | silent normal persistence and configuration-owned `result_ctas` | accepted 2026-09-08 |
+| DEC-018 | narrowed five-class Stage 3, exact PSS10 route, deferred later-stage services, PHP 8.2 minimum | accepted 2026-09-08 |
 
 Any deviation during implementation needs a new decision or an amended decision with date, evidence, migration consequence, and user acceptance.
 
@@ -1372,10 +1373,10 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 Execute exactly one next stage in a separate run:
 
-`STAGE 3 - Generic PHP infrastructure in parallel`
+`STAGE 3.2 - Explicit questionnaire registry and lifecycle public gate`
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
 
-The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`; its status does not start Stage 3. The earlier statement that duplicate replay remained unverified is superseded: `DUPLICATE_CHECK = PASS` is recorded in the milestone report and test matrix.
+The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3.1 subsequently extracted PHP bootstrap/orchestration without changing that runtime baseline. Stage 4 remains not started.
 
 Current public-release blockers are: PSS10 licensing/legal/attribution approval; WordPress/page-layout implementation of the full-width `#faf8f5` background; creation of the `/tests-sante/` catalogue; activation of the secondary CTA after that page exists; real WordPress mobile validation; Stage 3 generic architecture; proprietary questionnaire migrations; and required synthetic scoring validation/approvals. PSS10 is not public-ready solely because runtime passed; lifecycle/legal gates remain independent.

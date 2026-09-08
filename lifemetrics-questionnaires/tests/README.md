@@ -14,4 +14,6 @@ The frontend test safely instruments an in-memory copy of `app.js` inside a VM t
 
 The PHP test loads the real plugin entry point behind minimal test-only WordPress stubs. It checks REST boundary categories, server-derived category, forwarded payload, duplicate response, validation/upstream errors, and two template instances with unique IDs.
 
+From Stage 3.1 it also checks one-time plugin initialization, the extracted legacy runtime, exact PSS10 shortcode/REST routing, unique shortcode instance IDs, existing asset handles, and filemtime cache versions.
+
 Browser screenshots, live timing/focus interaction, responsive layout, WordPress activation, Gutenberg, and Elementor are not claimed here because the isolated WordPress/browser environment is deferred to STAGES 8-9.

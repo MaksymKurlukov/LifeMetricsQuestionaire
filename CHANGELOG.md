@@ -20,6 +20,8 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Began the approved narrowed Stage 3 with a PHP-only bootstrap/orchestration extraction: `LifeMetrics_Plugin` registers hooks once and the temporary `LifeMetrics_Legacy_PSS10_Runtime` preserves the validated PSS10 path.
+- Updated plugin metadata to the approved minimum PHP version 8.2. No generic registry, schema, scoring, renderer, assets, wildcard REST route, backend adapter, or questionnaire migration was introduced in this unit.
 - Fixed the confirmed OVH/WordPress automatic ContentService redirect failure in `1e8899c`: the Apps Script payload is POSTed once, the trusted HTTPS Google redirect is followed once with a clean GET, and final success remains strictly verified.
 - Removed the temporary PHI-safe upstream diagnostic logging after confirmation.
 - No questionnaire content, scoring, frontend UX, REST contract, Apps Script, or Sheet schema change.

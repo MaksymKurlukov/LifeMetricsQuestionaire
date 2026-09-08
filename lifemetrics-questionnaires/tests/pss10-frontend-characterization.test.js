@@ -8,6 +8,7 @@ const testsDir = __dirname;
 const appPath = path.join(testsDir, '..', 'questionnaires', 'pss10', 'assets', 'js', 'app.js');
 const templatePath = path.join(testsDir, '..', 'questionnaires', 'pss10', 'template.php');
 const pluginPath = path.join(testsDir, '..', 'lifemetrics-questionnaires.php');
+const legacyRuntimePath = path.join(testsDir, '..', 'includes', 'class-legacy-pss10-runtime.php');
 const cssPath = path.join(testsDir, '..', 'questionnaires', 'pss10', 'assets', 'css', 'style.css');
 const fixture = JSON.parse(fs.readFileSync(path.join(testsDir, 'fixtures', 'pss10-golden-v1.json'), 'utf8'));
 
@@ -207,6 +208,7 @@ function runCharacterization(mutationName) {
 
   const template = fs.readFileSync(templatePath, 'utf8');
   const plugin = fs.readFileSync(pluginPath, 'utf8');
+  const legacyRuntime = fs.readFileSync(legacyRuntimePath, 'utf8');
   const css = fs.readFileSync(cssPath, 'utf8');
   assert.match(source, new RegExp('\\}, ' + fixture.ui.auto_advance_ms + '\\);'), 'auto-advance delay changed');
   for (const message of Object.values(fixture.ui).filter((value) => typeof value === 'string')) {
@@ -230,8 +232,10 @@ function runCharacterization(mutationName) {
   assert.ok(!source.includes('Sauvegarde en cours…'));
   assert.ok(!source.includes('Résultat enregistré.'));
   assert.match(source, /sendToWordPress\(payload\)\.then\(function \(\) \{[\s\S]*?hideToast\(\);[\s\S]*?\}\)\.catch\(function \(error\) \{[\s\S]*?displaySaveError\(error\);/);
-  assert.ok(plugin.includes("'/pss10/submit'"));
-  assert.ok(plugin.includes("wp_unique_id('lmq-pss10-')"));
+  assert.ok(plugin.includes('Requires PHP: 8.2'));
+  assert.ok(plugin.includes('LifeMetrics_Plugin::init();'));
+  assert.ok(legacyRuntime.includes("'/pss10/submit'"));
+  assert.ok(legacyRuntime.includes("wp_unique_id('lmq-pss10-')"));
   assert.ok(template.includes('$instance_id . \'-gauge-gradient\''));
   assert.ok(template.includes('$instance_id . \'-modal-title\''));
   assert.ok(template.includes('data-lmq-questionnaire="pss10"'));

@@ -8,7 +8,7 @@ Last updated: 2026-09-08
 
 Decision owner and approver: Maksym Kurlukov.
 
-DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. DEC-016 and DEC-017 were accepted through the production-runtime documentation direction on 2026-09-08. Future changes must preserve this approval history and use an amended or superseding ADR.
+DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. DEC-016 through DEC-018 were accepted through explicit project directions on 2026-09-08. Future changes must preserve this approval history and use an amended or superseding ADR.
 
 Authority: this file owns architectural decisions. Sequencing remains in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`; accepted component and schema consequences are reflected in `ARCHITECTURE.md` and `QUESTIONNAIRE_SCHEMA.md`.
 
@@ -169,12 +169,21 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Consequences: submission/storage semantics remain unchanged; disabled future destinations render without a broken public link; CTA behavior becomes testable data.
 - Rollback/compatibility: the current PSS10 primary link and disabled secondary action are the migration input; no Stage 3 runtime work is authorized by this ADR.
 
+## DEC-018 - Narrow Stage 3 and require PHP 8.2
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: the original Stage 3 proposed empty renderer/assets shells and generic REST routing before schema, scoring, frontend, or generic submission behavior existed.
+- Alternatives: retain all original scaffolding; narrow Stage 3 to the five immediately useful PHP classes; combine later stages.
+- Proposal/rationale: Stage 3 contains only `LifeMetrics_Plugin`, `LifeMetrics_Questionnaire_Registry`, `LifeMetrics_Legacy_PSS10_Runtime`, `LifeMetrics_Shortcodes`, and `LifeMetrics_REST_Controller`. It preserves the exact PSS10 route and defers all specified later-stage responsibilities. Minimum PHP is 8.2.
+- Consequences: Stage 3 can progress in small working units without dead classes or premature public behavior; PSS10 remains on a named compatibility path through Stage 6.
+- Rollback/compatibility: each Stage 3 unit is independently revertible to baseline `e663351`; no wildcard route or PSS10 configuration migration exists to unwind.
+
 ## Approval record
 
 | Field | Value |
 |---|---|
 | Decision owner | Maksym Kurlukov |
 | Approver | Maksym Kurlukov |
-| Approval date | 2026-09-03 |
-| Approved decisions | DEC-001 through DEC-017 |
+| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-018 |
+| Approved decisions | DEC-001 through DEC-018 |
 | Required action | none for STAGE 1; future changes require an amended or superseding ADR |

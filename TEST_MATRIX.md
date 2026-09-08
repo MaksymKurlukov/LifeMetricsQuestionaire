@@ -4,7 +4,7 @@ Matrix version: 1.0.0
 
 Status: `APPROVED`
 
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 
 Approved by: Maksym Kurlukov on 2026-09-03.
 
@@ -51,6 +51,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | PSS-FREEZE-006 | forbidden frontend globals/Google URL/WordPress path and final diff | `rg` static scan; `git diff --check` | PASS on 2026-09-03 | 2 |
 | PSS-FREEZE-007 | project-owner acceptance of observed migration baseline | approval record in `STAGE_REPORTS/STAGE-02.md`; scope cross-check against plan/inventory | PASS on 2026-09-04; migration/regression only | 2 |
 | PSS-REDIRECT-001 | explicit Google ContentService redirect handling | PHP regression: one POST, trusted HTTPS 302 Location, payload-free GET, no second redirect, final response validation | PASS at fix commit `1e8899c` on 2026-09-07 | out-of-sequence |
+| STAGE3-BOOT-001 | bootstrap/orchestration extraction | PHP 8.2 lint; one-time hook/shortcode registration; exact shortcode/route; filemtime assets; full PSS10 frontend/REST/backend regressions | PASS in Stage 3.1 on 2026-09-08 | 3 |
 
 ## Out-of-sequence manual real-WordPress evidence
 
@@ -95,7 +96,7 @@ Before any questionnaire can be marked `ready`, all applicable rows below must b
 
 | ID | Requirement | Planned stage | Current result |
 |---|---|---:|---|
-| STATIC-001 | all PHP files lint on PHP 7.4 and 8.2 | 3+ | NOT_RUN |
+| STATIC-001 | all PHP files lint on minimum supported PHP 8.2 | 3+ | PASS for current Stage 3.1 PHP files on 2026-09-08 |
 | STATIC-002 | all JS and Apps Script parse | 2+ | PASS for current legacy/test JS and VM-parsed Apps Script in STAGE 2 |
 | STATIC-003 | registry paths are explicit and within plugin | 3 | NOT_RUN |
 | STATIC-004 | no visitor-derived include path/directory traversal | 3 | NOT_RUN |
