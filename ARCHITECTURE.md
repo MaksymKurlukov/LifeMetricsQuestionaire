@@ -82,6 +82,8 @@ The shared `templates/questionnaire.php` is the default and only planned templat
 
 During the approved Stage 3 transition, `class-legacy-pss10-runtime.php` temporarily contains the validated PSS10 PHP asset, shortcode rendering, exact REST callback, and Google redirect behavior. `LifeMetrics_Plugin` owns hook registration and guards against duplicate initialization. This compatibility class is not generic architecture and remains only until the Stage 6 PSS10 cutover.
 
+Stage 3 routes the public shortcode through `LifeMetrics_Shortcodes` and the exact PSS10 REST route through `LifeMetrics_REST_Controller`; both delegate compatibility behavior to the same legacy runtime. The registry production map remains empty and no generic public route exists.
+
 The project minimum supported PHP version is 8.2. Stage 3 does not create unused Renderer, generic Assets, SchemaValidator, ScoringEngine, SubmissionService, or Google adapter shells; those remain assigned to their documented later stages.
 
 ### Questionnaire registry
@@ -106,6 +108,8 @@ It does not repair, default, or reinterpret incomplete scoring/content.
 
 `class-shortcodes.php` registers only `[lifemetrics_questionnaire]` in V1. It sanitizes the ID, asks the public registry, enqueues shared assets through the asset service, and returns renderer output. Invalid/draft/review/disabled IDs render nothing and never expose content.
 
+Until the Stage 5 renderer and Stage 6 PSS10 cutover, the Stage 3 controller delegates to the legacy PSS10 runtime to preserve byte-equivalent output.
+
 ### Renderer and template
 
 `class-questionnaire-renderer.php` creates a unique instance ID, same-origin submission URL, shared asset URLs, and a client-safe configuration projection. It escapes output and includes the shared template.
@@ -121,6 +125,8 @@ The shared template contains semantic placeholders only. It does not score, fetc
 ### REST controller
 
 `class-rest-controller.php` owns `POST /wp-json/lifemetrics-questionnaires/v1/{id}/submit`. It enforces request size/content type, resolves the exact public questionnaire/version, validates the request envelope, invokes server scoring, and delegates canonical persistence.
+
+The Stage 3 implementation registers only `/pss10/submit` and delegates its callback to the legacy PSS10 runtime. The wildcard form above is target architecture and is not active.
 
 The public permission callback is explicit because the flow is anonymous. It does not weaken body validation, idempotency, or abuse controls.
 
@@ -150,7 +156,7 @@ The adapter is replaceable without changing the engine/UI/schema. No generalized
 
 `questionnaires/<id>/questionnaire.php` returns one plain associative array. It has no hooks, includes, callbacks, environment URL, DOM, or HTTP behavior. Its immutable `version` identifies the exact content/scoring interpretation.
 
-Stage 3 must add a `result_ctas` collection to this data contract. Each item owns `label`, `url`, `variant`, and `enabled`; URLs remain subject to the schema's internal/approved-destination rules. The current PSS10 values are `Je veux faire un bilan` -> `/formulaire-bilan/` and a disabled/unlinked `Découvrir les autres tests` reserved for `/tests-sante/`.
+The generic data contract includes a `result_ctas` collection. Each item owns `label`, `url`, `variant`, and `enabled`; URLs remain subject to the schema's internal/approved-destination rules. PSS10 migration to this contract is deferred to Stage 6. Its current values are `Je veux faire un bilan` -> `/formulaire-bilan/` and a disabled/unlinked `Découvrir les autres tests` reserved for `/tests-sante/`.
 
 ## WordPress presentation boundary
 
