@@ -96,8 +96,8 @@ $modal_title_id = $instance_id . '-modal-title';
           <button type="button" class="btn btn--secondary btn--retry" data-lmq-role="retry">Réessayer</button>
         </div>
         <div class="result-actions">
-          <button type="button" class="btn btn--primary">Voir mon programme personnalisé</button>
-          <button type="button" class="btn btn--secondary">Contacter un praticien certifié</button>
+          <a href="/formulaire-bilan/" class="btn btn--primary" data-lmq-role="primary-cta">Je veux faire un bilan</a>
+          <button type="button" class="btn btn--secondary" data-lmq-role="tests-catalogue">Découvrir les autres tests</button>
           <button type="button" class="btn btn--tertiary" data-lmq-role="restart">Refaire le test</button>
         </div>
       </div>
@@ -124,5 +124,5 @@ $modal_title_id = $instance_id . '-modal-title';
     </div>
   </div>
 
-  <div class="toast" data-lmq-role="toast" aria-live="polite" hidden>Sauvegarde en cours…</div>
+  <div class="toast" data-lmq-role="toast" aria-live="polite" hidden></div>
 </div>

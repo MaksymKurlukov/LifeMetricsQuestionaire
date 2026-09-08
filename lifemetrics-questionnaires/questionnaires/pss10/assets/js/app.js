@@ -229,7 +229,6 @@
       state.saveFailed = false;
       if (btnRetrySend) btnRetrySend.disabled = true;
       if (resultSaveAlert) resultSaveAlert.hidden = true;
-      showToast('Sauvegarde en cours…');
 
       sendToWordPress(payload).then(function () {
         state.saving = false;

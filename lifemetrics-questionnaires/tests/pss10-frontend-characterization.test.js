@@ -224,10 +224,10 @@ function runCharacterization(mutationName) {
   assert.match(source, /function onAnswerClick\(event\) \{[\s\S]*?var questionId = state\.currentQuestion;[\s\S]*?cancelAutoAdvance\(\);/);
   assert.ok(source.includes("method: 'POST'"));
   assert.ok(source.includes('body: JSON.stringify(payload)'));
-  assert.ok(source.includes("showToast('Sauvegarde en cours…');"));
   assert.ok(source.includes('displaySaveError(error);'));
   assert.ok(source.includes('showToast(message, 3500);'));
   assert.ok(source.includes('if (resultSaveAlert) resultSaveAlert.hidden = false;'));
+  assert.ok(!source.includes('Sauvegarde en cours…'));
   assert.ok(!source.includes('Résultat enregistré.'));
   assert.match(source, /sendToWordPress\(payload\)\.then\(function \(\) \{[\s\S]*?hideToast\(\);[\s\S]*?\}\)\.catch\(function \(error\) \{[\s\S]*?displaySaveError\(error\);/);
   assert.ok(plugin.includes("'/pss10/submit'"));
@@ -237,8 +237,11 @@ function runCharacterization(mutationName) {
   assert.ok(template.includes('data-lmq-questionnaire="pss10"'));
   assert.ok(template.includes('class="lmq-dialog"'));
   assert.ok(!template.includes('class="modal"'));
-  assert.match(template, /<button type="button" class="btn btn--primary">Voir mon programme personnalisé<\/button>/);
-  assert.match(template, /<button type="button" class="btn btn--secondary">Contacter un praticien certifié<\/button>/);
+  assert.ok(!template.includes('Sauvegarde en cours…'));
+  assert.ok(!template.includes('Résultat enregistré.'));
+  assert.match(template, /<a href="\/formulaire-bilan\/" class="btn btn--primary" data-lmq-role="primary-cta">Je veux faire un bilan<\/a>/);
+  assert.match(template, /<button type="button" class="btn btn--secondary" data-lmq-role="tests-catalogue">Découvrir les autres tests<\/button>/);
+  assert.ok(!template.includes('href="/tests-sante/"'));
   assert.ok(css.includes('.lmq-pss10'));
   assert.match(css, /--color-bg: #faf8f5;/);
   assert.match(css, /\.lmq-pss10 \{[\s\S]*?position: relative;[\s\S]*?left: 50%;[\s\S]*?margin-left: -50vw;[\s\S]*?background: var\(--color-bg\);[\s\S]*?width: 100vw;[\s\S]*?max-width: 100vw;/);
@@ -254,6 +257,7 @@ function runCharacterization(mutationName) {
   assert.match(css, /\.lmq-pss10 \.link\[data-lmq-role="learn-more"\],[\s\S]*?:hover,[\s\S]*?:focus,[\s\S]*?:active \{[\s\S]*?color: var\(--color-primary\) !important;/);
   assert.match(css, /\.lmq-pss10 \.page-footer \.footer-link,[\s\S]*?\.footer-link:hover,[\s\S]*?\.footer-link:focus,[\s\S]*?\.footer-link:active \{[\s\S]*?color: var\(--color-text-muted\) !important;/);
   assert.match(css, /\.lmq-pss10 \.result-actions \.btn \{[\s\S]*?display: flex;[\s\S]*?align-items: center;[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/);
+  assert.match(css, /\.lmq-pss10 \.result-actions \.btn\[data-lmq-role="primary-cta"\],[\s\S]*?:hover,[\s\S]*?:focus,[\s\S]*?:active \{[\s\S]*?color: #fff !important;[\s\S]*?text-decoration: none !important;/);
   assert.match(css, /\.lmq-pss10 \.lmq-dialog > \.modal-close \{[\s\S]*?display: flex !important;[\s\S]*?align-items: center !important;[\s\S]*?justify-content: center !important;[\s\S]*?text-align: center !important;[\s\S]*?width: 100%;/);
 }
 
