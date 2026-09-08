@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Generic UI Fixture Test</title>
+  <link rel="stylesheet" href="../../assets/css/questionnaire.css">
+</head>
+<body>
+  <div id="lmq-fixture-root" class="lmq-questionnaire" data-lmq-questionnaire="synthetic-test" data-lmq-submit-url="/fake/submit">
+    <script type="application/json" data-lmq-config>
+      {
+        "id": "synthetic-test",
+        "title": "Synthetic Test",
+        "description": "A test questionnaire.",
+        "questions": [
+          { "id": "q1", "text": "Q1?", "answers": [{ "value": 0, "label": "No", "points": 0, "applicable": true }, { "value": 1, "label": "Yes", "points": 1, "applicable": true }] }
+        ],
+        "safety_questions": [],
+        "dimensions": [],
+        "classification_rules": [],
+        "classification_messages": {},
+        "safety_messages": {},
+        "result_ctas": [],
+        "score": { "target_min": 0, "target_max": 1, "normalize_when_unavailable": false, "rounding": "half_up" },
+        "result_levels": [
+          { "code": "low", "rank": 1, "min": 0, "max": 0, "title": "Low", "description": "Low result", "recommendations": [] },
+          { "code": "high", "rank": 2, "min": 1, "max": 1, "title": "High", "description": "High result", "recommendations": [] }
+        ]
+      }
+    </script>
+    <div class="app">
+      <!-- UI -->
+    </div>
+  </div>
+  <script src="../../assets/js/questionnaire-engine.js"></script>
+  <script src="../../assets/js/questionnaire-ui.js"></script>
+</body>
+</html>

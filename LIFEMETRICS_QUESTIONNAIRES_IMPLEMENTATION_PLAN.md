@@ -896,7 +896,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 5 - Shared frontend UI, API, template, and assets
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** implement reusable presentation and same-origin transport against fixtures, still without PSS10 cutover.
 - **Prerequisites:** STAGE 4 PASS.
 - **Files allowed to change:** shared `assets/`, shared template, renderer/assets service, frontend tests, test pages/fixtures.
@@ -913,7 +913,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 6 - Migrate PSS10 to generic configuration
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** switch PSS10 to the generic stack without observed behavior change.
 - **Prerequisites:** STAGE 5 PASS; STAGE 2 freeze green.
 - **Files allowed to change:** PSS10 config/new migration adapter, bootstrap/registry/renderer/assets, shared files only for proven parity fixes, tests/docs.
@@ -930,7 +930,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 7 - Scoring contract hardening
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** prove the generic features with synthetic non-public fixtures before real LifeMetrics content.
 - **Prerequisites:** STAGE 6 PASS.
 - **Files allowed to change:** scoring/schema/payload implementations only for defects; tests/fixtures/docs.
@@ -964,7 +964,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 9 - PSS10 WordPress regression validation
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** prove migrated PSS10 in real WordPress/Gutenberg/Elementor and browser contexts.
 - **Prerequisites:** STAGE 8 PASS.
 - **Files allowed to change:** tests/evidence; narrowly scoped plugin defect fixes with separate diff; test site content.
@@ -981,7 +981,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 10 - Generic backend shadow migration
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** implement the versioned canonical payload and recommended hybrid Sheet model without blind cutover.
 - **Prerequisites:** STAGE 9 PASS; DEC-005 accepted; privacy/storage owner approval; backup/export available.
 - **Files allowed to change:** integration adapter, Apps Script canonical source, REST/submission service, backend/payload tests, docs.
@@ -1023,7 +1023,7 @@ The catalogue page is `Tests santé` at `/tests-sante/`. It lists the ten propri
 
 ## STAGE 11 - First proprietary questionnaire: Sédentarité
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** prove N/A, normalized dimensions, weakest output, and category guardrail using the most technically complete proprietary specification after approval.
 - **Prerequisites:** STAGE 10 PASS; PDF hash and owner approval recorded; CTA URLs supplied.
 - **Files allowed to change:** `questionnaires/sedentarite/questionnaire.php`, its scoring fixture/test, registry, inventory/changelog/test matrix.
@@ -1193,7 +1193,7 @@ The catalogue page is `Tests santé` at `/tests-sante/`. It lists the ten propri
 
 ## STAGE 21 - Production packaging and deployment readiness
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `IN_PROGRESS`
 - **Objective:** package only questionnaires meeting Production Ready DoD and provide a reversible deployment checklist.
 - **Prerequisites:** PSS10 and each included questionnaire have all prior stages PASS; privacy/backend/WordPress owners sign off.
 - **Files allowed to change:** plugin docs/changelog/version, packaging exclusions, release manifest; source only for reviewed release defects.
