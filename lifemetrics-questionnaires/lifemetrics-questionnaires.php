@@ -22,6 +22,8 @@ if (!defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
 
 require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-legacy-pss10-runtime.php';
+require_once LMQ_PLUGIN_PATH . 'includes/class-shortcodes.php';
+require_once LMQ_PLUGIN_PATH . 'includes/class-rest-controller.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-lifemetrics-plugin.php';
 
 LifeMetrics_Plugin::init();

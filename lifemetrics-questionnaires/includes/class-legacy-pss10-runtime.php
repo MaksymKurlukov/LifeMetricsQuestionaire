@@ -41,19 +41,6 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         return (string) ob_get_clean();
     }
 
-    public function register_rest_routes(): void
-    {
-        register_rest_route(
-            'lifemetrics-questionnaires/v1',
-            '/pss10/submit',
-            array(
-                'methods' => WP_REST_Server::CREATABLE,
-                'callback' => array($this, 'submit'),
-                'permission_callback' => '__return_true',
-            )
-        );
-    }
-
     public function submit(WP_REST_Request $request)
     {
         if (strlen($request->get_body()) > 8192) {

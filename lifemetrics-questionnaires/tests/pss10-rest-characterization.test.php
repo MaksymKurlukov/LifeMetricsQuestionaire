@@ -99,7 +99,8 @@ function submit_pss10($input, $jsonContentType = true, $body = null)
     $GLOBALS['lmq_last_remote_request'] = null;
     $GLOBALS['lmq_remote_requests'] = array();
     $runtime = new LifeMetrics_Legacy_PSS10_Runtime();
-    return $runtime->submit(new WP_REST_Request($input, $jsonContentType, $body));
+    $controller = new LifeMetrics_REST_Controller($runtime);
+    return $controller->submit_pss10(new WP_REST_Request($input, $jsonContentType, $body));
 }
 
 function expect_error_code($expectedCode, $result, $label)
@@ -122,20 +123,24 @@ expect_same(false, $GLOBALS['lmq_registered_style']['version'] === '1.0.0', 'CSS
 expect_same(false, $GLOBALS['lmq_registered_script']['version'] === '1.0.0', 'JS version is not static plugin version');
 expect_same(3, count($GLOBALS['lmq_actions']), 'plugin registers three actions once');
 expect_same(1, count($GLOBALS['lmq_shortcodes']), 'plugin registers one shortcode once');
+expect_same(LifeMetrics_Shortcodes::class, get_class($GLOBALS['lmq_shortcodes'][0]['callback'][0]), 'shortcode uses controller');
 LifeMetrics_Plugin::init();
 expect_same(3, count($GLOBALS['lmq_actions']), 'plugin initialization is idempotent');
 expect_same(1, count($GLOBALS['lmq_shortcodes']), 'shortcode initialization is idempotent');
-expect_same('', $runtime->render_shortcode(array('id' => '../unknown')), 'unknown shortcode ID renders nothing');
-$shortcodeFirst = $runtime->render_shortcode(array('id' => 'pss10'));
-$shortcodeSecond = $runtime->render_shortcode(array('id' => 'pss10'));
+$shortcodeCallback = $GLOBALS['lmq_shortcodes'][0]['callback'];
+expect_same('', $shortcodeCallback(array('id' => '../unknown')), 'unknown shortcode ID renders nothing');
+$shortcodeFirst = $shortcodeCallback(array('id' => 'pss10'));
+$shortcodeSecond = $shortcodeCallback(array('id' => 'pss10'));
 expect_same(true, strpos($shortcodeFirst, 'id="lmq-pss10-1"') !== false, 'first shortcode gets unique root ID');
 expect_same(true, strpos($shortcodeSecond, 'id="lmq-pss10-2"') !== false, 'second shortcode gets unique root ID');
 expect_same(array('lmq-pss10', 'lmq-pss10'), $GLOBALS['lmq_enqueued_styles'], 'shortcode preserves style handle');
 expect_same(array('lmq-pss10', 'lmq-pss10'), $GLOBALS['lmq_enqueued_scripts'], 'shortcode preserves script handle');
-$runtime->register_rest_routes();
+$GLOBALS['lmq_actions'][2]['callback']();
 expect_same('lifemetrics-questionnaires/v1', $GLOBALS['lmq_registered_route']['namespace'], 'REST namespace unchanged');
 expect_same('/pss10/submit', $GLOBALS['lmq_registered_route']['route'], 'exact PSS10 REST route unchanged');
 expect_same('POST', $GLOBALS['lmq_registered_route']['args']['methods'], 'REST method unchanged');
+expect_same(LifeMetrics_REST_Controller::class, get_class($GLOBALS['lmq_registered_route']['args']['callback'][0]), 'REST route uses controller');
+expect_same('submit_pss10', $GLOBALS['lmq_registered_route']['args']['callback'][1], 'REST callback remains explicit PSS10 compatibility');
 
 $GLOBALS['lmq_remote_response'] = array('status' => 200, 'body' => '{"ok":true,"duplicate":false}');
 $GLOBALS['lmq_remote_get_response'] = null;
