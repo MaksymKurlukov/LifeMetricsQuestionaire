@@ -4,7 +4,7 @@ Inventory version: 1.0.0
 
 Status: `APPROVED AS CURRENT INVENTORY STATE`
 
-Last verified: 2026-09-03
+Last verified: 2026-09-08
 
 Approved by: Maksym Kurlukov on 2026-09-03. This accepts the inventory contract and recorded readiness state; it does not approve questionnaire content for implementation/publication or assign questionnaire-specific owners.
 
@@ -40,7 +40,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 
 | ID | Content | Scoring | Safety | N/A | Guardrail/attention | CTA | Implementation | Approval/blocker |
 |---|---|---|---|---|---|---|---|---|
-| `pss10` | existing plugin/standalone behavior; no separate questionnaire PDF found | executable freeze approved for structural migration: 1-5, reverse Q4/Q5/Q7/Q8, 10-50, boundaries 20/21/26/27 | none | none | none | existing non-navigating stubs approved only as legacy baseline | `BLOCKED_BY_APPROVAL` | behavior freeze complete; licensing/attribution and any production UX/content/CTA approval remain pending for their planned stages |
+| `pss10` | existing plugin/standalone behavior; no separate questionnaire PDF found | executable freeze approved for structural migration: 1-5, reverse Q4/Q5/Q7/Q8, 10-50, boundaries 20/21/26/27 | none | none | none | primary `/formulaire-bilan/`; secondary reserved for `/tests-sante/` and currently unlinked | `BLOCKED_BY_APPROVAL` | runtime/E2E stabilized and passed; licensing/attribution and publication approval remain separate blockers |
 | `activite-physique` | `CONTENT_READY` | ranges defined, but source requires synthetic validation/pilot | none | none | none | VitaScan | `BLOCKED_BY_SCORING` | confirm AP04 duplicate 4-point mapping; run/approve profiles; owner/date/URL pending |
 | `sommeil` | `CONTENT_READY` | model/ranges defined; completed synthetic validation evidence absent | SLSF01-SLSF03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | scoring profiles/boundaries plus owner/date/URL pending |
 | `hydratation` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation | HYSF01-HYSF03 | HY05 | weakest dimensions; no category guardrail | VitaScan | `BLOCKED_BY_APPROVAL` | source owner/date and final CTA URL pending |
@@ -60,7 +60,8 @@ PDF files are external read-only sources and are not tracked by this repository.
 - Current code is the behavior source until a separately approved legal/content source is recorded.
 - Stored and displayed category labels are not identical; migration must preserve this before any later UX/content decision.
 - STAGE 2 golden fixtures and mutation guards are executable and accepted as the structural-migration/regression baseline by Maksym Kurlukov on 2026-09-04.
-- The current legacy PSS10 path passed one controlled real-WordPress E2E on `lifemetrics.fr` on 2026-09-07 at fix commit `1e8899c`: REST returned `success:true, duplicate:false`, exactly one Sheet row was written, and the frontend confirmed success. This out-of-sequence evidence does not replace the broader migrated WordPress/backend gates in STAGES 8-10.
+- The current legacy PSS10 path completed the controlled production-runtime cycle on `lifemetrics.fr`: `WORDPRESS_RUNTIME`, `SHEET_WRITE`, `REST_RESPONSE`, `FRONTEND_CONFIRMATION`, `DUPLICATE_CHECK`, and `PSS10_END_TO_END` are all `PASS`. Full evidence and commit chronology are in `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`.
+- Current result actions are `Je veux faire un bilan` -> `/formulaire-bilan/` (normal relative link) and `Découvrir les autres tests` (intentionally unlinked until `/tests-sante/` exists). Stage 3 must migrate these into `result_ctas` configuration.
 - This baseline acceptance does not permanently approve legacy UX/content/legal choices for production; changes to wording, CTA behavior, licensing/attribution, or UX require a separate authorized stage.
 
 ### Activité physique
@@ -107,6 +108,10 @@ PDF files are external read-only sources and are not tracked by this repository.
 - Result ranges remain provisional.
 - Source requires deciding whether PF09-PF10 needs a guardrail after profiles A-F.
 - CTA is Podos360, not VitaScan.
+
+## Planned Tests santé catalogue
+
+The WordPress catalogue page is named `Tests santé` with planned path `/tests-sante/`. It will list these ten proprietary questionnaires from registry/config metadata: Activité physique; Sommeil; Hydratation; Nutrition; Fatigue et récupération; Sédentarité; Stress et équilibre quotidien; Pieds & confort postural; Habitudes favorables à la composition corporelle; Bien-être général. Each entry exposes title, description, estimated duration, lifecycle/status, and CTA; non-ready entries are disabled or marked unavailable. PSS10 is separate if retained because it is a standardized instrument rather than a proprietary LifeMetrics questionnaire.
 
 ## Approval ledger
 

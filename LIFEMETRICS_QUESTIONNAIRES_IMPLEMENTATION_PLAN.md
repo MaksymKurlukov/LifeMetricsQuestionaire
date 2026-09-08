@@ -10,9 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_NOT_STARTED`
 
 Next executable stage: `STAGE 3 - Generic PHP infrastructure in parallel`
+
+Stage 3 remains paused and has not started. The out-of-sequence PSS10 production-runtime milestone is complete, but it does not advance or reorder the generic implementation stages.
 
 ## Status vocabulary
 
@@ -116,7 +118,7 @@ Observed PSS10 score behavior to freeze before migration:
 - category boundaries: 10-20 `Stress bas`, 21-26 `Stress assez élevé`, 27-50 `Stress très élevé`;
 - displayed middle/high badges currently use `Stress modéré` and `Stress élevé`, while stored categories use the longer labels;
 - no dimensions, N/A answers, or safety questions;
-- result CTA buttons are currently non-navigating stubs;
+- at the STAGE 2 freeze, result CTA buttons were non-navigating stubs; this historical baseline was later changed by separately authorized UI stabilization, with current CTA state recorded in the milestone report;
 - PSS10 wording, score direction, gauge behavior, modal, timing, error messages, endpoint path, and accessibility behavior are migration invariants unless a later content/UX change is separately authorized.
 
 ### Backend flow
@@ -823,7 +825,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 ## STAGE 2 - Freeze PSS10 behavior with tests
 
 - **Status:** `PASS` on 2026-09-04. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Maksym Kurlukov explicitly accepted the captured legacy behavior as the structural-migration/regression baseline, without granting permanent production approval to legacy UX, content, CTA, licensing, or attribution choices.
-- **Later out-of-sequence evidence:** on 2026-09-07, before STAGE 3, the current legacy PSS10 path passed one controlled real-WordPress E2E on `lifemetrics.fr` after fix commit `1e8899c01aa79a0a9a78327f64999fb4c0c9c5c0`; see the addendum in `STAGE_REPORTS/STAGE-02.md`. This does not mark the broader STAGES 8-10 matrices complete.
+- **Later out-of-sequence evidence:** the controlled production-runtime cycle is complete through `bfb1385`: `WORDPRESS_RUNTIME`, `SHEET_WRITE`, `REST_RESPONSE`, `FRONTEND_CONFIRMATION`, `DUPLICATE_CHECK`, and `PSS10_END_TO_END` are `PASS`. See `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`. This does not mark the future generic/migrated STAGES 8-10 matrices complete.
 - **Objective:** create an executable characterization harness without modifying behavior.
 - **Prerequisites:** STAGE 1 PASS.
 - **Files allowed to change:** plugin `tests/`, test-only scripts/fixtures, test documentation.
@@ -834,7 +836,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **PASS/FAIL:** PASS with deterministic green harness and documented untestable runtime gaps; FAIL if tests require source behavior changes or cannot detect scoring drift.
 - **Rollback criteria:** remove only new test files/fixtures.
 - **Expected deliverables:** PSS10 golden fixture, test runner instructions, freeze report.
-- **Blockers:** none for STAGE 2. Browser/WordPress screenshots remain explicitly deferred to STAGES 8-9.
+- **Blockers:** none for STAGE 2. The original statement that all browser/WordPress evidence was deferred is historical and superseded for the current legacy PSS10 path by the production-runtime milestone; migrated generic runtime, mobile, and builder coverage remain in later gates.
 - **User action required:** none for STAGE 2.
 - **Recommended commit checkpoint:** `test: freeze current PSS10 behavior`.
 
@@ -854,6 +856,24 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Blockers:** PHP 7.4 runtime may need container/CI if unavailable locally.
 - **User action required:** review class boundaries and compatibility adapter.
 - **Recommended commit checkpoint:** `refactor: add generic PHP infrastructure without cutover`.
+
+### Completed out-of-sequence PSS10 stabilization milestone
+
+This milestone is complete without starting Stage 3. Commit chronology and scope:
+
+1. `1e8899c` - explicit trusted Google ContentService redirect handling and controlled E2E recovery;
+2. `54367e1` - modal visibility plus theme hover and result CTA isolation;
+3. `84d12d8` - strongly scoped Fermer alignment and removal of the success toast;
+4. `943a946` - first plugin full-bleed background attempt (superseded; did not solve the real theme layout);
+5. `d9f41f8` - alternate background attempt (superseded; did not solve the real theme layout);
+6. `046743b` - filemtime asset cache busting, same-answer reselection after Retour, and additional hover/link isolation;
+7. `bfb1385` - silent in-progress submission plus current CTA labels/navigation.
+
+Verified current behavior: modal open/close, Escape and focus return; Retour answer preservation and same-answer reselection; isolated Retour/main/footer/result-secondary hover states; centered result and Fermer CTA text; hidden normal saving/success toasts with error feedback retained; silent background submission; and cache-busted assets. The scoring model, backend semantics, REST contract, Apps Script, and Sheet schema did not change in the UI stabilization commits.
+
+PSS10 remains the standardized legacy instrument with reverse scoring on Q4/Q5/Q7/Q8, scale 10-50, and the characterized calculated/displayed category distinction preserved. Runtime success does not clear the unresolved licensing/legal/attribution gate.
+
+The required full-viewport `#faf8f5` background is not solved inside the plugin. It belongs to WordPress/page composition between the unchanged header and footer; plugin code must not acquire page-ID, Elementor, theme, or global body/html coupling to force it.
 
 ## STAGE 4 - Schema validator and dual-runtime scoring core
 
@@ -974,6 +994,31 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **User action required:** export/backup, deploy/authorize Apps Script, approve cutover.
 - **Recommended commit checkpoint:** `feat: add versioned generic submission backend`.
 
+### Standard lifecycle for STAGES 11-20
+
+Every questionnaire stage from STAGE 11 through STAGE 20 must execute and record the same A-P lifecycle. A later letter cannot compensate for an earlier missing approval or failing test:
+
+A. approved source/config intake and immutable source/version record;
+B. schema validation and lifecycle status validation;
+C. explicit scoring transcription and dual-runtime parity;
+D. exhaustive score bands and boundary fixtures;
+E. N/A, normalization, dimension, and weakest-dimension behavior where applicable;
+F. allowlisted guardrails with numeric-score invariance where applicable;
+G. independent non-scored safety flags and priority where applicable;
+H. result interpretation and approved claims/copy;
+I. recommendations and disclaimers;
+J. `result_ctas` configuration (`label`, `url`, `variant`, `enabled`);
+K. generic shortcode registration/rendering with lifecycle gate;
+L. generic REST request/server recomputation contract;
+M. canonical storage, idempotency, and versioning;
+N. automated schema/scoring/parity/contract/regression tests;
+O. real WordPress runtime plus desktop/mobile visual validation;
+P. `Tests santé` catalogue metadata/status/CTA integration.
+
+The standard runtime acceptance gate in `TEST_MATRIX.md` must be fully `PASS` before status `ready`. `draft` is incomplete/private, `review` is complete enough for review but non-public, `ready` alone is public, and `disabled` remains non-public and retained for history/rollback.
+
+The catalogue page is `Tests santé` at `/tests-sante/`. It lists the ten proprietary questionnaires from registry/config metadata (title, description, estimated duration, status, CTA) and visibly disables or marks unavailable non-ready entries. PSS10 is shown separately if retained as a standardized instrument.
+
 ## STAGE 11 - First proprietary questionnaire: Sédentarité
 
 - **Status:** `NOT_STARTED`.
@@ -981,7 +1026,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** STAGE 10 PASS; PDF hash and owner approval recorded; CTA URLs supplied.
 - **Files allowed to change:** `questionnaires/sedentarite/questionnaire.php`, its scoring fixture/test, registry, inventory/changelog/test matrix.
 - **Files forbidden to change:** shared engine unless a contract bug is first demonstrated; PSS config; other questionnaire content; PDF; standalone.
-- **Exact tasks:** exact transcription SD01-SD12, SD07/08 N/A, six dimensions, four levels, D1 cap/message, weakest/attention rules, CTA/disclaimers; independent two-person or source-vs-code review.
+- **Exact tasks:** execute lifecycle A-P; exact transcription SD01-SD12, SD07/08 N/A, normalized 0-48 scale, six dimensions, four levels, D1 cap/message, dimension warnings, weakest/attention rules, CTA/disclaimers; independent two-person or source-vs-code review.
 - **Required tests:** profiles A-F, all category boundaries, N/A combinations, D1 2/8 and 3/8, dimension percentages/ties, payload/server parity, WordPress/browser matrix.
 - **Acceptance criteria:** exact source traceability; no invented text; canonical/server outputs match PDF examples; only `ready` after approval.
 - **PASS/FAIL:** mismatch or missing CTA approval is FAIL/BLOCKED, not a default.
@@ -998,7 +1043,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** STAGE 11 PASS; source/content owner approval; CTA URL.
 - **Files allowed to change:** Hydratation config/test, registry, docs.
 - **Files forbidden to change:** other configs/shared behavior without failing generic fixture; PDF/standalone.
-- **Exact tasks:** exact HY01-HY12/safety/dimensions/ranges/results/disclaimers transcription and review.
+- **Exact tasks:** execute lifecycle A-P; exact HY01-HY12/safety/dimensions/ranges/results/disclaimers transcription and review.
 - **Required tests:** documented five profiles, 44/44 -> 48, safety plus favorable score, boundaries, weakest dimensions, E2E.
 - **Acceptance criteria:** exact PDF match and complete safety priority.
 - **PASS/FAIL:** FAIL if N/A penalizes score or safety changes score/is hidden.
@@ -1015,7 +1060,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** STAGE 12 PASS and source approval.
 - **Files allowed to change:** Fatigue config/test, registry, docs.
 - **Files forbidden to change:** other content/shared behavior absent demonstrated defect.
-- **Exact tasks:** exact transcription including final FR10 wording, result levels, weakest/attention, VitaScan/Metabolism separation.
+- **Exact tasks:** execute lifecycle A-P; exact transcription including final FR10 wording, result levels, weakest/attention, VitaScan/Metabolism separation.
 - **Required tests:** documented seven synthetic profiles, safety with 44/48, boundaries/dimensions/E2E.
 - **Acceptance criteria:** old draft FR10 is not reintroduced; safety independent and first.
 - **PASS/FAIL:** any content/source or safety mismatch fails.
@@ -1032,7 +1077,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** completed/approved synthetic boundary/profile report and content approval; prior stage PASS.
 - **Files allowed to change:** Sommeil config/test, registry, docs.
 - **Files forbidden to change:** source PDF, other configs, unapproved score ranges.
-- **Exact tasks:** validate non-linear SL01, ranges/dimensions/safety, transcribe/review, implement and test.
+- **Exact tasks:** execute lifecycle A-P; validate non-linear SL01, ranges/dimensions/safety, transcribe/review, implement and test.
 - **Required tests:** all boundaries, non-linear duration answer, safety high-score case, five dimensions, E2E.
 - **Acceptance criteria:** scoring approval recorded and exact implementation.
 - **PASS/FAIL:** remains BLOCKED rather than inventing missing validation conclusions.
@@ -1049,7 +1094,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** approved scoring profiles/boundaries and content.
 - **Files allowed to change:** Nutrition config/test, registry, docs.
 - **Files forbidden to change:** other configs/source/shared rules without proof.
-- **Exact tasks:** validate six dimensions/four ranges, safety and claims; exact transcription/review.
+- **Exact tasks:** execute lifecycle A-P; validate six dimensions/four ranges, safety and claims; exact transcription/review.
 - **Required tests:** extremes/intermediate boundaries, reverse-worded mapped points, safety high-score case, E2E.
 - **Acceptance criteria:** no calorie/diagnostic claims; complete source parity.
 - **PASS/FAIL:** blocked on absent validation/approval; content must not be guessed.
@@ -1066,7 +1111,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** approved five-profile scoring report; content approval.
 - **Files allowed to change:** Activité config/test, registry, docs.
 - **Files forbidden to change:** ranges until approved; other configs/source.
-- **Exact tasks:** resolve source anomaly where AP04 lists both `2 jours` and `3 jours ou plus` as 4 points and document confirmation; validate ranges; transcribe/review.
+- **Exact tasks:** execute lifecycle A-P; resolve source anomaly where AP04 lists both `2 jours` and `3 jours ou plus` as 4 points and document confirmation; validate ranges; transcribe/review.
 - **Required tests:** five profiles named by PDF, AP04 confirmed mapping, AP12 ordered scoring, category boundaries, E2E.
 - **Acceptance criteria:** anomaly explicitly approved; no WHO-score claim; exact output.
 - **PASS/FAIL:** AP04 ambiguity or missing validation keeps stage BLOCKED.
@@ -1083,7 +1128,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** approved profiles A-F and guardrail ADR/content approval.
 - **Files allowed to change:** Pieds config/test, registry, docs/ADR.
 - **Files forbidden to change:** provisional source by inference; other configs.
-- **Exact tasks:** execute synthetic validation, decide guardrail, version the approved specification, exact transcription, Podos360 CTA/claims review.
+- **Exact tasks:** execute lifecycle A-P; complete required synthetic validation, decide the unresolved PF09/PF10 guardrail, version the approved specification, exact transcription, Podos360 CTA/claims review. PFSF01-PFSF04 safety flags remain numerically independent.
 - **Required tests:** profiles A-F, any approved guardrail boundaries, dimension attention, safety with favorable score, E2E.
 - **Acceptance criteria:** categories no longer provisional and guardrail decision recorded.
 - **PASS/FAIL:** stage remains BLOCKED while either decision is unresolved.
@@ -1100,7 +1145,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** exact source file, version, scoring/dimensions/safety/N/A/guardrail/CTA/disclaimer and approval.
 - **Files allowed to change:** inventory first; config/test/registry only after readiness.
 - **Files forbidden to change:** PSS10 or invented content.
-- **Exact tasks:** inventory/review source, establish distinct naming/claims, then standard transcription/test workflow.
+- **Exact tasks:** execute lifecycle A-P after source approval; inventory/review source, establish distinct naming/claims, then standard transcription/test workflow.
 - **Required tests:** derived from approved source plus generic suite/E2E.
 - **Acceptance criteria:** no conceptual conflation with PSS10; source traceability complete.
 - **PASS/FAIL:** absent/incomplete source is BLOCKED, never guessed.
@@ -1117,7 +1162,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** complete approved specification and privacy/claims review.
 - **Files allowed to change:** inventory then questionnaire-specific config/tests/registry.
 - **Files forbidden to change:** invented scoring/medical claims/other configs.
-- **Exact tasks:** source review, schema mapping, claims/safety review, standard implementation.
+- **Exact tasks:** execute lifecycle A-P after source approval; source review, schema mapping, claims/safety review, standard implementation.
 - **Required tests:** source-specific profiles/boundaries plus generic/E2E.
 - **Acceptance criteria:** scoring and product-measurement boundaries explicit.
 - **PASS/FAIL:** missing source remains BLOCKED.
@@ -1134,7 +1179,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Prerequisites:** complete approved specification defining relationship to domain questionnaires.
 - **Files allowed to change:** inventory then questionnaire-specific config/tests/registry.
 - **Files forbidden to change:** invented aggregate weighting or cross-questionnaire data access.
-- **Exact tasks:** source/scope review, decide whether standalone or aggregate through ADR, then standard implementation.
+- **Exact tasks:** execute lifecycle A-P after source/scope approval; decide whether standalone or aggregate through ADR, then standard implementation.
 - **Required tests:** approved source vectors, overlap/privacy checks, generic/E2E.
 - **Acceptance criteria:** no hidden weighting or reuse of prior answers without consent/contract.
 - **PASS/FAIL:** absent source/scope decision remains BLOCKED.
@@ -1243,6 +1288,8 @@ The following decisions must be created/accepted in `DECISIONS.md` during STAGE 
 | DEC-013 | PSS10 frozen migration compatibility versus later content/UX change | accepted 2026-09-03 |
 | DEC-014 | privacy-minimal payload; path-only `source_page`, no identifiers/free text by default | accepted 2026-09-03 |
 | DEC-015 | native browser/WordPress scripts first; no bundler/new dependency without measured need | accepted 2026-09-03 |
+| DEC-016 | plugin owns questionnaire UI/runtime; WordPress owns surrounding page layout/full-width background/catalogue composition | accepted 2026-09-08 |
+| DEC-017 | silent normal persistence and configuration-owned `result_ctas` | accepted 2026-09-08 |
 
 Any deviation during implementation needs a new decision or an amended decision with date, evidence, migration consequence, and user acceptance.
 
@@ -1290,6 +1337,8 @@ All of the following are true:
 - lifecycle is at most `review` until user approves public exposure;
 - changelog/inventory/test matrix/stage report updated.
 
+Before transition to `ready`, every item in the standard questionnaire runtime acceptance gate in `TEST_MATRIX.md` must be `PASS`, including WordPress render/navigation/back/reselection/result/CTA/submission/REST/storage/error/silent-success/asset-versioning/desktop/mobile evidence.
+
 This level does not imply WordPress or backend runtime success.
 
 ## WORDPRESS_INTEGRATION_DONE
@@ -1327,4 +1376,6 @@ Execute exactly one next stage in a separate run:
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
 
-One out-of-sequence real-WordPress PSS10 E2E also passed on 2026-09-07 after the automatic Google ContentService redirect failure was diagnosed and fixed in `1e8899c`. Mobile, multiple-instance, Gutenberg/Elementor, deliberate backend-failure, and explicit duplicate-replay checks remain assigned to their existing later gates and do not block STAGE 3.
+The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`; its status does not start Stage 3. The earlier statement that duplicate replay remained unverified is superseded: `DUPLICATE_CHECK = PASS` is recorded in the milestone report and test matrix.
+
+Current public-release blockers are: PSS10 licensing/legal/attribution approval; WordPress/page-layout implementation of the full-width `#faf8f5` background; creation of the `/tests-sante/` catalogue; activation of the secondary CTA after that page exists; real WordPress mobile validation; Stage 3 generic architecture; proprietary questionnaire migrations; and required synthetic scoring validation/approvals. PSS10 is not public-ready solely because runtime passed; lifecycle/legal gates remain independent.

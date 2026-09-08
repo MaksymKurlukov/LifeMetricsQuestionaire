@@ -4,11 +4,11 @@ Log version: 1.0.0
 
 Status: `APPROVED`
 
-Last updated: 2026-09-03
+Last updated: 2026-09-08
 
 Decision owner and approver: Maksym Kurlukov.
 
-DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. Future changes must preserve this approval history and use an amended or superseding ADR.
+DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. DEC-016 and DEC-017 were accepted through the production-runtime documentation direction on 2026-09-08. Future changes must preserve this approval history and use an amended or superseding ADR.
 
 Authority: this file owns architectural decisions. Sequencing remains in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`; accepted component and schema consequences are reflected in `ARCHITECTURE.md` and `QUESTIONNAIRE_SCHEMA.md`.
 
@@ -151,6 +151,24 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Consequences: less operational complexity; shared modules may use classic scripts if WordPress/browser support requires it.
 - Rollback/compatibility: a later dependency decision records measured need, migration, and removal plan.
 
+## DEC-016 - Plugin versus WordPress page-layout boundary
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: two scoped plugin full-bleed techniques did not make the `#faf8f5` background span the real theme viewport because the shortcode remains inside WordPress layout containers.
+- Alternatives: couple plugin CSS to the current page/theme/Elementor; apply global body styles; keep trying root escape techniques; assign surrounding page composition to WordPress.
+- Proposal/rationale: the plugin owns the questionnaire/card/modal/flow/result/CTA/REST/assets; WordPress owns header/footer, full-width surrounding background, and catalogue page layout. No page ID, theme class, Elementor selector, or global body/html coupling is allowed in the plugin.
+- Consequences: the full-bleed background remains an explicit page-layout task and is not claimed solved by plugin runtime stabilization.
+- Rollback/compatibility: no runtime change; future layout work is reversible in WordPress without changing questionnaire behavior.
+
+## DEC-017 - Silent persistence and configuration-owned result actions
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: technical saving/success toasts create unnecessary ambiguity in an anonymous self-assessment, and per-questionnaire CTA literals do not scale.
+- Alternatives: retain storage notices; hardcode actions in JavaScript; define result actions in questionnaire configuration.
+- Proposal/rationale: normal saving and success remain silent, errors remain visible, and Stage 3 introduces ordered `result_ctas` with `label`, `url`, `variant`, and `enabled`.
+- Consequences: submission/storage semantics remain unchanged; disabled future destinations render without a broken public link; CTA behavior becomes testable data.
+- Rollback/compatibility: the current PSS10 primary link and disabled secondary action are the migration input; no Stage 3 runtime work is authorized by this ADR.
+
 ## Approval record
 
 | Field | Value |
@@ -158,5 +176,5 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 | Decision owner | Maksym Kurlukov |
 | Approver | Maksym Kurlukov |
 | Approval date | 2026-09-03 |
-| Approved decisions | DEC-001 through DEC-015 |
+| Approved decisions | DEC-001 through DEC-017 |
 | Required action | none for STAGE 1; future changes require an amended or superseding ADR |

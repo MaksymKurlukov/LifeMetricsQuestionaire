@@ -61,8 +61,35 @@ These results cover the current legacy PSS10 path only. They do not mark the pla
 | Install/activate and render shortcode in real LifeMetrics theme | PASS | no activation fatal; CSS/JS/icons and one PSS10 instance loaded |
 | Ten-question runtime flow | PASS | start, 400 ms auto-navigation, Back preservation, progress, result and score |
 | Initial storage with failed acknowledgement | PASS as diagnostic evidence | one Sheet row; REST `lmq_upstream_http_error`/502; automatic redirect chain ended at Google 400 |
-| Fixed end-to-end submission | PASS | one browser submit; REST `{success:true, duplicate:false}`; exactly one Sheet row; frontend no storage error |
-| Mobile, multiple instances, Gutenberg/Elementor, deliberate backend failure, same-session replay | NOT_RUN | remains manual runtime work for existing later gates |
+| Fixed end-to-end submission | PASS | browser -> WordPress -> REST/PHP -> Apps Script -> expected Sheet write -> verified frontend completion |
+| REST response and frontend confirmation | PASS | final REST success accepted; no saving/success storage toast; result remained visible |
+| Duplicate check | PASS | same-session duplicate handling verified without a second canonical row |
+| Error feedback | PASS | technical saving/success notices are silent; the existing actionable failure feedback remains available |
+| Mobile, multiple instances, Gutenberg/Elementor | NOT_RUN | remains manual runtime work for existing later gates |
+
+The earlier `same-session replay = NOT_RUN` statement is superseded by the final controlled duplicate check above. The full evidence chronology is in `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`.
+
+## Standard questionnaire runtime acceptance gate
+
+Before any questionnaire can be marked `ready`, all applicable rows below must be `PASS` against its exact version and target WordPress environment. Static/unit evidence cannot substitute for runtime evidence.
+
+| Gate | Required evidence |
+|---|---|
+| `LOCAL_TESTS` | lint, syntax, schema, scoring/parity, characterization, and backend smoke pass |
+| `WORDPRESS_RENDER` | shortcode renders without PHP/console/runtime failure |
+| `QUESTION_NAVIGATION` | start, all questions, progress, and automatic/manual transitions work |
+| `BACK_NAVIGATION` | Retour returns to the prior question and preserves state |
+| `ANSWER_RESELECTION` | the same answer can be selected again after navigating back |
+| `RESULT_RENDER` | expected score/category/result copy render |
+| `CTA_RENDER` | configured labels, enabled states, destinations, alignment, and hover/focus states render |
+| `SUBMISSION` | exactly one intended submission is initiated and retry behavior is controlled |
+| `REST_RESPONSE` | same-origin REST returns the expected validated success/duplicate/error contract |
+| `STORAGE_WRITE` | the expected canonical write exists with the expected questionnaire/version/result |
+| `ERROR_FEEDBACK` | real failure remains actionable and does not expose sensitive diagnostics |
+| `NO_SUCCESS_STORAGE_TOAST` | normal saving and success storage messages remain invisible |
+| `ASSET_VERSIONING` | deployed CSS/JS cache keys change with source modification time |
+| `DESKTOP_VISUAL` | approved desktop viewport/theme visual check passes |
+| `MOBILE_VISUAL` | approved mobile viewport/theme visual check passes |
 
 ## Static architecture tests
 

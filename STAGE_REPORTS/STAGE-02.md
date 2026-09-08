@@ -131,6 +131,10 @@ Environment: real company WordPress at `lifemetrics.fr`, OVH Web Hosting, PHP 8.
 - Multiple questionnaire instances on one page.
 - Explicit Gutenberg and Elementor editor/public compatibility.
 - Deliberate backend failure behavior in real WordPress.
-- Manual replay of the exact same session ID; exactly one row for the single final request is proven, but duplicate replay is not.
+- Manual replay of the exact same session ID was unverified at the time of this report.
 
 These are not STAGE 2 blockers. The authoritative plan assigns the broader WordPress/browser/backend matrix to STAGES 8-10.
+
+### Superseding milestone note - 2026-09-08
+
+The CTA-stub statement and duplicate-replay gap above are preserved as historical STAGE 2 evidence but are no longer current. The separately authorized stabilization cycle changed the current CTA presentation and completed the duplicate check. The authoritative current status, commit chronology, remaining mobile/layout/legal blockers, and final `PSS10_END_TO_END = PASS` evidence are recorded in `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`.

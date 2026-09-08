@@ -4,7 +4,7 @@ Document version: 1.0.0
 
 Status: `APPROVED`
 
-Last updated: 2026-09-03
+Last updated: 2026-09-08
 
 Approved by: Maksym Kurlukov on 2026-09-03.
 
@@ -32,6 +32,9 @@ The existing standalone PSS10 project at repository root remains a protected ref
 12. Multiple shortcode instances have isolated state, IDs, selectors, and submission sessions.
 13. No hardcoded `/wp-content/` path; WordPress URL/path helpers provide locations.
 14. No runtime/build dependency is added until native PHP, browser, WordPress, or installed tooling is demonstrably insufficient.
+15. Result actions are questionnaire configuration (`label`, `url`, `variant`, `enabled`), not questionnaire-ID branches in JavaScript.
+16. Normal persistence is silent: saving/success notices are not shown; actionable error feedback remains visible.
+17. Runtime asset versions use source modification time so a deployed source change cannot remain hidden behind a stale static version.
 
 ## Target structure
 
@@ -140,6 +143,18 @@ The adapter is replaceable without changing the engine/UI/schema. No generalized
 ### Questionnaire configuration
 
 `questionnaires/<id>/questionnaire.php` returns one plain associative array. It has no hooks, includes, callbacks, environment URL, DOM, or HTTP behavior. Its immutable `version` identifies the exact content/scoring interpretation.
+
+Stage 3 must add a `result_ctas` collection to this data contract. Each item owns `label`, `url`, `variant`, and `enabled`; URLs remain subject to the schema's internal/approved-destination rules. The current PSS10 values are `Je veux faire un bilan` -> `/formulaire-bilan/` and a disabled/unlinked `Découvrir les autres tests` reserved for `/tests-sante/`.
+
+## WordPress presentation boundary
+
+The plugin owns the questionnaire root/card, modal, question flow, scoring/result presentation, result CTAs, error UI, same-origin REST integration, isolated assets, and asset versioning. WordPress/page composition owns the site header/footer, the page-level full-width background and surrounding layout, and the catalogue page layout.
+
+The plugin must not couple itself to a WordPress page ID, Elementor widget/container, theme class, or global `body`/`html` rule. The attempted plugin-only full-bleed background approaches did not reliably escape the real theme content container; the required `#faf8f5` full-width page background is therefore a WordPress/page-layout responsibility, while the card width stays plugin-owned.
+
+## Questionnaire catalogue
+
+The planned WordPress page `Tests santé` at `/tests-sante/` lists registry/config metadata rather than duplicated page content: title, description, estimated duration, lifecycle/status, and CTA. Only `ready` questionnaires are actionable; unavailable entries are visibly disabled or marked unavailable. The page includes the ten proprietary questionnaires recorded in the inventory. PSS10, if retained, is presented separately as a standardized instrument and remains subject to its licensing gate.
 
 ## Dependency direction
 

@@ -6,7 +6,7 @@ Schema version: `1.0.0`
 
 Status: `APPROVED`
 
-Last updated: 2026-09-03
+Last updated: 2026-09-08
 
 Approved by: Maksym Kurlukov on 2026-09-03.
 
@@ -51,7 +51,7 @@ The registry, not visitor input, selects the file through an explicit map.
 | `weakest_dimensions` | conditional | required when dimensions must be ranked/displayed |
 | `safety_questions` | optional | ordered non-scored questions |
 | `safety_messages` | conditional | required when safety questions can trigger a message |
-| `cta` | required | approved label/destination/supporting copy |
+| `result_ctas` | required in the Stage 3 generic schema | ordered result actions containing `label`, `url`, `variant`, `enabled` |
 | `disclaimer` | required | before and after text |
 | `attribution` | conditional | required when instrument/legal source needs it, including PSS10 if confirmed |
 | `content_revision` | optional | approved document/hash reference; never replaces `version` |
@@ -271,13 +271,22 @@ Application changes only `displayed_category` and records the rule ID/message. `
 - Duplicate triggers collapse by code and sort by descending priority, then first trigger order.
 - Triggered messages render before general result recommendations at every score/category.
 
-## CTA, disclaimer, and attribution
+## Result CTAs, disclaimer, and attribution
 
 ```php
-'cta' => array(
-    'label' => 'Découvrir mon bilan VitaScan',
-    'destination' => 'vitascan',
-    'supporting_text' => '...',
+'result_ctas' => array(
+    array(
+        'label' => 'Je veux faire un bilan',
+        'url' => '/formulaire-bilan/',
+        'variant' => 'primary',
+        'enabled' => true,
+    ),
+    array(
+        'label' => 'Découvrir les autres tests',
+        'url' => '/tests-sante/',
+        'variant' => 'secondary',
+        'enabled' => false,
+    ),
 ),
 'disclaimer' => array(
     'before' => '...',
@@ -290,7 +299,7 @@ Application changes only `displayed_category` and records the rule ID/message. `
 ),
 ```
 
-CTA `destination` is a server-side allowlisted key resolved to an approved URL. Direct arbitrary configuration URLs are not public-ready unless the schema explicitly validates an approved HTTPS allowlist. Questionnaire content cannot define an upstream submission URL.
+Each result CTA requires non-empty plain-text `label`, `variant` from an allowlist, and boolean `enabled`. An enabled CTA requires an approved same-site root-relative URL or an explicitly approved HTTPS destination; disabled CTAs may retain a future URL without rendering navigation. Questionnaire content cannot define an upstream submission URL. The legacy singular `cta` field is superseded for the future generic schema; its migration occurs only in Stage 3 and does not change the current runtime by this documentation update.
 
 ## Lifecycle validation
 
