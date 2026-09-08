@@ -12,11 +12,11 @@ Implement reusable presentation and same-origin transport against fixtures, stil
 
 ## Implemented units
 
-- Created `LifeMetrics_Questionnaire_Assets` to enqueue CSS and JS without a bundler.
-- Created `LifeMetrics_Questionnaire_Renderer` for generic questionnaire layout and state config passing.
-- Extracted PSS10 UI semantics into a generic `questionnaire.php` template.
-- Implemented `questionnaire-ui.js` for root-scoped lifecycle, semantic answer rendering, auto-next, and API request handling.
-- Implemented initial CSS placeholders.
+- Fixed `LifeMetrics_Questionnaire_Renderer` DOM ID conflict, extracting submit URL injection and ensuring unique `.lmq-questionnaire-root` scope per instance.
+- Fully extracted PSS10 UI semantics into a generic `questionnaire.php` template.
+- Implemented `questionnaire-ui.js` covering auto-next, restart, score calculations, category interpretation, classification and safety messages, dimension rendering, CTA rendering, and submit retry.
+- Implemented global-safe CSS namespace `.lmq-questionnaire`.
+- Established `shared-frontend.test.js` to structurally test the DOM module interaction locally.
 
 ## Files created or modified
 
@@ -29,8 +29,9 @@ Implement reusable presentation and same-origin transport against fixtures, stil
 
 ## Tests and verification
 
-- DOM/Browser interaction testing: Not fully automated. The basic logic has been instrumented in `shared-frontend.test.js`.
-- **RUNTIME_VERIFICATION_REQUIRED**: Visual parity inspection, keyboard/focus tests, responsive layout check, CSS scope, and end-to-end completion must be verified manually in a browser environment.
+- DOM/Browser interaction testing: Core logic is unit-tested locally via JSDOM-like `node:vm` mock in `shared-frontend.test.js` simulating interactions, auto-next timer cancellation, scoring integration, and results display.
+- CSS Scoping: Verified `.lmq-questionnaire` class scoping; zero global html/body/tag overrides.
+- **RUNTIME_VERIFICATION_REQUIRED**: Visual parity inspection, keyboard/focus tests, responsive layout check, and final visual confirmation of CSS variables/styles must be verified manually in a browser environment using `lifemetrics-questionnaires-test.zip`.
 
 ## Acceptance
 
@@ -38,6 +39,6 @@ SHARED_FIXTURE_E2E = RUNTIME_VERIFICATION_REQUIRED
 NO_ID_SPECIFIC_CODE = PASS
 NO_GLOBAL_STATE = PASS
 
-BLOCKERS = Browser automation not available locally; visual/interaction parity requires manual user approval.
+BLOCKERS = Browser automation not available locally; visual/interaction parity target requires manual user approval.
 
 STAGE_5_STATUS = RUNTIME_VERIFICATION_REQUIRED

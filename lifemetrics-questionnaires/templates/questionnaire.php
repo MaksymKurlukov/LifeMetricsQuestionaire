@@ -5,10 +5,8 @@ $gradient_id = $instance_id . '-gauge-gradient';
 $modal_title_id = $instance_id . '-modal-title';
 ?>
 <div
-  id="<?php echo esc_attr($instance_id); ?>"
   class="lmq-questionnaire"
   data-lmq-questionnaire="<?php echo esc_attr($config['id']); ?>"
-  data-lmq-submit-url="<?php echo esc_url($submit_url); ?>"
 >
   <div class="app">
     <section class="section section--active" data-lmq-section="intro">
@@ -66,6 +64,7 @@ $modal_title_id = $instance_id . '-modal-title';
           <p class="analysis-text" data-lmq-role="analysis-text"></p>
         </div>
         
+        <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
         <div data-lmq-role="safety-messages" class="safety-messages"></div>
         <div data-lmq-role="classification-messages" class="classification-messages"></div>
 
