@@ -1,0 +1,76 @@
+{
+  "schema_version": "2.0.0",
+  "id": "fixture-core",
+  "version": "1.0.0",
+  "status": "ready",
+  "locale": "fr-FR",
+  "title": "Fixture de calcul",
+  "description": "Configuration synthétique de validation.",
+  "population": "Adultes",
+  "recall_period": "Sept derniers jours",
+  "estimated_duration": "Une minute",
+  "scoring_direction": "higher_is_better",
+  "score": {"target_min": 0, "target_max": 20, "normalize_when_unavailable": true, "rounding": "half_up"},
+  "questions": [
+    {"id": "Q1", "dimension": "habitudes", "text": "Question 1", "required": true, "answers": [
+      {"value": 0, "label": "Zéro", "points": 0, "applicable": true},
+      {"value": 1, "label": "Un", "points": 1, "applicable": true},
+      {"value": 2, "label": "Deux", "points": 2, "applicable": true},
+      {"value": 3, "label": "Trois", "points": 3, "applicable": true},
+      {"value": 4, "label": "Quatre", "points": 4, "applicable": true},
+      {"value": "na", "label": "Non applicable", "points": null, "applicable": false}
+    ]},
+    {"id": "Q2", "dimension": "habitudes", "text": "Question 2 inversée", "required": true, "answers": [
+      {"value": 0, "label": "Zéro", "points": 4, "applicable": true},
+      {"value": 1, "label": "Un", "points": 3, "applicable": true},
+      {"value": 2, "label": "Deux", "points": 2, "applicable": true},
+      {"value": 3, "label": "Trois", "points": 1, "applicable": true},
+      {"value": 4, "label": "Quatre", "points": 0, "applicable": true},
+      {"value": "na", "label": "Non applicable", "points": null, "applicable": false}
+    ]},
+    {"id": "Q3", "dimension": "energie", "text": "Question 3", "required": true, "answers": [
+      {"value": "low", "label": "Faible", "points": 0, "applicable": true},
+      {"value": "middle", "label": "Moyen", "points": 6, "applicable": true},
+      {"value": "high", "label": "Élevé", "points": 12, "applicable": true},
+      {"value": "na", "label": "Non applicable", "points": null, "applicable": false}
+    ]}
+  ],
+  "dimensions": [
+    {"id": "habitudes", "label": "Habitudes", "question_ids": ["Q1", "Q2"], "weakest_eligible": true,
+      "attention": {"metric": "percentage", "operator": "<=", "value": 25, "message_code": "LOW_HABITS"}},
+    {"id": "energie", "label": "Énergie", "question_ids": ["Q3"], "weakest_eligible": true}
+  ],
+  "result_levels": [
+    {"code": "LOW", "rank": 0, "min": 0, "max": 6, "title": "Faible", "description": "Résultat faible.", "recommendations": []},
+    {"code": "MID", "rank": 1, "min": 7, "max": 13, "title": "Moyen", "description": "Résultat moyen.", "recommendations": []},
+    {"code": "HIGH", "rank": 2, "min": 14, "max": 20, "title": "Élevé", "description": "Résultat élevé.", "recommendations": []}
+  ],
+  "classification_rules": [
+    {"id": "CAP_LOW_HABITS", "type": "category_cap", "metric": "dimension_score", "dimension": "habitudes", "operator": "<=", "value": 2, "max_category": "MID", "message_code": "HABITS_CAP"}
+  ],
+  "classification_messages": {
+    "LOW_HABITS": {"title": "Habitudes à renforcer", "text": "Cette dimension mérite votre attention."},
+    "HABITS_CAP": {"title": "Résultat plafonné", "text": "Les habitudes limitent le résultat affiché."}
+  },
+  "weakest_dimensions": {"count": 2, "tie_break": "configuration_order"},
+  "safety_questions": [
+    {"id": "SF1", "text": "Alerte 1", "required": true, "answers": [
+      {"value": "yes", "label": "Oui", "triggers": ["CHECK", "URGENT"]},
+      {"value": "no", "label": "Non", "triggers": []}
+    ]},
+    {"id": "SF2", "text": "Alerte 2", "required": true, "answers": [
+      {"value": "yes", "label": "Oui", "triggers": ["CHECK"]},
+      {"value": "no", "label": "Non", "triggers": []}
+    ]}
+  ],
+  "safety_messages": {
+    "CHECK": {"priority": 50, "title": "Vérification", "text": "Demandez conseil."},
+    "URGENT": {"priority": 100, "title": "Attention", "text": "Consultez rapidement."}
+  },
+  "result_ctas": [
+    {"label": "Continuer", "url": "/continuer/", "variant": "primary", "enabled": true},
+    {"label": "Plus tard", "url": "/plus-tard/", "variant": "secondary", "enabled": false}
+  ],
+  "disclaimer": {"before": "Avant le test.", "after": "Après le test."},
+  "approvals": {"content_scoring": true, "legal_licensing": true, "technical_runtime": true, "publication": true}
+}

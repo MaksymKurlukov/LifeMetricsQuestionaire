@@ -12,10 +12,12 @@ final class LifeMetrics_Questionnaire_Registry
     /** @var array<string, array<string, mixed>|null> */
     private array $cache = array();
 
+    private ?LifeMetrics_Questionnaire_Schema_Validator $validator;
+
     /**
      * @param array<string, string> $questionnaires Explicit questionnaire ID-to-file map.
      */
-    public function __construct(string $base_path, array $questionnaires)
+    public function __construct(string $base_path, array $questionnaires, ?LifeMetrics_Questionnaire_Schema_Validator $validator = null)
     {
         $resolved_base = realpath($base_path);
 
@@ -25,6 +27,7 @@ final class LifeMetrics_Questionnaire_Registry
 
         $this->base_path = rtrim($resolved_base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         $this->questionnaires = $questionnaires;
+        $this->validator = $validator;
     }
 
     /**
@@ -66,6 +69,7 @@ final class LifeMetrics_Questionnaire_Registry
             !is_array($configuration)
             || ($configuration['id'] ?? null) !== $id
             || !in_array($configuration['status'] ?? null, array('draft', 'review', 'ready', 'disabled'), true)
+            || (($configuration['status'] ?? null) === 'ready' && $this->validator !== null && !$this->validator->is_valid($configuration))
         ) {
             return $this->cache[$id] = null;
         }
