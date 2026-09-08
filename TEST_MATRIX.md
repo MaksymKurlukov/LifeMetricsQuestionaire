@@ -218,6 +218,7 @@ Before any questionnaire can be marked `ready`, all applicable rows below must b
 | BACK-009 | stale deployment/schema version | detected/rejected | 10 |
 | BACK-010 | shadow old/new reconciliation | zero unexplained divergence | 10 |
 | BACK-011 | rollback deployment | previous endpoint restores writes | 10 |
+| BACK-012 | multi-destination routing | payload routed to correct destination | 10 |
 
 ## Questionnaire-specific minimum fixtures
 

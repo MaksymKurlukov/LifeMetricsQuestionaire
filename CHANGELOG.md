@@ -6,6 +6,12 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Documentation
 
+- Conducted a major architecture and documentation reconciliation run (2026-09-08) to align the implementation plan with newly clarified product requirements.
+- Updated DECISIONS.md: Superseded DEC-005 (One canonical common submission sheet) with DEC-020 (Generic submission infrastructure with per-questionnaire server-side routing) and DEC-023 (Questionnaire-specific physical Sheet schemas). Added DEC-021 (PSS10 is a distinct legacy profile) and DEC-022 (Shared frontend runtime plus optional presentation overrides).
+- Restructured the roadmap in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md` to define PSS10 migration as a legacy profile test (Stage 6), require a PDF capability audit (Stage 7), define presentation and storage routing metadata (Stage 7B), and explicitly separate questionnaire implementations sequentially (Stages 11-20).
+- Explicitly documented that each proprietary LifeMetrics questionnaire may have a unique backend Google Sheet destination and physical schema structure, abandoning the monolithic sheet assumption.
+- Formalized the frontend presentation extension architecture in `ARCHITECTURE.md` to allow custom layouts/themes per test while sharing core business logic.
+
 - Added the authoritative staged implementation plan and recoverable WordPress plugin baseline.
 - Approved component architecture, questionnaire schema/scoring/payload contract, source/readiness inventory, test matrix, and DEC-001 through DEC-015 for STAGE 1.
 - Recorded Maksym Kurlukov as project owner and approval owner for DEC-001 through DEC-015.

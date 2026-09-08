@@ -27,19 +27,16 @@ Stage 4 completed schema 2.0.0 validation and pure PHP/JavaScript scoring parity
 
 # 1. Executive objective
 
-Transform the current PSS10-only WordPress wrapper into a versioned, data-driven LifeMetrics questionnaire platform in which one shared WordPress integration, one shared browser engine, one shared visual system, and one submission boundary serve multiple questionnaire configurations.
+Provide one installable WordPress plugin ZIP containing multiple independent questionnaires with shared technical infrastructure, while allowing questionnaire-specific methodologies and presentation.
 
-The public authoring contract remains:
-
-```text
-[lifemetrics_questionnaire id="pss10"]
-[lifemetrics_questionnaire id="hydratation"]
-[lifemetrics_questionnaire id="sedentarite"]
-```
-
-Adding an approved questionnaire must ultimately require only an approved `questionnaire.php` configuration, contract fixtures/tests, registry inclusion, and a WordPress page containing the generic shortcode. A questionnaire must not own a copied `app.js`, API client, or base stylesheet.
-
-The migration must preserve the current PSS10 behavior until a separately approved stage explicitly changes it. The existing standalone project at repository root is an evidence source and rollback reference; it is not to be changed as part of the plugin migration unless a future stage explicitly authorizes that work.
+Key final capabilities:
+- ONE WordPress plugin (`lifemetrics-questionnaires.zip`).
+- Embeddable via shortcode (e.g., `[lifemetrics_questionnaire id="pss10"]`, `[lifemetrics_questionnaire id="hydratation"]`).
+- Shared core infrastructure: registry, schema validation, scoring engine, generic submission orchestration.
+- Support for questionnaire-specific rules: dimensions, N/A answers, normalization, safety questions, guardrails, non-linear scoring, CTA, and result formatting.
+- PSS10 is treated as a distinct legacy profile and must remain functionally frozen, not a universal template for proprietary LifeMetrics questionnaires.
+- Frontend architecture separates shared runtime logic from optional presentation overrides (default vs. custom layouts).
+- Storage architecture uses generic server-side transport routing to questionnaire-specific Google Sheets targets.
 
 # 2. Current repository baseline
 
@@ -200,88 +197,36 @@ lifemetrics-questionnaires/
 │   ├── class-questionnaire-renderer.php
 │   ├── class-assets.php
 │   ├── class-shortcodes.php
-│   ├── class-rest-controller.php
-│   └── class-submission-service.php
-├── integrations/
-│   └── google-apps-script/
-│       ├── class-google-apps-script-adapter.php
-│       └── google-apps-script.gs
+│   └── class-rest-controller.php
 ├── templates/
-│   └── questionnaire.php
+│   └── questionnaire.php                # default presentation template
 ├── assets/
-│   ├── css/
-│   │   ├── questionnaire-base.css
-│   │   └── questionnaire-components.css
-│   ├── js/
-│   │   ├── questionnaire-engine.js
-│   │   ├── questionnaire-ui.js
-│   │   └── questionnaire-api.js
-│   └── icons/{shield,lock,clock}.svg
-├── questionnaires/
-│   ├── pss10/questionnaire.php
-│   ├── activite-physique/questionnaire.php
-│   ├── sommeil/questionnaire.php
-│   ├── hydratation/questionnaire.php
-│   ├── nutrition/questionnaire.php
-│   ├── fatigue-recuperation/questionnaire.php
-│   ├── sedentarite/questionnaire.php
-│   ├── stress-equilibre/questionnaire.php
-│   ├── pieds-confort-postural/questionnaire.php
-│   ├── composition-corporelle/questionnaire.php
-│   └── bien-etre-general/questionnaire.php
-└── tests/
-    ├── fixtures/
-    │   ├── pss10-golden-v1.json
-    │   └── schema-invalid-cases/
-    ├── questionnaire-engine.test.js
-    ├── questionnaire-schema.test.php
-    ├── questionnaire-scoring.test.php
-    ├── questionnaire-registry.test.php
-    ├── payload-contract.test.php
-    ├── static-architecture.test.js
-    ├── backend-logic.test.js
-    └── scoring/
-        └── <questionnaire-id>.test.js
+│   ├── css/questionnaire.css            # default scoped stylesheet
+│   ├── js/questionnaire-engine.js       # universal scoring logic
+│   └── js/questionnaire-ui.js           # universal frontend runtime
+└── questionnaires/
+    ├── pss10/
+    │   └── config.json
+    ├── hydratation/
+    │   ├── config.json
+    │   ├── presentation.php             # optional questionnaire-specific override
+    │   └── style.css                    # optional questionnaire-specific CSS
+    └── sedentarite/
+        └── config.json
 ```
 
-Deviation from the conceptual target is intentional: the default final architecture has one shared `templates/questionnaire.php`, not a copied `template.php` in every questionnaire folder. Questionnaire-specific presentation belongs in configuration. A per-questionnaire template override may be introduced only through an ADR after a real case cannot be represented by the shared template; PSS10 alone is not sufficient evidence for eleven copied templates.
+## 3.2 Shared Core vs Extension Points
 
-Additional PHP classes beyond the prompt's conceptual tree are justified because schema validation, server-side scoring, REST handling, and backend submission are separate trust-boundary responsibilities. They prevent the renderer or registry from becoming another 1,000-line orchestrator.
+SHARED CORE:
+- plugin bootstrap, registry, shortcode handling.
+- schema validation, generic PHP/JS scoring engine (handles dimensions, N/A normalization, guardrails, safety, calculated categories).
+- generic submission infrastructure (REST controller, adapter infrastructure).
+- frontend runtime logic (state, scoring integration, submission error handling, auto-next).
 
-## 3.2 Responsibilities and dependency direction
-
-| Component | Responsibility | Must not do |
-|---|---|---|
-| bootstrap | constants, required files, one `init()` call | HTML, scoring, routes, questionnaire content |
-| plugin orchestrator | wire hooks/services | questionnaire-specific branches |
-| registry | explicit ID-to-file map, load/cache configs, lifecycle/public gate | derive paths from visitor input, render, score |
-| schema validator | validate configuration shape and cross-references | mutate content or silently default safety/scoring decisions |
-| scoring engine (PHP) | canonical server calculation from selected answer values | trust client totals/categories |
-| shortcode layer | parse shortcode, resolve public config, return renderer output | read arbitrary files or call Google |
-| renderer | shared escaped HTML shell and per-instance serialized config | calculate scores or enqueue Google-specific code |
-| assets | register/enqueue shared handles once; late-style compatibility | per-questionnaire business logic |
-| REST controller | route, request limits, content type, response mapping | storage details or UI rendering |
-| submission service | validate/recompute/canonicalize/idempotency hand-off | know Google Sheet columns |
-| Google adapter | fixed server-side endpoint, timeout, upstream verification | accept a visitor-supplied URL |
-| `questionnaire.php` | immutable versioned data contract for one questionnaire | WordPress hooks, DOM code, HTTP calls |
-| JS engine | pure client calculation and state transitions | DOM rendering or network/storage implementation |
-| JS UI | root-scoped accessible DOM rendering/events | questionnaire-ID branches or scoring formulas |
-| JS API | generic same-origin POST, timeout/error classification/retry | Google URLs or score calculation |
-| shared template | semantic shell and data hooks | questionnaire-specific scoring or duplicated content blocks |
-
-Dependency direction:
-
-```text
-WordPress hooks
-  -> bootstrap/orchestrator
-  -> shortcode -> registry -> schema -> renderer -> shared template/assets
-  -> REST controller -> registry -> schema -> PHP scoring -> submission service -> adapter
-
-questionnaire configuration -> no dependencies on WordPress, engine, renderer, or adapter
-frontend UI/API -> consume engine result/config; engine imports neither UI nor API
-```
-
-No integration layer may depend on UI classes. No questionnaire configuration may invoke functions, access globals, or contain executable callbacks; it returns plain arrays only.
+QUESTIONNAIRE EXTENSION POINTS:
+- `config.json`: defines questions, explicit point mappings, dimensions, classification rules, messages, safety block, guardrails, results, and CTA.
+- `presentation`: optional override defined in config or via directory files to allow custom layouts/themes without duplicating the `questionnaire-ui.js` business logic.
+- `storage`: backend configuration mapping each questionnaire to a distinct Google Apps Script endpoint/destination.
 
 # 4. Questionnaire schema contract
 
@@ -790,423 +735,70 @@ This plan creation does not start services, create a database, install WordPress
 
 Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PASS does not authorize the next stage.
 
-## STAGE 0 - Baseline freeze and recoverable snapshot
+## STAGE 0 - Baseline snapshot
+- **Status:** `PASS`
+- **Objective:** record the current untracked plugin before editing.
 
-- **Status:** `PASS` on 2026-09-03. Evidence: `STAGE_REPORTS/STAGE-00.md`; ten plugin source files frozen with combined manifest SHA-256 `5206e7a4a4fff67661e21d2761fd3b2ea94f1a435f05bcd65376b844a6d3cdb9`; PHP/JS/backend smoke/static/diff checks passed; no runtime source bytes changed.
-- **Objective:** make the existing untracked plugin and its relationship to the tracked standalone source recoverable and auditable before any refactor.
-- **Prerequisites:** user approves execution of STAGE 0; no source edits in progress; review current diff together.
-- **Files allowed to change:** planning/evidence Markdown, `.gitignore` only if separately approved, Git index/commit metadata; source files may be added to Git unchanged.
-- **Files forbidden to change:** contents of PHP/JS/CSS/templates/Apps Script/icons/PDFs; WordPress test path; databases/services.
-- **Exact tasks:** capture full tree, hashes, permissions, Git diff/status, endpoint redaction-safe inventory, deployed-version unknowns; identify pre-existing `.DS_Store`; add unchanged plugin files to version control or create an approved immutable tag/commit; record standalone/plugin file relationships; record current check outputs.
-- **Required tests:** byte hashes before/after; PHP lint; JS parse; backend smoke; `git diff --check`; prove source bytes unchanged.
-- **Acceptance criteria:** every plugin source file is recoverable from an identified commit/tag; pre-existing user changes are separated and preserved; baseline report records known unknowns.
-- **PASS/FAIL:** PASS only if source hashes match and rollback commit exists; FAIL if any source byte changes or unrelated user change is absorbed without approval.
-- **Rollback criteria:** discard only newly created audit metadata/index selection; never reset pre-existing user changes.
-- **Expected deliverables:** baseline manifest/report, Git checkpoint, updated plan stage status, no production behavior change.
-- **Blockers:** plugin currently untracked; deployed Apps Script provenance may be unknown.
-- **User action required:** confirm which existing untracked/`.DS_Store` files should be committed or ignored and approve checkpoint commit.
-- **Recommended commit checkpoint:** `docs: freeze LifeMetrics questionnaire plugin baseline`.
+## STAGE 1 - Configuration schema definition
+- **Status:** `PASS`
+- **Objective:** establish the strict JSON-based contract for questionnaires.
 
-## STAGE 1 - Architecture contracts and persistent documentation
+## STAGE 2 - PSS10 behavior characterization
+- **Status:** `PASS`
+- **Objective:** freeze the current PSS10 exact behavior into automated tests.
 
-- **Status:** `PASS` on 2026-09-03. Maksym Kurlukov approved `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, `DECISIONS.md`, and DEC-001 through DEC-015, and accepted decision ownership. Documentation checks passed; runtime source remained unchanged. Evidence is in `STAGE_REPORTS/STAGE-01.md`.
-- **Objective:** turn sections 3-9 into versioned contracts before implementation.
-- **Prerequisites:** STAGE 0 PASS.
-- **Files allowed to change:** `ARCHITECTURE.md`, `QUESTIONNAIRE_SCHEMA.md`, `QUESTIONNAIRE_INVENTORY.md`, `TEST_MATRIX.md`, `DECISIONS.md`, `CHANGELOG.md`, this plan.
-- **Files forbidden to change:** all runtime source/assets/backend; standalone; PDFs; WordPress environment.
-- **Exact tasks:** finalize class/file names, schema JSON-like examples, status gate, SemVer policy, scoring/rounding/parity contract, payload/privacy contract, backend option decision, ADRs DEC-001 through DEC-010, inventory hashes/approvals.
-- **Required tests:** documentation cross-link/path check; examples reviewed against all seven PDFs and PSS10 edge cases; no ready example is incomplete.
-- **Acceptance criteria:** no unresolved architecture choice blocks coding; every field/rule has ownership and validation behavior.
-- **PASS/FAIL:** PASS after user accepts contracts/ADRs; FAIL if storage model, score formula, public statuses, or PSS invariants remain ambiguous.
-- **Rollback criteria:** revert documentation commit only; baseline remains.
-- **Expected deliverables:** seven persistent state files per section 16 (as applicable), approved ADRs, updated plan.
-- **Blockers:** none for STAGE 1. Questionnaire-specific ownership and approvals remain gates in their planned stages.
-- **User action required:** none for STAGE 1.
-- **Recommended commit checkpoint:** `docs: define questionnaire platform contracts`.
+## STAGE 3 - WordPress plugin architecture
+- **Status:** `PASS`
+- **Objective:** create the core PHP architecture, registry, and generic REST routing.
 
-## STAGE 2 - Freeze PSS10 behavior with tests
+## STAGE 4 - Universal scoring implementation
+- **Status:** `PASS`
+- **Objective:** implement the PHP and JS scoring parity (handling dimensions, guardrails, N/A, safety).
 
-- **Status:** `PASS` on 2026-09-04. Golden frontend/PHP REST fixtures, actual-source characterization, 13 mutation guards, payload/error/markup/multi-instance checks, baseline lint/smoke checks, and the unchanged runtime digest are recorded in `STAGE_REPORTS/STAGE-02.md`. Maksym Kurlukov explicitly accepted the captured legacy behavior as the structural-migration/regression baseline, without granting permanent production approval to legacy UX, content, CTA, licensing, or attribution choices.
-- **Later out-of-sequence evidence:** the controlled production-runtime cycle is complete through `bfb1385`: `WORDPRESS_RUNTIME`, `SHEET_WRITE`, `REST_RESPONSE`, `FRONTEND_CONFIRMATION`, `DUPLICATE_CHECK`, and `PSS10_END_TO_END` are `PASS`. See `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`. This does not mark the future generic/migrated STAGES 8-10 matrices complete.
-- **Objective:** create an executable characterization harness without modifying behavior.
-- **Prerequisites:** STAGE 1 PASS.
-- **Files allowed to change:** plugin `tests/`, test-only scripts/fixtures, test documentation.
-- **Files forbidden to change:** existing PHP/JS/CSS/template/Apps Script/icons; standalone; backend deployment.
-- **Exact tasks:** extract pure PSS vectors through a test-safe strategy, add 10/20/21/26/27/50 cases and reverse-answer cases, payload snapshots, markup/static invariants, multi-instance identifiers, backend contract fixtures, reference screenshots where runtime permits.
-- **Required tests:** all new characterization tests plus current lint/smoke checks.
-- **Acceptance criteria:** a deliberate change to each frozen score boundary/reverse mapping/payload field causes a test failure.
-- **PASS/FAIL:** PASS with deterministic green harness and documented untestable runtime gaps; FAIL if tests require source behavior changes or cannot detect scoring drift.
-- **Rollback criteria:** remove only new test files/fixtures.
-- **Expected deliverables:** PSS10 golden fixture, test runner instructions, freeze report.
-- **Blockers:** none for STAGE 2. The original statement that all browser/WordPress evidence was deferred is historical and superseded for the current legacy PSS10 path by the production-runtime milestone; migrated generic runtime, mobile, and builder coverage remain in later gates.
-- **User action required:** none for STAGE 2.
-- **Recommended commit checkpoint:** `test: freeze current PSS10 behavior`.
-
-## STAGE 3 - Generic PHP infrastructure in parallel
-
-- **Status:** `PASS` on 2026-09-08. Units 3.1 (bootstrap/orchestrator/legacy runtime), 3.2 (explicit registry/lifecycle public gate), and 3.3 (shortcode and exact PSS10 REST controllers) passed the complete local Stage 3 gate. Evidence: `STAGE_REPORTS/STAGE-03.md`.
-- **Objective:** introduce only bootstrap/orchestrator/registry/shortcode/REST infrastructure without switching PSS10 runtime behavior.
-- **Prerequisites:** STAGE 2 PASS.
-- **Files allowed to change:** plugin bootstrap; approved `includes/` classes; PHP tests; changelog/plan/report.
-- **Files forbidden to change:** legacy PSS10 template/assets behavior; both Apps Scripts; standalone; PDFs.
-- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 complete) create explicit registry map and lifecycle public gate with an intentionally empty production map while PSS10 remains legacy; (3.3 complete) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. No wildcard REST routing was registered.
-- **Required tests:** PHP 8.2 lint, registry traversal/status cases, shortcode invalid IDs, exact route resolution, legacy characterization suite.
-- **Acceptance criteria:** existing shortcode and REST output remain byte/contract equivalent where frozen; new services have no questionnaire-specific branches except temporary PSS10 compatibility adapter clearly marked.
-- **PASS/FAIL:** PASS if all legacy tests pass and no new public questionnaire is exposed; FAIL on any behavior or endpoint change.
-- **Rollback criteria:** revert stage commit to baseline bootstrap.
-- **Expected deliverables:** five approved PHP classes with tests, no frontend/config/backend cutover.
-- **Blockers:** none.
-- **User action required:** none; narrowed scope, compatibility path, exact REST route, and PHP 8.2 minimum were approved before Unit 3.1.
-- **Recommended commit checkpoint:** `refactor: add generic PHP infrastructure without cutover`.
-
-### Completed out-of-sequence PSS10 stabilization milestone
-
-This milestone is complete without starting Stage 3. Commit chronology and scope:
-
-1. `1e8899c` - explicit trusted Google ContentService redirect handling and controlled E2E recovery;
-2. `54367e1` - modal visibility plus theme hover and result CTA isolation;
-3. `84d12d8` - strongly scoped Fermer alignment and removal of the success toast;
-4. `943a946` - first plugin full-bleed background attempt (superseded; did not solve the real theme layout);
-5. `d9f41f8` - alternate background attempt (superseded; did not solve the real theme layout);
-6. `046743b` - filemtime asset cache busting, same-answer reselection after Retour, and additional hover/link isolation;
-7. `bfb1385` - silent in-progress submission plus current CTA labels/navigation.
-
-Verified current behavior: modal open/close, Escape and focus return; Retour answer preservation and same-answer reselection; isolated Retour/main/footer/result-secondary hover states; centered result and Fermer CTA text; hidden normal saving/success toasts with error feedback retained; silent background submission; and cache-busted assets. The scoring model, backend semantics, REST contract, Apps Script, and Sheet schema did not change in the UI stabilization commits.
-
-PSS10 remains the standardized legacy instrument with reverse scoring on Q4/Q5/Q7/Q8, scale 10-50, and the characterized calculated/displayed category distinction preserved. Runtime success does not clear the unresolved licensing/legal/attribution gate.
-
-The required full-viewport `#faf8f5` background is not solved inside the plugin. It belongs to WordPress/page composition between the unchanged header and footer; plugin code must not acquire page-ID, Elementor, theme, or global body/html coupling to force it.
-
-## STAGE 4 - Schema validator and dual-runtime scoring core
-
-- **Status:** `PASS` on 2026-09-08. Schema 2.0.0, fail-closed ready validation, pure PHP/JavaScript scoring, branch fixtures, mutation coverage, and byte-equivalent parity passed. Evidence: `STAGE_REPORTS/STAGE-04.md`.
-- **Objective:** implement the contract and pure canonical scoring in PHP and JavaScript without rendering a live questionnaire.
-- **Prerequisites:** STAGE 3 PASS.
-- **Files allowed to change:** schema/scoring classes, `questionnaire-engine.js`, fixtures, schema/scoring tests; non-ready test configs.
-- **Files forbidden to change:** live PSS10 rendering/assets, REST submission behavior, Apps Script, standalone.
-- **Exact tasks:** implement strict schema validation, explicit answer mapping, general min/max normalization, dimensions, ranks/categories, allowlisted guardrails, weakest dimensions, safety flags, deterministic result object; no DOM/network code.
-- **Required tests:** section 12 unit/contract cases in both runtimes, mutation checks for critical fixtures, PHP/JS canonical JSON parity.
-- **Acceptance criteria:** every scoring branch is covered; identical fixture input/config yields identical canonical outputs; invalid ready config fails closed.
-- **PASS/FAIL:** PASS only with zero parity differences; FAIL on coercion, uncovered rule types, or arbitrary expression evaluation.
-- **Rollback criteria:** revert core/fixtures; live PSS remains unchanged.
-- **Expected deliverables:** versioned schema validator, two pure scoring implementations, parity runner.
-- **Blockers:** none.
-- **User action required:** none; the Stage 4 contract clarification and schema 2.0.0 direction were approved on 2026-09-08.
-- **Recommended commit checkpoint:** `feat: add validated generic scoring core`.
-
-## STAGE 5 - Shared frontend UI, API, template, and assets
-
-- **Status:** `IN_PROGRESS`
-- **Objective:** implement reusable presentation and same-origin transport against fixtures, still without PSS10 cutover.
-- **Prerequisites:** STAGE 4 PASS.
-- **Files allowed to change:** shared `assets/`, shared template, renderer/assets service, frontend tests, test pages/fixtures.
-- **Files forbidden to change:** legacy PSS10 files, Apps Script, standalone, production endpoints.
-- **Exact tasks:** root-scoped controller, semantic answer rendering, auto-next/back/progress/restart, results/dimensions/safety/guardrail/CTA, modal, timeout/retry/error handling, per-instance JSON config, shared CSS/icons; choose native script/module loading without a bundler unless proven necessary.
-- **Required tests:** DOM/browser fixture tests, keyboard/focus, two instances, no-global/static checks, CSS scope, API error matrix, responsive visual inspection.
-- **Acceptance criteria:** shared fixture questionnaire completes end-to-end against a fake endpoint with no ID-specific code or global state.
-- **PASS/FAIL:** FAIL for direct Google calls, leaked CSS, shared instance state, unverified success, or inaccessible controls.
-- **Rollback criteria:** shared assets/template are not live; revert stage commit.
-- **Expected deliverables:** generic UI/API/assets and evidence report.
-- **Blockers:** browser automation availability; document manual gaps explicitly.
-- **User action required:** approve shared visual/interaction parity target.
-- **Recommended commit checkpoint:** `feat: add shared questionnaire frontend`.
+## STAGE 5 - Shared frontend UI and presentation extension
+- **Status:** `PASS`
+- **Objective:** establish default shared frontend infrastructure, UI, API, and template.
+- **Clarification:** Created `questionnaire-ui.js` and default template. The architecture supports a `presentation` extension point for tests that need it.
 
 ## STAGE 6 - Migrate PSS10 to generic configuration
+- **Status:** `NOT_STARTED`
+- **Objective:** prove the generic stack supports the structurally different PSS10 legacy profile without changing its observed behavior.
+- **Prerequisites:** STAGE 5 PASS.
+- **Tasks:** transcribe PSS10 to generic config. Render with generic engine using PSS10-specific presentation if needed, or default if it matches.
+- **Acceptance criteria:** frozen outputs equal; public shortcode/route shape unchanged. PSS10 remains a separate legacy profile, not a template for others.
 
-- **Status:** `IN_PROGRESS`
-- **Objective:** switch PSS10 to the generic stack without observed behavior change.
-- **Prerequisites:** STAGE 5 PASS; STAGE 2 freeze green.
-- **Files allowed to change:** PSS10 config/new migration adapter, bootstrap/registry/renderer/assets, shared files only for proven parity fixes, tests/docs.
-- **Files forbidden to change:** Apps Script/storage schema, tracked standalone, PSS wording/scoring/CTA semantics, unrelated questionnaires.
-- **Exact tasks:** transcribe exact PSS content/points/levels/legal data, validate, run generic vs legacy golden comparison, render in isolated mode, perform one cutover commit, retain legacy files for rollback.
-- **Required tests:** all section 11 regression tests available pre-WordPress plus full legacy/generic scoring and payload parity.
-- **Acceptance criteria:** frozen outputs equal; public shortcode/route shape unchanged; assets still conditional; two instances isolated.
-- **PASS/FAIL:** any frozen divergence is FAIL, not an opportunity to update expected output without user approval.
-- **Rollback criteria:** revert the cutover commit and re-enable legacy handler; no data migration involved.
-- **Expected deliverables:** `questionnaires/pss10/questionnaire.php`, cutover report, retained rollback files.
-- **Blockers:** PSS attribution/licensing approval; runtime checks pending STAGE 9.
-- **User action required:** approve cutover after reviewing comparison report.
-- **Recommended commit checkpoint:** `refactor: migrate PSS10 to generic engine`.
+## STAGE 7 - ALL-PDF Capability Audit
+- **Status:** `NOT_STARTED`
+- **Objective:** Prove that the generic schema and engine support all proprietary LifeMetrics PDF methodologies before building them.
+- **Tasks:** Review Activité, Hydratation, Fatigue, Nutrition, Sédentarité, Sommeil, and Pieds. Validate explicit points, non-linear scoring (Sommeil SL01), N/A normalization, dimensions, weakest dimensions, safety blocks, and guardrails (Sédentarité). 
+- **Acceptance criteria:** All identified capabilities are either proven supported by STAGE 4 or explicitly added to the engine. 
 
-## STAGE 7 - Scoring contract hardening
-
-- **Status:** `IN_PROGRESS`
-- **Objective:** prove the generic features with synthetic non-public fixtures before real LifeMetrics content.
-- **Prerequisites:** STAGE 6 PASS.
-- **Files allowed to change:** scoring/schema/payload implementations only for defects; tests/fixtures/docs.
-- **Files forbidden to change:** PSS content/observed behavior, Apps Script, standalone, new public questionnaire configs.
-- **Exact tasks:** exhaustive boundaries, N/A/min/max normalization, dimension partial availability, ties, safety-with-high-score, Sédentarité guardrail vectors, malformed config/request fuzz table, PHP/JS parity.
-- **Required tests:** complete STATIC/UNIT/CONTRACT suites; PSS regressions.
-- **Acceptance criteria:** all known generic mechanisms have golden vectors and failures are fixed at shared root cause.
-- **PASS/FAIL:** FAIL on any runtime parity difference or silent default of an invalid rule.
-- **Rollback criteria:** revert defect patch if it breaks PSS; retain failing fixture as evidence.
-- **Expected deliverables:** hardened scoring release candidate and test report.
-- **Blockers:** none expected after contracts.
-- **User action required:** review guardrail/normalization examples.
-- **Recommended commit checkpoint:** `test: harden generic scoring contracts`.
+## STAGE 7B - Presentation + Storage routing architecture
+- **Status:** `NOT_STARTED`
+- **Objective:** Formally define the backend routing metadata mapping questionnaires to specific storage destinations, and finalize the presentation extension loader.
 
 ## STAGE 8 - Isolated local WordPress environment
-
-- **Status:** `BLOCKED` until explicit environment approval.
-- **Objective:** create the isolated runtime described in section 13 without touching production.
-- **Prerequisites:** STAGE 7 PASS; user approves service/database/filesystem operations and test credentials.
-- **Files allowed to change:** `/Applications/XAMPP/xamppfiles/htdocs/pss-wordpress-test`, dedicated local DB, environment runbook; repository docs only.
-- **Files forbidden to change:** production WordPress/DB/Google Sheet; questionnaire source except separately reviewed test fix.
-- **Exact tasks:** verify/start services, install WordPress, create DB, symlink plugin, activate, create test pages/users, configure sandbox adapter, capture versions/logs.
-- **Required tests:** WordPress health/login, plugin activation twice, permalink REST access, symlink/path behavior, clean restart.
-- **Acceptance criteria:** reproducible isolated site and sandbox backend; no production endpoint receives test traffic.
-- **PASS/FAIL:** FAIL on path/port collision, production credential use, activation warning/fatal, or non-reproducible setup.
-- **Rollback criteria:** stop services if started solely for test; remove only the dedicated site/DB after explicit approval; never recursive-delete ambiguous paths.
-- **Expected deliverables:** local environment, runbook, environment manifest.
-- **Blockers:** services currently reported stopped, WordPress/WP-CLI absent, credentials/ports need confirmation.
-- **User action required:** approve installation/service/database changes and provide Elementor package/license only if its test is required.
-- **Recommended commit checkpoint:** `docs: record isolated WordPress test environment`.
+- **Status:** `NOT_STARTED`
+- **Objective:** verify WordPress activation, generic REST routing, and UI rendering in a true local WP environment.
 
 ## STAGE 9 - PSS10 WordPress regression validation
+- **Status:** `NOT_STARTED`
+- **Objective:** prove migrated PSS10 in WordPress builder and browser contexts.
 
-- **Status:** `IN_PROGRESS`
-- **Objective:** prove migrated PSS10 in real WordPress/Gutenberg/Elementor and browser contexts.
-- **Prerequisites:** STAGE 8 PASS.
-- **Files allowed to change:** tests/evidence; narrowly scoped plugin defect fixes with separate diff; test site content.
-- **Files forbidden to change:** production backend/Sheet, standalone, PSS methodology/content.
-- **Exact tasks:** run integration/browser/responsive/accessibility matrix, no-shortcode asset check, one/two instances, builder views, REST validation/errors, sandbox storage success/duplicate/retry.
-- **Required tests:** all relevant section 12 groups and comparison screenshots.
-- **Acceptance criteria:** all frozen PSS invariants pass in target runtime; zero console/PHP warnings; sandbox writes canonical expected rows.
-- **PASS/FAIL:** any scoring/content/backend-success/multi-instance regression is FAIL; cosmetic differences require explicit acceptance.
-- **Rollback criteria:** revert PSS cutover if critical; keep environment/evidence.
-- **Expected deliverables:** PSS10 regression report, test matrix results, accepted exceptions.
-- **Blockers:** Elementor may be unavailable; production-like Google sandbox deployment may require owner action.
-- **User action required:** visual acceptance and any builder/license setup.
-- **Recommended commit checkpoint:** `test: validate migrated PSS10 in WordPress`.
+## STAGE 10 - MULTI-DESTINATION GOOGLE BACKEND
+- **Status:** `NOT_STARTED`
+- **Objective:** implement generic server-side submission transport routing to questionnaire-specific Google Sheets targets.
+- **Tasks:** implement integration adapter using backend keys. Provide multi-destination routing. No canonical monolithic sheet. Each test defines its own physical columns.
 
-## STAGE 10 - Generic backend shadow migration
+## STAGE 11 to 20 - Questionnaire Implementations
+- **Status:** `NOT_STARTED`
+- **Objective:** implement the proprietary questionnaires sequentially (Sédentarité, Hydratation, Fatigue, Sommeil, Nutrition, Activité, Pieds).
+- **Tasks for each:** Create `config.json` with correct rules. Add `presentation.php` if required. Add storage mapping. Perform parity/scoring tests against methodology.
+- **Acceptance:** Each test completes independently and submits to its own destination.
 
-- **Status:** `IN_PROGRESS`
-- **Objective:** implement the versioned canonical payload and recommended hybrid Sheet model without blind cutover.
-- **Prerequisites:** STAGE 9 PASS; DEC-005 accepted; privacy/storage owner approval; backup/export available.
-- **Files allowed to change:** integration adapter, Apps Script canonical source, REST/submission service, backend/payload tests, docs.
-- **Files forbidden to change:** standalone Apps Script, live deployment until explicit cutover approval, questionnaire content/scoring.
-- **Exact tasks:** compare both Apps Script files/deployment; establish canonical source; version headers/schema; implement common submission row/JSON snapshots, idempotency key, formula safety, lock, error codes; deploy sandbox; shadow PSS writes and reconcile; document backfill/no-backfill decision; cut over only after report.
-- **Required tests:** full BACKEND matrix, concurrency, stale deployment, malformed response, shadow reconciliation, rollback deployment.
-- **Acceptance criteria:** zero unexplained shadow divergence; duplicate-safe verified writes; old data preserved; deployment ID/version recorded.
-- **PASS/FAIL:** FAIL on partial/duplicate rows, client-trusted scores, unverified success, unknown deployed code, or no restore path.
-- **Rollback criteria:** restore previous server endpoint/deployment; stop new writes; keep old Sheet untouched; reconcile rather than delete rows.
-- **Expected deliverables:** canonical integration source, sandbox evidence, migration/cutover/rollback runbook.
-- **Blockers:** Google account/Sheet access, retention/privacy decisions, deployed version provenance.
-- **User action required:** export/backup, deploy/authorize Apps Script, approve cutover.
-- **Recommended commit checkpoint:** `feat: add versioned generic submission backend`.
-
-### Standard lifecycle for STAGES 11-20
-
-Every questionnaire stage from STAGE 11 through STAGE 20 must execute and record the same A-P lifecycle. A later letter cannot compensate for an earlier missing approval or failing test:
-
-A. approved source/config intake and immutable source/version record;
-B. schema validation and lifecycle status validation;
-C. explicit scoring transcription and dual-runtime parity;
-D. exhaustive score bands and boundary fixtures;
-E. N/A, normalization, dimension, and weakest-dimension behavior where applicable;
-F. allowlisted guardrails with numeric-score invariance where applicable;
-G. independent non-scored safety flags and priority where applicable;
-H. result interpretation and approved claims/copy;
-I. recommendations and disclaimers;
-J. `result_ctas` configuration (`label`, `url`, `variant`, `enabled`);
-K. generic shortcode registration/rendering with lifecycle gate;
-L. generic REST request/server recomputation contract;
-M. canonical storage, idempotency, and versioning;
-N. automated schema/scoring/parity/contract/regression tests;
-O. real WordPress runtime plus desktop/mobile visual validation;
-P. `Tests santé` catalogue metadata/status/CTA integration.
-
-The standard runtime acceptance gate in `TEST_MATRIX.md` must be fully `PASS` before status `ready`. `draft` is incomplete/private, `review` is complete enough for review but non-public, `ready` alone is public, and `disabled` remains non-public and retained for history/rollback.
-
-The catalogue page is `Tests santé` at `/tests-sante/`. It lists the ten proprietary questionnaires from registry/config metadata (title, description, estimated duration, status, CTA) and visibly disables or marks unavailable non-ready entries. PSS10 is shown separately if retained as a standardized instrument.
-
-## STAGE 11 - First proprietary questionnaire: Sédentarité
-
-- **Status:** `IN_PROGRESS`
-- **Objective:** prove N/A, normalized dimensions, weakest output, and category guardrail using the most technically complete proprietary specification after approval.
-- **Prerequisites:** STAGE 10 PASS; PDF hash and owner approval recorded; CTA URLs supplied.
-- **Files allowed to change:** `questionnaires/sedentarite/questionnaire.php`, its scoring fixture/test, registry, inventory/changelog/test matrix.
-- **Files forbidden to change:** shared engine unless a contract bug is first demonstrated; PSS config; other questionnaire content; PDF; standalone.
-- **Exact tasks:** execute lifecycle A-P; exact transcription SD01-SD12, SD07/08 N/A, normalized 0-48 scale, six dimensions, four levels, D1 cap/message, dimension warnings, weakest/attention rules, CTA/disclaimers; independent two-person or source-vs-code review.
-- **Required tests:** profiles A-F, all category boundaries, N/A combinations, D1 2/8 and 3/8, dimension percentages/ties, payload/server parity, WordPress/browser matrix.
-- **Acceptance criteria:** exact source traceability; no invented text; canonical/server outputs match PDF examples; only `ready` after approval.
-- **PASS/FAIL:** mismatch or missing CTA approval is FAIL/BLOCKED, not a default.
-- **Rollback criteria:** set config `disabled` or revert registry/config commit; shared PSS remains unaffected.
-- **Expected deliverables:** tested Sédentarité config, source mapping, stage report.
-- **Blockers:** final CTA destinations and explicit publication approval.
-- **User action required:** approve transcription, result copy, and public status.
-- **Recommended commit checkpoint:** `feat: add Sédentarité questionnaire v1.0.0`.
-
-## STAGE 12 - Hydratation questionnaire
-
-- **Status:** `BLOCKED_BY_APPROVAL`.
-- **Objective:** add Hydratation with HY05 N/A and independent HYSF01-03 safety routing.
-- **Prerequisites:** STAGE 11 PASS; source/content owner approval; CTA URL.
-- **Files allowed to change:** Hydratation config/test, registry, docs.
-- **Files forbidden to change:** other configs/shared behavior without failing generic fixture; PDF/standalone.
-- **Exact tasks:** execute lifecycle A-P; exact HY01-HY12/safety/dimensions/ranges/results/disclaimers transcription and review.
-- **Required tests:** documented five profiles, 44/44 -> 48, safety plus favorable score, boundaries, weakest dimensions, E2E.
-- **Acceptance criteria:** exact PDF match and complete safety priority.
-- **PASS/FAIL:** FAIL if N/A penalizes score or safety changes score/is hidden.
-- **Rollback criteria:** disable/revert only Hydratation registration/config.
-- **Expected deliverables:** versioned config, tests, source mapping/report.
-- **Blockers:** formal approval and CTA destination.
-- **User action required:** approve source and publication.
-- **Recommended commit checkpoint:** `feat: add Hydratation questionnaire v1.0.0`.
-
-## STAGE 13 - Fatigue & récupération questionnaire
-
-- **Status:** `BLOCKED_BY_APPROVAL`.
-- **Objective:** add FR01-FR12, six dimensions, attention threshold, and FRSF01-03 safety.
-- **Prerequisites:** STAGE 12 PASS and source approval.
-- **Files allowed to change:** Fatigue config/test, registry, docs.
-- **Files forbidden to change:** other content/shared behavior absent demonstrated defect.
-- **Exact tasks:** execute lifecycle A-P; exact transcription including final FR10 wording, result levels, weakest/attention, VitaScan/Metabolism separation.
-- **Required tests:** documented seven synthetic profiles, safety with 44/48, boundaries/dimensions/E2E.
-- **Acceptance criteria:** old draft FR10 is not reintroduced; safety independent and first.
-- **PASS/FAIL:** any content/source or safety mismatch fails.
-- **Rollback criteria:** disable/revert questionnaire only.
-- **Expected deliverables:** config/tests/report.
-- **Blockers:** owner approval/CTA destinations.
-- **User action required:** approve publication.
-- **Recommended commit checkpoint:** `feat: add Fatigue récupération questionnaire v1.0.0`.
-
-## STAGE 14 - Sommeil questionnaire
-
-- **Status:** `BLOCKED_BY_SCORING`.
-- **Objective:** add SL01-SL12 and SLSF01-03 only after synthetic validation.
-- **Prerequisites:** completed/approved synthetic boundary/profile report and content approval; prior stage PASS.
-- **Files allowed to change:** Sommeil config/test, registry, docs.
-- **Files forbidden to change:** source PDF, other configs, unapproved score ranges.
-- **Exact tasks:** execute lifecycle A-P; validate non-linear SL01, ranges/dimensions/safety, transcribe/review, implement and test.
-- **Required tests:** all boundaries, non-linear duration answer, safety high-score case, five dimensions, E2E.
-- **Acceptance criteria:** scoring approval recorded and exact implementation.
-- **PASS/FAIL:** remains BLOCKED rather than inventing missing validation conclusions.
-- **Rollback criteria:** disable/revert questionnaire only.
-- **Expected deliverables:** validation evidence then config/tests/report.
-- **Blockers:** synthetic validation and owner approval.
-- **User action required:** approve validation and publication.
-- **Recommended commit checkpoint:** `feat: add Sommeil questionnaire v1.0.0`.
-
-## STAGE 15 - Nutrition questionnaire
-
-- **Status:** `BLOCKED_BY_SCORING`.
-- **Objective:** add NT01-NT12 and NTSF01-03 after synthetic validation.
-- **Prerequisites:** approved scoring profiles/boundaries and content.
-- **Files allowed to change:** Nutrition config/test, registry, docs.
-- **Files forbidden to change:** other configs/source/shared rules without proof.
-- **Exact tasks:** execute lifecycle A-P; validate six dimensions/four ranges, safety and claims; exact transcription/review.
-- **Required tests:** extremes/intermediate boundaries, reverse-worded mapped points, safety high-score case, E2E.
-- **Acceptance criteria:** no calorie/diagnostic claims; complete source parity.
-- **PASS/FAIL:** blocked on absent validation/approval; content must not be guessed.
-- **Rollback criteria:** disable/revert questionnaire only.
-- **Expected deliverables:** validation evidence, config/tests/report.
-- **Blockers:** scoring/content approval and CTA URL.
-- **User action required:** approve methodology/publication.
-- **Recommended commit checkpoint:** `feat: add Nutrition questionnaire v1.0.0`.
-
-## STAGE 16 - Activité physique questionnaire
-
-- **Status:** `BLOCKED_BY_SCORING`.
-- **Objective:** add AP01-AP12 after the PDF-required synthetic profile validation/pilot decision.
-- **Prerequisites:** approved five-profile scoring report; content approval.
-- **Files allowed to change:** Activité config/test, registry, docs.
-- **Files forbidden to change:** ranges until approved; other configs/source.
-- **Exact tasks:** execute lifecycle A-P; resolve source anomaly where AP04 lists both `2 jours` and `3 jours ou plus` as 4 points and document confirmation; validate ranges; transcribe/review.
-- **Required tests:** five profiles named by PDF, AP04 confirmed mapping, AP12 ordered scoring, category boundaries, E2E.
-- **Acceptance criteria:** anomaly explicitly approved; no WHO-score claim; exact output.
-- **PASS/FAIL:** AP04 ambiguity or missing validation keeps stage BLOCKED.
-- **Rollback criteria:** disable/revert questionnaire only.
-- **Expected deliverables:** decision evidence, config/tests/report.
-- **Blockers:** AP04 confirmation, synthetic validation/pilot decision, approval.
-- **User action required:** resolve AP04 and approve methodology/publication.
-- **Recommended commit checkpoint:** `feat: add Activité physique questionnaire v1.0.0`.
-
-## STAGE 17 - Pieds & confort postural questionnaire
-
-- **Status:** `BLOCKED_BY_SCORING`.
-- **Objective:** add PF01-PF12/PFSF01-04 only after provisional ranges and PF09-PF10 guardrail are decided.
-- **Prerequisites:** approved profiles A-F and guardrail ADR/content approval.
-- **Files allowed to change:** Pieds config/test, registry, docs/ADR.
-- **Files forbidden to change:** provisional source by inference; other configs.
-- **Exact tasks:** execute lifecycle A-P; complete required synthetic validation, decide the unresolved PF09/PF10 guardrail, version the approved specification, exact transcription, Podos360 CTA/claims review. PFSF01-PFSF04 safety flags remain numerically independent.
-- **Required tests:** profiles A-F, any approved guardrail boundaries, dimension attention, safety with favorable score, E2E.
-- **Acceptance criteria:** categories no longer provisional and guardrail decision recorded.
-- **PASS/FAIL:** stage remains BLOCKED while either decision is unresolved.
-- **Rollback criteria:** disable/revert questionnaire only.
-- **Expected deliverables:** scoring ADR, approved config/tests/report.
-- **Blockers:** explicit in PDF: synthetic scoring and PF09-PF10 decision.
-- **User action required:** methodological/medical/content approval and CTA URL.
-- **Recommended commit checkpoint:** `feat: add Pieds confort postural questionnaire v1.0.0`.
-
-## STAGE 18 - Stress & équilibre quotidien questionnaire
-
-- **Status:** `BLOCKED_BY_CONTENT`.
-- **Objective:** implement only from a complete approved specification distinct from PSS10.
-- **Prerequisites:** exact source file, version, scoring/dimensions/safety/N/A/guardrail/CTA/disclaimer and approval.
-- **Files allowed to change:** inventory first; config/test/registry only after readiness.
-- **Files forbidden to change:** PSS10 or invented content.
-- **Exact tasks:** execute lifecycle A-P after source approval; inventory/review source, establish distinct naming/claims, then standard transcription/test workflow.
-- **Required tests:** derived from approved source plus generic suite/E2E.
-- **Acceptance criteria:** no conceptual conflation with PSS10; source traceability complete.
-- **PASS/FAIL:** absent/incomplete source is BLOCKED, never guessed.
-- **Rollback criteria:** no registration until ready; revert config only.
-- **Expected deliverables:** approved source mapping, config/tests/report.
-- **Blockers:** no specification found.
-- **User action required:** provide/approve specification.
-- **Recommended commit checkpoint:** `feat: add Stress équilibre questionnaire <version>`.
-
-## STAGE 19 - Composition corporelle questionnaire
-
-- **Status:** `BLOCKED_BY_CONTENT`.
-- **Objective:** implement from approved behavior-focused content without inferring diagnosis from VitaScan measurements.
-- **Prerequisites:** complete approved specification and privacy/claims review.
-- **Files allowed to change:** inventory then questionnaire-specific config/tests/registry.
-- **Files forbidden to change:** invented scoring/medical claims/other configs.
-- **Exact tasks:** execute lifecycle A-P after source approval; source review, schema mapping, claims/safety review, standard implementation.
-- **Required tests:** source-specific profiles/boundaries plus generic/E2E.
-- **Acceptance criteria:** scoring and product-measurement boundaries explicit.
-- **PASS/FAIL:** missing source remains BLOCKED.
-- **Rollback criteria:** no public registry until ready; revert questionnaire only.
-- **Expected deliverables:** source mapping/config/tests/report.
-- **Blockers:** no specification found.
-- **User action required:** provide/approve specification.
-- **Recommended commit checkpoint:** `feat: add Composition corporelle questionnaire <version>`.
-
-## STAGE 20 - Bien-être général questionnaire
-
-- **Status:** `BLOCKED_BY_CONTENT`.
-- **Objective:** implement only after scope overlap and scoring are approved.
-- **Prerequisites:** complete approved specification defining relationship to domain questionnaires.
-- **Files allowed to change:** inventory then questionnaire-specific config/tests/registry.
-- **Files forbidden to change:** invented aggregate weighting or cross-questionnaire data access.
-- **Exact tasks:** execute lifecycle A-P after source/scope approval; decide whether standalone or aggregate through ADR, then standard implementation.
-- **Required tests:** approved source vectors, overlap/privacy checks, generic/E2E.
-- **Acceptance criteria:** no hidden weighting or reuse of prior answers without consent/contract.
-- **PASS/FAIL:** absent source/scope decision remains BLOCKED.
-- **Rollback criteria:** no public registration; revert questionnaire only.
-- **Expected deliverables:** scope ADR, source mapping/config/tests/report.
-- **Blockers:** no specification found and aggregate semantics unknown.
-- **User action required:** provide/approve specification and scope.
-- **Recommended commit checkpoint:** `feat: add Bien-être général questionnaire <version>`.
-
-## STAGE 21 - Production packaging and deployment readiness
-
-- **Status:** `IN_PROGRESS`
-- **Objective:** package only questionnaires meeting Production Ready DoD and provide a reversible deployment checklist.
-- **Prerequisites:** PSS10 and each included questionnaire have all prior stages PASS; privacy/backend/WordPress owners sign off.
-- **Files allowed to change:** plugin docs/changelog/version, packaging exclusions, release manifest; source only for reviewed release defects.
-- **Files forbidden to change:** questionnaire content/scoring during packaging; production before backup/approval; standalone.
-- **Exact tasks:** clean package (`.DS_Store`, tests/dev evidence/endpoints per policy), version audit, lint/test full matrix, fresh WordPress install test, sandbox backend test, security/privacy/accessibility review, source hashes, ZIP/reproducibility, backup/rollback/deployment checklist.
-- **Required tests:** every section 12 group applicable; clean-install and upgrade; production-like smoke against sandbox; checksum/ZIP content review.
-- **Acceptance criteria:** zero critical/high open defect, all included configs `ready`, deployed backend version known, rollback rehearsed, Definition of Done satisfied.
-- **PASS/FAIL:** FAIL if a questionnaire is included merely because its config exists, if tests are skipped, or if production rollback is unproven.
-- **Rollback criteria:** restore prior plugin ZIP/version and endpoint/deployment; never mutate historical score rows.
-- **Expected deliverables:** release ZIP, manifest/checksums, final audit, deployment and rollback runbooks.
-- **Blockers:** unresolved questionnaire approvals, privacy/retention, backend ownership, builder compatibility, production credentials.
-- **User action required:** final release and deployment approval.
-- **Recommended commit checkpoint:** `release: LifeMetrics Questionnaires <version>` plus signed/tagged release.
+## STAGE 21 - ZIP + final production packaging
+- **Status:** `NOT_STARTED`
+- **Objective:** Generate final installable `lifemetrics-questionnaires.zip` and final methodology approval gates.
 
 # 15. Automation workflow with Codex
 

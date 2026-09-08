@@ -57,8 +57,27 @@ The registry, not visitor input, selects the file through an explicit map.
 | `attribution` | conditional | required when instrument/legal source needs it, including PSS10 if confirmed |
 | `content_revision` | optional | approved document/hash reference; never replaces `version` |
 | `approvals` | required for `ready` | boolean `content_scoring`, `legal_licensing`, `technical_runtime`, and `publication` gates |
+| `presentation` | optional | `layout` and `theme` override configuration |
+| `storage` | optional | backend configuration like `adapter` and `destination` for multi-destination routing |
 
 Unknown fields fail schema validation for `ready` configurations. During schema evolution they require a new schema version rather than being silently ignored.
+
+## Presentation and Storage
+
+```php
+'presentation' => array(
+    'layout' => 'pss10', // or 'default', 'podos360', etc.
+    'theme' => 'pss10'
+),
+'storage' => array(
+    'adapter' => 'google-apps-script',
+    'destination' => 'hydratation'
+)
+```
+
+Rules:
+- `presentation` allows optional UI/layout overrides. When omitted, the default LifeMetrics shared presentation is used.
+- `storage` declares the logical backend destination. Physical endpoints remain protected server-side and are mapped via the registry or environment variables based on `destination`.
 
 ## Score object
 

@@ -54,12 +54,12 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-005 - Hybrid Sheet model with one canonical write
 
-- Status: `ACCEPTED` on 2026-09-03 by Maksym Kurlukov.
-- Context: questionnaires have variable answers/dimensions/safety, while one tab per questionnaire fragments global audit/deduplication.
-- Alternatives: one wide common tab; canonical tab per questionnaire; common ledger plus canonical detail tabs; one common canonical row plus derived views.
-- Proposal/rationale: one canonical `submissions` append with common columns and JSON snapshots; per-questionnaire views are derived/noncanonical.
-- Consequences: avoids sparse columns and multi-tab partial commits; manual JSON analysis is less convenient.
-- Rollback/compatibility: PSS10 legacy `results` is untouched until shadow migration; if JSON operations fail, move to a proper datastore rather than dual canonical Sheets.
+- Status: `SUPERSEDED` by DEC-020 and DEC-023 on 2026-09-08 by Maksym Kurlukov.
+- Context: Originally proposed to reduce deployment complexity with a single canonical Sheet. 
+- Alternatives: one wide common tab; canonical tab per questionnaire.
+- Proposal/rationale: all generic submissions append to one versioned canonical Sheet.
+- Consequences: JSON snapshot columns.
+- Rollback/compatibility: Superseded. See DEC-020 for the per-questionnaire destination routing.
 
 ## DEC-006 - General min/max N/A normalization with half-up rounding
 
@@ -186,6 +186,42 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Proposal/rationale: schema 2.0.0 adds `classification_messages`, keeps `safety_messages` separate, standardizes on `result_ctas`, and requires four boolean approval gates for `ready` only.
 - Consequences: every ordinary rule/attention message resolves explicitly; incomplete approvals do not invalidate non-ready lifecycle states; required-field additions follow the approved major-version policy.
 - Rollback/compatibility: Stage 4 remains disconnected from live rendering and submission; legacy PSS10 behavior and its later Stage 6 migration remain unchanged.
+
+## DEC-020 - Generic submission infrastructure with per-questionnaire server-side routing
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: The previous goal of a single monolithic Google Sheet conflicts with the need for clean, distinct analytics and separate Google storage destinations per test.
+- Alternatives: One common sheet; client-side routing.
+- Proposal/rationale: The plugin provides generic submission validation and transport, but routes payloads to questionnaire-specific server-side destinations.
+- Consequences: Backend URL/keys become per-questionnaire configuration. Core submission logic remains shared.
+- Rollback/compatibility: Replaces the monolithic Stage 10 plan.
+
+## DEC-021 - PSS10 is a distinct legacy profile, not the universal template
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: PSS10 has structural differences (10 questions, 1-5 answers, 10-50 range, higher=worse) compared to proprietary LifeMetrics questionnaires (12 questions, dimensions, N/A, etc).
+- Alternatives: Force LifeMetrics into PSS10 shape; force PSS10 to change.
+- Proposal/rationale: PSS10 is maintained as a functionally frozen legacy profile. The generic schema must support it, but it does not dictate the frontend, scoring logic, or dimensions of proprietary LifeMetrics questionnaires.
+- Consequences: PSS10 retains exact historical behavior. New questionnaires use distinct configurations.
+- Rollback/compatibility: Clarifies the goal of Stage 6.
+
+## DEC-022 - Shared frontend runtime plus optional presentation overrides
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: The assumption of a single identical visual system for all questionnaires is too restrictive.
+- Alternatives: Duplicate JS engine per test; enforce one strict UI layout.
+- Proposal/rationale: Architecture relies on a shared frontend infrastructure (state, scoring, submission) but allows a declarative `presentation` configuration and optional templates.
+- Consequences: Core JS is not duplicated. Specific tests can supply their own UI without rewriting business logic.
+- Rollback/compatibility: Augments the default UI built in Stage 5.
+
+## DEC-023 - Questionnaire-specific physical Sheet schemas
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: Forcing all answers and metrics into a single monolithic schema makes data analysis difficult.
+- Alternatives: JSON blobs in a single column; sparse generic columns.
+- Proposal/rationale: Common metadata can be standardized, but the physical Google Sheet schema can be distinct per questionnaire (e.g., HY01-HY12 for Hydratation).
+- Consequences: Easier analytical usage for stakeholders.
+- Rollback/compatibility: Works in tandem with DEC-020.
 
 ## Approval record
 

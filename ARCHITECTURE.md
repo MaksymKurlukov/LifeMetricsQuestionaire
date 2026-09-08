@@ -147,9 +147,13 @@ The adapter is replaceable without changing the engine/UI/schema. No generalized
 
 `questionnaire-engine.js` owns per-instance state and pure calculation/state transitions. It has no DOM, `fetch`, WordPress, Google, questionnaire-ID, or question-ID branches. It must run under Node for parity fixtures.
 
-### Frontend UI
+### Frontend UI and Presentation
 
-`questionnaire-ui.js` discovers roots, parses their inert configuration, and manages root-scoped accessible DOM rendering and events. It renders intro, progress, answers, result, dimensions, guardrail messages, safety, CTA, errors, retry, and restart. It contains no scoring formula.
+The architecture enforces shared frontend infrastructure (state, scoring, submission, error handling) while supporting questionnaire-specific presentation.
+
+`questionnaire-ui.js` provides the default LifeMetrics frontend presentation. It discovers roots, manages root-scoped accessible DOM rendering, and orchestrates the flow.
+
+To support functionally distinct questionnaires (like PSS10 or future layouts), the schema allows an optional `presentation` config block. The renderer can inject specific templates, and specific CSS can be loaded. Central business logic must NOT be duplicated to support different presentations.
 
 ### Frontend API
 
@@ -231,23 +235,20 @@ Moving to `ready` requires recorded source/version/approval and passing contract
 
 ## Storage direction
 
-The proposed backend decision is a hybrid with one canonical write:
+The generic element is the submission infrastructure; the physical Google destination is NOT common.
 
-- one `submissions` ledger row per completion;
-- common scalar metadata columns plus JSON snapshots for variable answers/dimensions/safety;
-- idempotency across questionnaire ID, version, and session ID;
-- optional per-questionnaire reporting tabs are derived/noncanonical;
-- legacy PSS10 storage remains untouched until the backend migration stage.
-
-This prevents partial canonical writes across multiple tabs and avoids a wide sparse schema. If JSON querying becomes inadequate, the upgrade is a proper datastore rather than two-way Sheet synchronization.
+- The plugin provides generic server-side payload validation, routing, and transport via `class-submission-service.php` and an adapter.
+- The destination Google Apps Script endpoint is a server-side configuration mapping specific to each questionnaire (e.g. PSS10 maps to one target, Hydratation maps to another).
+- Physical Google Sheet columns are questionnaire-specific (e.g. `q1...q10` for PSS10 vs `HY01...HY12` + dimensions for Hydratation). Common metadata like `submission_id` and `category` are standardized.
+- The browser never knows or routes to the Google Apps Script endpoint.
+- Monolithic canonical sheets are explicitly avoided in favor of clean analytical utility per questionnaire.
 
 ## Compatibility and migration
 
-- Current PSS10 remains on its legacy implementation until characterization tests and generic parallel runtime exist.
-- The canonical future route retains the existing URL shape `/v1/{id}/submit`.
-- PSS10 content, reverse scoring, thresholds, labels, payload, errors, and interactions are frozen before cutover.
-- Legacy assets remain available for one rollback checkpoint after cutover.
-- Existing standalone files are never used as direct replacements for plugin files because the versions differ.
+- Current PSS10 remains functionally frozen. It is a distinct legacy profile, not a template for other questionnaires.
+- The generic schema must support PSS10's unique properties (10 questions, 1-5 answers, 10-50 range, reverse scoring Q4,5,7,8).
+- The canonical route is `/v1/{id}/submit`.
+- Existing standalone files are never used as direct replacements for plugin files.
 
 ## Security and privacy boundary
 

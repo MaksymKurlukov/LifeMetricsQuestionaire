@@ -28,3 +28,6 @@ From Stage 3.3 the PHP characterization test also verifies shortcode and REST ca
 Stage 4 adds a synthetic schema 2.0.0 fixture. Its tests cover strict ready validation, malformed-schema mutations, lifecycle approval behavior, public registry failure, explicit and reverse answer points, N/A normalization, half-up rounding, dimensions, attention, weakest ordering, guardrails, separate classification/safety messages, safety priority/de-duplication, and byte-equivalent PHP/JavaScript canonical output.
 
 Browser screenshots, live timing/focus interaction, responsive layout, WordPress activation, Gutenberg, and Elementor are not claimed here because the isolated WordPress/browser environment is deferred to STAGES 8-9.
+
+
+As new proprietary questionnaires are added (Stages 11-20), additional tests will verify their specific schema files, scoring logic, optional presentation overrides, and per-questionnaire server-side routing endpoints without modifying the shared `questionnaire-ui.js` or `class-rest-controller.php` implementations.
