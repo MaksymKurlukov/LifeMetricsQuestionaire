@@ -16,14 +16,14 @@ final class LifeMetrics_Questionnaire_Renderer
     public function render(array $config, string $submit_url = ''): string
     {
         $this->assets->enqueue();
-        
+
         $instance_id = wp_unique_id('lmq-');
-        
+
         $client_config = $config;
         unset($client_config['approvals']);
-        
+
         $json_config = wp_json_encode($client_config);
-        
+
         ob_start();
         ?>
         <div class="lmq-questionnaire-root" id="<?php echo esc_attr($instance_id); ?>">

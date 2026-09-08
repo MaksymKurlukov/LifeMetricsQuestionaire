@@ -63,7 +63,7 @@ $modal_title_id = $instance_id . '-modal-title';
         <div class="analysis-block">
           <p class="analysis-text" data-lmq-role="analysis-text"></p>
         </div>
-        
+
         <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
         <div data-lmq-role="safety-messages" class="safety-messages"></div>
         <div data-lmq-role="classification-messages" class="classification-messages"></div>

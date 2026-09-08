@@ -1,45 +1,35 @@
-(function(engine) {
-  'use strict';
+
+(function (engine) {
 
   function initQuestionnaire(rootEl) {
     const configEl = rootEl.querySelector('[data-lmq-config]');
     if (!configEl) return;
-    
+
     let config;
     try {
       config = JSON.parse(configEl.textContent);
     } catch (e) {
-      console.error('LMQ: Invalid configuration JSON', e);
+      console.error('LMQ: Failed to parse configuration', e);
       return;
     }
 
-    const submitUrlEl = rootEl.querySelector('[data-lmq-submit-url]');
-    let submitUrl = null;
-    if (submitUrlEl) {
-      try {
-        submitUrl = JSON.parse(submitUrlEl.textContent);
-      } catch (e) {
-        console.error('LMQ: Invalid submit URL JSON', e);
-      }
-    }
-    
-    let state = {
+    const urlEl = rootEl.querySelector('[data-lmq-submit-url]');
+    const submitUrl = urlEl ? JSON.parse(urlEl.textContent) : null;
+
+    const allQuestions = (config.questions || []).concat(config.safety_questions || []);
+
+    const state = {
       answers: {},
       currentQuestionIndex: 0,
-      safetyAnswers: {},
       isSubmitting: false,
-      autoNextTimer: null
-    };
-
-    const sections = {
-      intro: rootEl.querySelector('[data-lmq-section="intro"]'),
-      test: rootEl.querySelector('[data-lmq-section="test"]'),
-      result: rootEl.querySelector('[data-lmq-section="result"]')
+      autoNextTimer: null,
+      abortController: null,
+      previouslyFocused: null
     };
 
     function showSection(name) {
-      Object.keys(sections).forEach(k => {
-        if (sections[k]) sections[k].hidden = (k !== name);
+      rootEl.querySelectorAll('[data-lmq-section]').forEach(el => {
+        el.hidden = el.getAttribute('data-lmq-section') !== name;
       });
     }
 
@@ -47,21 +37,20 @@
       const title = rootEl.querySelector('[data-lmq-role="intro-title"]');
       const text = rootEl.querySelector('[data-lmq-role="intro-text"]');
       if (title) title.textContent = config.title;
-      if (text) text.innerHTML = config.description;
+      if (text) text.textContent = config.description;
       showSection('intro');
     }
 
     function renderQuestion() {
-      const q = config.questions[state.currentQuestionIndex];
-      const qTitle = rootEl.querySelector('[data-lmq-role="test-question"]');
-      if (qTitle) qTitle.textContent = q.text;
+      const q = allQuestions[state.currentQuestionIndex];
+      const title = rootEl.querySelector('[data-lmq-role="test-question"]');
+      if (title) title.textContent = q.text;
 
       const answersContainer = rootEl.querySelector('[data-lmq-role="answers"]');
       if (answersContainer) {
         answersContainer.innerHTML = '';
         q.answers.forEach(ans => {
           const btn = document.createElement('button');
-          btn.type = 'button';
           btn.className = 'answer-btn';
           if (state.answers[q.id] === ans.value) {
             btn.classList.add('selected');
@@ -72,12 +61,10 @@
           btn.setAttribute('role', 'radio');
           btn.textContent = ans.label;
           btn.onclick = () => {
-            // Cancel any pending auto-next
             if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
-            
+
             state.answers[q.id] = ans.value;
-            
-            // Re-render to show selected state immediately
+
             Array.from(answersContainer.children).forEach(child => {
               child.classList.remove('selected');
               child.setAttribute('aria-checked', 'false');
@@ -85,7 +72,6 @@
             btn.classList.add('selected');
             btn.setAttribute('aria-checked', 'true');
 
-            // Auto-next delay
             state.autoNextTimer = setTimeout(() => {
               nextQuestion();
             }, 400);
@@ -95,11 +81,11 @@
       }
 
       const progressLabel = rootEl.querySelector('[data-lmq-role="progress-label"]');
-      if (progressLabel) progressLabel.textContent = `Question ${state.currentQuestionIndex + 1}/${config.questions.length}`;
+      if (progressLabel) progressLabel.textContent = `Question ${state.currentQuestionIndex + 1}/${allQuestions.length}`;
 
       const progressBar = rootEl.querySelector('[data-lmq-role="progress-bar"]');
       if (progressBar) {
-        const percent = ((state.currentQuestionIndex) / config.questions.length) * 100;
+        const percent = ((state.currentQuestionIndex) / allQuestions.length) * 100;
         progressBar.style.width = percent + '%';
         progressBar.setAttribute('aria-valuenow', Math.round(percent));
       }
@@ -108,12 +94,12 @@
       if (backBtn) {
         backBtn.disabled = state.currentQuestionIndex === 0;
       }
-      
+
       showSection('test');
     }
 
     function nextQuestion() {
-      if (state.currentQuestionIndex < config.questions.length - 1) {
+      if (state.currentQuestionIndex < allQuestions.length - 1) {
         state.currentQuestionIndex++;
         renderQuestion();
       } else {
@@ -130,9 +116,10 @@
     }
 
     function submitTest() {
+      if (state.isSubmitting) return;
+
       showSection('result');
-      
-      // Update final progress bar
+
       const progressBar = rootEl.querySelector('[data-lmq-role="progress-bar"]');
       if (progressBar) {
         progressBar.style.width = '100%';
@@ -146,7 +133,7 @@
         console.error('LMQ: Scoring failed', e);
         return;
       }
-      
+
       const scoreVal = rootEl.querySelector('.result-score__value');
       if (scoreVal) scoreVal.textContent = scoreResult.final_score;
 
@@ -155,7 +142,7 @@
         const level = config.result_levels.find(l => l.code === scoreResult.displayed_category);
         if (level) analysisText.textContent = level.description;
       }
-      
+
       const safetyContainer = rootEl.querySelector('[data-lmq-role="safety-messages"]');
       if (safetyContainer) {
         safetyContainer.innerHTML = '';
@@ -165,7 +152,12 @@
              if (msg) {
                const el = document.createElement('div');
                el.className = 'safety-message';
-               el.innerHTML = `<strong>${msg.title}</strong><p>${msg.text}</p>`;
+               const strong = document.createElement('strong');
+               strong.textContent = msg.title;
+               const p = document.createElement('p');
+               p.textContent = msg.text;
+               el.appendChild(strong);
+               el.appendChild(p);
                safetyContainer.appendChild(el);
              }
           });
@@ -200,16 +192,20 @@
              if (msg) {
                const el = document.createElement('div');
                el.className = 'classification-message';
-               el.innerHTML = `<strong>${msg.title}</strong><p>${msg.text}</p>`;
+               const strong = document.createElement('strong');
+               strong.textContent = msg.title;
+               const p = document.createElement('p');
+               p.textContent = msg.text;
+               el.appendChild(strong);
+               el.appendChild(p);
                classContainer.appendChild(el);
              }
           });
         }
       }
-      
+
       const ctasContainer = rootEl.querySelector('[data-lmq-role="ctas"]');
       if (ctasContainer && config.result_ctas && config.result_ctas.length > 0) {
-        // Clear generic restart button
         ctasContainer.innerHTML = '';
         config.result_ctas.forEach(cta => {
           if (!cta.enabled) return;
@@ -219,7 +215,6 @@
           a.textContent = cta.label;
           ctasContainer.appendChild(a);
         });
-        // Add restart button back
         const restartBtn = document.createElement('button');
         restartBtn.type = 'button';
         restartBtn.className = 'btn btn--tertiary';
@@ -232,16 +227,23 @@
         state.isSubmitting = true;
         const alertBox = rootEl.querySelector('[data-lmq-role="save-alert"]');
         if (alertBox) alertBox.hidden = true;
-        
+
+        state.abortController = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (state.abortController) state.abortController.abort();
+        }, 10000);
+
         fetch(submitUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: state.answers })
+          body: JSON.stringify({ answers: state.answers }),
+          signal: state.abortController.signal
         }).then(res => {
           if (!res.ok) throw new Error('Network error');
         }).catch(err => {
           if (alertBox) alertBox.hidden = false;
         }).finally(() => {
+          clearTimeout(timeoutId);
           state.isSubmitting = false;
         });
       }
@@ -250,22 +252,71 @@
     const modal = rootEl.querySelector('[data-lmq-role="modal-overlay"]');
     const learnMoreBtn = rootEl.querySelector('[data-lmq-role="learn-more"]');
     const modalCloseBtn = rootEl.querySelector('[data-lmq-role="modal-close"]');
+
+    if (modal && learnMoreBtn && config.disclaimer) {
+      if (config.disclaimer.before || config.disclaimer.after) {
+        learnMoreBtn.hidden = false;
+
+        const modalTitle = rootEl.querySelector('[data-lmq-role="modal-title"]');
+        if (modalTitle) modalTitle.textContent = 'À propos de ce test';
+
+        const modalContent = rootEl.querySelector('[data-lmq-role="modal-content"]');
+        if (modalContent) {
+          modalContent.innerHTML = '';
+          if (config.disclaimer.before) {
+            const pb = document.createElement('p');
+            pb.textContent = config.disclaimer.before;
+            modalContent.appendChild(pb);
+          }
+          if (config.disclaimer.after) {
+            const pa = document.createElement('p');
+            pa.textContent = config.disclaimer.after;
+            modalContent.appendChild(pa);
+          }
+        }
+      }
+    }
+
+    function openModal() {
+      if (modal) {
+        modal.hidden = false;
+        state.previouslyFocused = document.activeElement;
+        if (modalCloseBtn) modalCloseBtn.focus();
+      }
+    }
+
+    function closeModal() {
+      if (modal) {
+        modal.hidden = true;
+        if (state.previouslyFocused) state.previouslyFocused.focus();
+      }
+    }
+
     if (modal && learnMoreBtn) {
       learnMoreBtn.onclick = (e) => {
         e.preventDefault();
-        modal.hidden = false;
+        openModal();
       };
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!modal.hidden && e.key === 'Escape') closeModal();
+      });
     }
-    if (modal && modalCloseBtn) {
-      modalCloseBtn.onclick = () => {
-        modal.hidden = true;
-      };
+
+    if (modalCloseBtn) {
+      modalCloseBtn.onclick = closeModal;
     }
 
     function handleRestart() {
+      if (state.isSubmitting) {
+        if (state.abortController) state.abortController.abort();
+      }
       state.answers = {};
       state.currentQuestionIndex = 0;
-      state.safetyAnswers = {};
       state.isSubmitting = false;
       if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
       renderIntro();

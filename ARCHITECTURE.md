@@ -58,8 +58,7 @@ lifemetrics-questionnaires/
 │   └── google-apps-script.gs
 ├── templates/questionnaire.php
 ├── assets/
-│   ├── css/questionnaire-base.css
-│   ├── css/questionnaire-components.css
+│   ├── css/questionnaire.css
 │   ├── js/questionnaire-engine.js
 │   ├── js/questionnaire-ui.js
 │   ├── js/questionnaire-api.js
