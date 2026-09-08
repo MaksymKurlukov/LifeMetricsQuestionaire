@@ -23,7 +23,8 @@ final class LifeMetrics_Plugin
         self::$initialized = true;
         self::$registry = new LifeMetrics_Questionnaire_Registry(
             LMQ_PLUGIN_PATH . 'questionnaires',
-            array()
+            array(),
+            new LifeMetrics_Questionnaire_Schema_Validator()
         );
         self::$legacy_pss10 = new LifeMetrics_Legacy_PSS10_Runtime();
         self::$shortcodes = new LifeMetrics_Shortcodes(self::$legacy_pss10);

@@ -20,6 +20,8 @@ if (!defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
     );
 }
 
+require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-schema-validator.php';
+require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-scoring-engine.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-legacy-pss10-runtime.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-shortcodes.php';
