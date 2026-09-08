@@ -8,6 +8,10 @@ Run from the repository root:
 node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js
 /Applications/XAMPP/xamppfiles/bin/php lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php
 /Applications/XAMPP/xamppfiles/bin/php lifemetrics-questionnaires/tests/questionnaire-registry.test.php
+/Applications/XAMPP/xamppfiles/bin/php lifemetrics-questionnaires/tests/questionnaire-schema.test.php
+/Applications/XAMPP/xamppfiles/bin/php lifemetrics-questionnaires/tests/questionnaire-scoring.test.php
+node lifemetrics-questionnaires/tests/questionnaire-engine.test.js
+/Applications/XAMPP/xamppfiles/bin/php lifemetrics-questionnaires/tests/questionnaire-parity.test.php
 node lifemetrics-questionnaires/tests/backend-logic.test.js
 ```
 
@@ -20,5 +24,7 @@ From Stage 3.1 it also checks one-time plugin initialization, the extracted lega
 From Stage 3.2 the registry test checks explicit in-root file resolution, internal lifecycle access, the public `ready` gate, ID/config mismatch, invalid configurations, directory traversal, outside-base mappings, and caching. The production registry remains empty while PSS10 stays on its legacy compatibility path.
 
 From Stage 3.3 the PHP characterization test also verifies shortcode and REST callback ownership by the dedicated controllers, delegation through the legacy compatibility runtime, and the unchanged exact PSS10 route.
+
+Stage 4 adds a synthetic schema 2.0.0 fixture. Its tests cover strict ready validation, malformed-schema mutations, lifecycle approval behavior, public registry failure, explicit and reverse answer points, N/A normalization, half-up rounding, dimensions, attention, weakest ordering, guardrails, separate classification/safety messages, safety priority/de-duplication, and byte-equivalent PHP/JavaScript canonical output.
 
 Browser screenshots, live timing/focus interaction, responsive layout, WordPress activation, Gutenberg, and Elementor are not claimed here because the isolated WordPress/browser environment is deferred to STAGES 8-9.

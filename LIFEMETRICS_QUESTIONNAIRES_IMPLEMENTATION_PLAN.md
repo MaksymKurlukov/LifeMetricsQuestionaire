@@ -10,11 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS`
 
-Next executable task: `STAGE 4 - Schema validator and dual-runtime scoring core`
+Next executable task: `STAGE 5 - Shared frontend UI, API, template, and assets`
 
-Stage 3 completed its approved five-class PHP infrastructure without changing the PSS10 public runtime. Stage 4 has not started.
+Stage 4 completed schema 2.0.0 validation and pure PHP/JavaScript scoring parity without changing the PSS10 public runtime. Stage 5 has not started.
 
 ## Status vocabulary
 
@@ -300,7 +300,7 @@ No integration layer may depend on UI classes. No questionnaire configuration ma
 
 | Field | Requirement | Contract |
 |---|---|---|
-| `schema_version` | REQUIRED | configuration contract version, initially `1.0.0` |
+| `schema_version` | REQUIRED | configuration contract version, currently `2.0.0` |
 | `id` | REQUIRED | exact registry key, lowercase `[a-z0-9-]+` |
 | `version` | REQUIRED | questionnaire SemVer string |
 | `status` | REQUIRED | `draft`, `review`, `ready`, or `disabled` |
@@ -319,11 +319,13 @@ No integration layer may depend on UI classes. No questionnaire configuration ma
 | `safety_questions` | OPTIONAL | ordered non-scored questions; empty array when none |
 | `safety_messages` | REQUIRED if safety exists | stable message codes and presentation copy |
 | `classification_rules` | OPTIONAL | declarative ordered guardrails; empty array when none |
+| `classification_messages` | REQUIRED | ordinary guardrail/attention messages referenced by stable code |
 | `weakest_dimensions` | OPTIONAL | count, eligibility, tie policy, attention threshold; omitted when dimensions empty |
-| `cta` | REQUIRED | label, destination key/URL policy, optional supporting copy; URL must be allowlisted/sanitized server-side |
+| `result_ctas` | REQUIRED | ordered label, URL, variant, and enabled state; URLs must satisfy the approved destination policy |
 | `disclaimer` | REQUIRED | before-test and after-result copy |
 | `attribution` | OPTIONAL | source/licensing/legal metadata, required for PSS10 if applicable |
 | `content_revision` | OPTIONAL | internal approved document/hash reference; not a replacement for `version` |
+| `approvals` | REQUIRED for `ready` | content/scoring, legal/licensing, technical/runtime, and publication gates must be true |
 
 Each scored question requires:
 
@@ -358,7 +360,7 @@ This fragment documents the contract using approved Hydratation wording; it is n
 ```php
 <?php
 return array(
-    'schema_version' => '1.0.0',
+    'schema_version' => '2.0.0',
     'id' => 'hydratation',
     'version' => '1.0.0',
     'status' => 'review',
@@ -877,7 +879,7 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 
 ## STAGE 4 - Schema validator and dual-runtime scoring core
 
-- **Status:** `NOT_STARTED`.
+- **Status:** `PASS` on 2026-09-08. Schema 2.0.0, fail-closed ready validation, pure PHP/JavaScript scoring, branch fixtures, mutation coverage, and byte-equivalent parity passed. Evidence: `STAGE_REPORTS/STAGE-04.md`.
 - **Objective:** implement the contract and pure canonical scoring in PHP and JavaScript without rendering a live questionnaire.
 - **Prerequisites:** STAGE 3 PASS.
 - **Files allowed to change:** schema/scoring classes, `questionnaire-engine.js`, fixtures, schema/scoring tests; non-ready test configs.
@@ -888,8 +890,8 @@ The required full-viewport `#faf8f5` background is not solved inside the plugin.
 - **PASS/FAIL:** PASS only with zero parity differences; FAIL on coercion, uncovered rule types, or arbitrary expression evaluation.
 - **Rollback criteria:** revert core/fixtures; live PSS remains unchanged.
 - **Expected deliverables:** versioned schema validator, two pure scoring implementations, parity runner.
-- **Blockers:** final rounding/version policy from STAGE 1.
-- **User action required:** approve canonical formula and payload examples.
+- **Blockers:** none.
+- **User action required:** none; the Stage 4 contract clarification and schema 2.0.0 direction were approved on 2026-09-08.
 - **Recommended commit checkpoint:** `feat: add validated generic scoring core`.
 
 ## STAGE 5 - Shared frontend UI, API, template, and assets
@@ -1373,10 +1375,10 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 Execute exactly one next stage in a separate run:
 
-`STAGE 4 - Schema validator and dual-runtime scoring core`
+`STAGE 5 - Shared frontend UI, API, template, and assets`
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
 
-The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3 subsequently completed the approved five-class PHP infrastructure without changing that runtime baseline. Stage 4 remains not started.
+The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3 subsequently completed the approved five-class PHP infrastructure without changing that runtime baseline. Stage 4 is PASS.
 
 Current public-release blockers are: PSS10 licensing/legal/attribution approval; WordPress/page-layout implementation of the full-width `#faf8f5` background; creation of the `/tests-sante/` catalogue; activation of the secondary CTA after that page exists; real WordPress mobile validation; Stage 3 generic architecture; proprietary questionnaire migrations; and required synthetic scoring validation/approvals. PSS10 is not public-ready solely because runtime passed; lifecycle/legal gates remain independent.

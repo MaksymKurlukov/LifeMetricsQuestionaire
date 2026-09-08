@@ -86,6 +86,8 @@ Stage 3 routes the public shortcode through `LifeMetrics_Shortcodes` and the exa
 
 The project minimum supported PHP version is 8.2. Stage 3 does not create unused Renderer, generic Assets, SchemaValidator, ScoringEngine, SubmissionService, or Google adapter shells; those remain assigned to their documented later stages.
 
+Stage 4 adds the schema validator and pure PHP/JavaScript scoring engines without connecting generic rendering, REST submission, or persistence. The registry applies complete schema validation only when a mapped configuration requests public `ready` access.
+
 ### Questionnaire registry
 
 `class-questionnaire-registry.php` owns the explicit ID-to-file map. It resolves mapped files only inside its fixed questionnaire base directory, loads and caches plain arrays, verifies `config.id` equals the registry key, and exposes separate internal/public lookup methods. The public lookup returns only lifecycle status `ready`.
@@ -99,6 +101,8 @@ During Stage 3 the production map is intentionally empty because PSS10 remains o
 `class-questionnaire-schema-validator.php` enforces the contract in `QUESTIONNAIRE_SCHEMA.md`, including cross-references, result-range coverage, allowed guardrail grammar, and lifecycle readiness. It reports stable developer-facing codes without exposing paths/content to visitors.
 
 It does not repair, default, or reinterpret incomplete scoring/content.
+
+Schema 2.0.0 keeps ordinary `classification_messages` separate from medical-attention `safety_messages`, uses only `result_ctas`, and requires four explicit true approval gates before `ready` can pass public resolution. Non-ready configurations are not denied internal lookup solely for incomplete approvals.
 
 ### PHP scoring engine
 

@@ -8,7 +8,7 @@ Last updated: 2026-09-08
 
 Decision owner and approver: Maksym Kurlukov.
 
-DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. DEC-016 through DEC-018 were accepted through explicit project directions on 2026-09-08. Future changes must preserve this approval history and use an amended or superseding ADR.
+DEC-001 through DEC-015 were accepted by Maksym Kurlukov on 2026-09-03. DEC-016 through DEC-019 were accepted through explicit project directions on 2026-09-08. Future changes must preserve this approval history and use an amended or superseding ADR.
 
 Authority: this file owns architectural decisions. Sequencing remains in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`; accepted component and schema consequences are reflected in `ARCHITECTURE.md` and `QUESTIONNAIRE_SCHEMA.md`.
 
@@ -178,12 +178,21 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Consequences: Stage 3 can progress in small working units without dead classes or premature public behavior; PSS10 remains on a named compatibility path through Stage 6.
 - Rollback/compatibility: each Stage 3 unit is independently revertible to baseline `e663351`; no wildcard route or PSS10 configuration migration exists to unwind.
 
+## DEC-019 - Schema 2.0.0 readiness and message separation
+
+- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
+- Context: strict Stage 4 validation required an explicit home for ordinary guardrail messages, one authoritative CTA field, and configuration-readable publication gates.
+- Alternatives: leave message codes unresolved; reuse safety messages; keep approvals external; introduce a generic workflow engine.
+- Proposal/rationale: schema 2.0.0 adds `classification_messages`, keeps `safety_messages` separate, standardizes on `result_ctas`, and requires four boolean approval gates for `ready` only.
+- Consequences: every ordinary rule/attention message resolves explicitly; incomplete approvals do not invalidate non-ready lifecycle states; required-field additions follow the approved major-version policy.
+- Rollback/compatibility: Stage 4 remains disconnected from live rendering and submission; legacy PSS10 behavior and its later Stage 6 migration remain unchanged.
+
 ## Approval record
 
 | Field | Value |
 |---|---|
 | Decision owner | Maksym Kurlukov |
 | Approver | Maksym Kurlukov |
-| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-018 |
-| Approved decisions | DEC-001 through DEC-018 |
+| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-019 |
+| Approved decisions | DEC-001 through DEC-019 |
 | Required action | none for STAGE 1; future changes require an amended or superseding ADR |

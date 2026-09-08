@@ -1,8 +1,8 @@
 # LifeMetrics questionnaire schema and scoring contract
 
-Document version: 1.0.0
+Document version: 2.0.0
 
-Schema version: `1.0.0`
+Schema version: `2.0.0`
 
 Status: `APPROVED`
 
@@ -31,7 +31,7 @@ The registry, not visitor input, selects the file through an explicit map.
 
 | Field | Requirement | Validation |
 |---|---|---|
-| `schema_version` | required | exact supported SemVer; initially `1.0.0` |
+| `schema_version` | required | exact supported SemVer; currently `2.0.0` |
 | `id` | required | lowercase kebab-case `[a-z0-9]+(?:-[a-z0-9]+)*`; equals registry key/directory |
 | `version` | required | questionnaire SemVer |
 | `status` | required | `draft`, `review`, `ready`, `disabled` |
@@ -48,13 +48,15 @@ The registry, not visitor input, selects the file through an explicit map.
 | `dimensions` | required | ordered array; empty only for approved dimensionless instruments |
 | `result_levels` | required | ordered exhaustive/non-overlapping category ranges |
 | `classification_rules` | optional | ordered allowlisted guardrail rules; default empty only when explicitly present/validated |
+| `classification_messages` | required | ordinary classification, guardrail, and dimension-attention message map |
 | `weakest_dimensions` | conditional | required when dimensions must be ranked/displayed |
 | `safety_questions` | optional | ordered non-scored questions |
 | `safety_messages` | conditional | required when safety questions can trigger a message |
-| `result_ctas` | required in the Stage 3 generic schema | ordered result actions containing `label`, `url`, `variant`, `enabled` |
+| `result_ctas` | required | ordered result actions containing `label`, `url`, `variant`, `enabled` |
 | `disclaimer` | required | before and after text |
 | `attribution` | conditional | required when instrument/legal source needs it, including PSS10 if confirmed |
 | `content_revision` | optional | approved document/hash reference; never replaces `version` |
+| `approvals` | required for `ready` | boolean `content_scoring`, `legal_licensing`, `technical_runtime`, and `publication` gates |
 
 Unknown fields fail schema validation for `ready` configurations. During schema evolution they require a new schema version rather than being silently ignored.
 
@@ -220,7 +222,7 @@ V1 supports one rule type:
 Validation:
 
 - IDs are unique.
-- `type` is exactly `category_cap` in schema 1.0.0.
+- `type` is exactly `category_cap` in schema 2.0.0.
 - `metric` is `dimension_score` or `dimension_percentage`.
 - Dimension/category/message references exist.
 - Operator is one of `<`, `<=`, `==`, `>=`, `>`.
@@ -228,6 +230,8 @@ Validation:
 - Arbitrary expressions, JavaScript/PHP snippets, `eval`, and questionnaire-ID branches are forbidden.
 
 Application changes only `displayed_category` and records the rule ID/message. `raw_score`, capacities, `final_score`, and `calculated_category` remain unchanged.
+
+`classification_messages` is keyed by every `message_code` used by classification rules or dimension attention definitions. Each entry contains non-empty plain-text `title` and `text`. These ordinary interpretation messages are semantically separate from `safety_messages`; unresolved references fail validation.
 
 ## Weakest dimensions
 
@@ -238,7 +242,7 @@ Application changes only `displayed_category` and records the rule ID/message. `
 ),
 ```
 
-- `count` is 1 or 2 in schema 1.0.0.
+- `count` is 1 or 2 in schema 2.0.0.
 - Rank eligible/available dimensions by ascending percentage.
 - Equal percentages use configuration order.
 - Attention status does not reorder ties unless a later schema/ADR says so.
@@ -311,6 +315,19 @@ Each result CTA requires non-empty plain-text `label`, `variant` from an allowli
 | `disabled` | retained/version-readable internally; may have historical schema | denied |
 
 Transition to `ready` requires inventory source hash, questionnaire version, content/scoring approval, passing tests, approved CTA, and required legal/privacy review.
+
+Schema 2.0.0 represents readiness with:
+
+```php
+'approvals' => array(
+    'content_scoring' => true,
+    'legal_licensing' => true,
+    'technical_runtime' => true,
+    'publication' => true,
+),
+```
+
+All four values must be exactly `true` for `ready`. Non-ready states may omit the object or retain false gates without being rejected solely for incomplete publication approval. This is configuration validation, not a workflow engine.
 
 ## Canonical scoring algorithm
 
@@ -429,6 +446,8 @@ Any scoring-affecting change requires at least a minor bump. The content owner a
 - Patch for clarification with identical accepted data.
 - Minor for backward-compatible optional fields/rule types.
 - Major for required-field, semantics, or serialization incompatibility.
+
+Schema 2.0.0 is the first implemented validator contract. The major version reflects the required `classification_messages` and ready-state `approvals` fields plus the authoritative `result_ctas` representation; it does not alter the legacy PSS10 runtime.
 
 ### Submission schema version
 
