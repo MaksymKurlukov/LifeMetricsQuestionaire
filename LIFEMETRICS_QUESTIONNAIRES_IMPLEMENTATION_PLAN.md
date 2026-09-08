@@ -10,11 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_IN_PROGRESS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS`
 
-Next executable task: `STAGE 3.2 - Explicit questionnaire registry and lifecycle public gate`
+Next executable task: `STAGE 4 - Schema validator and dual-runtime scoring core`
 
-Stage 3 began with the approved bootstrap/orchestration extraction only. The registry, shortcode controller, and REST controller remain incomplete; Stage 4 has not started.
+Stage 3 completed its approved five-class PHP infrastructure without changing the PSS10 public runtime. Stage 4 has not started.
 
 ## Status vocabulary
 
@@ -842,18 +842,18 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 3 - Generic PHP infrastructure in parallel
 
-- **Status:** `IN_PROGRESS`. Units 3.1 (bootstrap/orchestrator/legacy runtime) and 3.2 (explicit registry/lifecycle public gate) passed locally; Unit 3.3 remains incomplete.
+- **Status:** `PASS` on 2026-09-08. Units 3.1 (bootstrap/orchestrator/legacy runtime), 3.2 (explicit registry/lifecycle public gate), and 3.3 (shortcode and exact PSS10 REST controllers) passed the complete local Stage 3 gate. Evidence: `STAGE_REPORTS/STAGE-03.md`.
 - **Objective:** introduce only bootstrap/orchestrator/registry/shortcode/REST infrastructure without switching PSS10 runtime behavior.
 - **Prerequisites:** STAGE 2 PASS.
 - **Files allowed to change:** plugin bootstrap; approved `includes/` classes; PHP tests; changelog/plan/report.
 - **Files forbidden to change:** legacy PSS10 template/assets behavior; both Apps Scripts; standalone; PDFs.
-- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 complete) create explicit registry map and lifecycle public gate with an intentionally empty production map while PSS10 remains legacy; (3.3 next) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. Do not register wildcard REST routing.
+- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 complete) create explicit registry map and lifecycle public gate with an intentionally empty production map while PSS10 remains legacy; (3.3 complete) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. No wildcard REST routing was registered.
 - **Required tests:** PHP 8.2 lint, registry traversal/status cases, shortcode invalid IDs, exact route resolution, legacy characterization suite.
 - **Acceptance criteria:** existing shortcode and REST output remain byte/contract equivalent where frozen; new services have no questionnaire-specific branches except temporary PSS10 compatibility adapter clearly marked.
 - **PASS/FAIL:** PASS if all legacy tests pass and no new public questionnaire is exposed; FAIL on any behavior or endpoint change.
 - **Rollback criteria:** revert stage commit to baseline bootstrap.
 - **Expected deliverables:** five approved PHP classes with tests, no frontend/config/backend cutover.
-- **Blockers:** none for the next Stage 3 unit.
+- **Blockers:** none.
 - **User action required:** none; narrowed scope, compatibility path, exact REST route, and PHP 8.2 minimum were approved before Unit 3.1.
 - **Recommended commit checkpoint:** `refactor: add generic PHP infrastructure without cutover`.
 
@@ -1373,10 +1373,10 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 Execute exactly one next stage in a separate run:
 
-`STAGE 3.3 - Shortcodes and exact PSS10 REST Controller extraction`
+`STAGE 4 - Schema validator and dual-runtime scoring core`
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
 
-The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3.1 subsequently extracted PHP bootstrap/orchestration, and Stage 3.2 added the non-public generic registry gate without changing that runtime baseline. Stage 4 remains not started.
+The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3 subsequently completed the approved five-class PHP infrastructure without changing that runtime baseline. Stage 4 remains not started.
 
 Current public-release blockers are: PSS10 licensing/legal/attribution approval; WordPress/page-layout implementation of the full-width `#faf8f5` background; creation of the `/tests-sante/` catalogue; activation of the secondary CTA after that page exists; real WordPress mobile validation; Stage 3 generic architecture; proprietary questionnaire migrations; and required synthetic scoring validation/approvals. PSS10 is not public-ready solely because runtime passed; lifecycle/legal gates remain independent.
