@@ -86,9 +86,11 @@ The project minimum supported PHP version is 8.2. Stage 3 does not create unused
 
 ### Questionnaire registry
 
-`class-questionnaire-registry.php` owns the explicit ID-to-file map. It loads and caches plain arrays, verifies `config.id` equals the registry key, delegates schema validation, and exposes separate internal/public lookup methods.
+`class-questionnaire-registry.php` owns the explicit ID-to-file map. It resolves mapped files only inside its fixed questionnaire base directory, loads and caches plain arrays, verifies `config.id` equals the registry key, and exposes separate internal/public lookup methods. The public lookup returns only lifecycle status `ready`.
 
 It must never concatenate shortcode or route input into a path. Unknown or non-public configurations fail closed.
+
+During Stage 3 the production map is intentionally empty because PSS10 remains on the legacy compatibility path until Stage 6. The registry performs only ID, path, array, matching-ID, and lifecycle checks in this unit; it will delegate the complete configuration contract to `LifeMetrics_Questionnaire_Schema_Validator` when that validator is introduced in Stage 4.
 
 ### Schema validator
 

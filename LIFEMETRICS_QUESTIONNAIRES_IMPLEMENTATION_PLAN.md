@@ -842,12 +842,12 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 
 ## STAGE 3 - Generic PHP infrastructure in parallel
 
-- **Status:** `IN_PROGRESS`. Unit 3.1 (bootstrap, `LifeMetrics_Plugin`, temporary `LifeMetrics_Legacy_PSS10_Runtime`) passed locally; later Stage 3 units remain incomplete.
+- **Status:** `IN_PROGRESS`. Units 3.1 (bootstrap/orchestrator/legacy runtime) and 3.2 (explicit registry/lifecycle public gate) passed locally; Unit 3.3 remains incomplete.
 - **Objective:** introduce only bootstrap/orchestrator/registry/shortcode/REST infrastructure without switching PSS10 runtime behavior.
 - **Prerequisites:** STAGE 2 PASS.
 - **Files allowed to change:** plugin bootstrap; approved `includes/` classes; PHP tests; changelog/plan/report.
 - **Files forbidden to change:** legacy PSS10 template/assets behavior; both Apps Scripts; standalone; PDFs.
-- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 next) create explicit registry map and lifecycle public gate; (3.3 later) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. Do not register wildcard REST routing.
+- **Exact tasks:** (3.1 complete) split bootstrap and isolate validated PHP behavior in the temporary legacy runtime; (3.2 complete) create explicit registry map and lifecycle public gate with an intentionally empty production map while PSS10 remains legacy; (3.3 next) introduce Shortcodes and REST Controller while preserving the exact PSS10 route. Do not register wildcard REST routing.
 - **Required tests:** PHP 8.2 lint, registry traversal/status cases, shortcode invalid IDs, exact route resolution, legacy characterization suite.
 - **Acceptance criteria:** existing shortcode and REST output remain byte/contract equivalent where frozen; new services have no questionnaire-specific branches except temporary PSS10 compatibility adapter clearly marked.
 - **PASS/FAIL:** PASS if all legacy tests pass and no new public questionnaire is exposed; FAIL on any behavior or endpoint change.
@@ -1373,10 +1373,10 @@ A PHP configuration file, a passing unit test, a PDF named V1, or a successful s
 
 Execute exactly one next stage in a separate run:
 
-`STAGE 3.2 - Explicit questionnaire registry and lifecycle public gate`
+`STAGE 3.3 - Shortcodes and exact PSS10 REST Controller extraction`
 
 STAGE 2 passed on 2026-09-04 after Maksym Kurlukov accepted the captured PSS10 behavior strictly as the structural-migration/regression baseline. Begin STAGE 3 only in a separate run; do not reinterpret this acceptance as permanent production approval of legacy UX, content, CTA, licensing, or attribution choices.
 
-The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3.1 subsequently extracted PHP bootstrap/orchestration without changing that runtime baseline. Stage 4 remains not started.
+The out-of-sequence PSS10 production-runtime validation and UI stabilization milestone is complete through `bfb1385`. Stage 3.1 subsequently extracted PHP bootstrap/orchestration, and Stage 3.2 added the non-public generic registry gate without changing that runtime baseline. Stage 4 remains not started.
 
 Current public-release blockers are: PSS10 licensing/legal/attribution approval; WordPress/page-layout implementation of the full-width `#faf8f5` background; creation of the `/tests-sante/` catalogue; activation of the secondary CTA after that page exists; real WordPress mobile validation; Stage 3 generic architecture; proprietary questionnaire migrations; and required synthetic scoring validation/approvals. PSS10 is not public-ready solely because runtime passed; lifecycle/legal gates remain independent.

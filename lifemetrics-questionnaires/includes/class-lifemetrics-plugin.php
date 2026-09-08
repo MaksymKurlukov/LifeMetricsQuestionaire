@@ -6,6 +6,8 @@ final class LifeMetrics_Plugin
 {
     private static bool $initialized = false;
 
+    private static ?LifeMetrics_Questionnaire_Registry $registry = null;
+
     private static ?LifeMetrics_Legacy_PSS10_Runtime $legacy_pss10 = null;
 
     public static function init(): void
@@ -15,6 +17,10 @@ final class LifeMetrics_Plugin
         }
 
         self::$initialized = true;
+        self::$registry = new LifeMetrics_Questionnaire_Registry(
+            LMQ_PLUGIN_PATH . 'questionnaires',
+            array()
+        );
         self::$legacy_pss10 = new LifeMetrics_Legacy_PSS10_Runtime();
 
         add_action('wp_enqueue_scripts', array(self::$legacy_pss10, 'register_assets'));
