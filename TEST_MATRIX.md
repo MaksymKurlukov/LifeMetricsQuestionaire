@@ -53,6 +53,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | PSS-REDIRECT-001 | explicit Google ContentService redirect handling | PHP regression: one POST, trusted HTTPS 302 Location, payload-free GET, no second redirect, final response validation | PASS at fix commit `1e8899c` on 2026-09-07 | out-of-sequence |
 | STAGE3-BOOT-001 | bootstrap/orchestration extraction | PHP 8.2 lint; one-time hook/shortcode registration; exact shortcode/route; filemtime assets; full PSS10 frontend/REST/backend regressions | PASS in Stage 3.1 on 2026-09-08 | 3 |
 | STAGE3-REG-001 | explicit registry and lifecycle public gate | in-root mapped files; cache; matching IDs; draft/review/ready/disabled; unknown/invalid IDs; traversal/outside-base rejection; full PSS10 regressions | PASS in Stage 3.2 on 2026-09-08 | 3 |
+| STAGE3-CTRL-001 | shortcode and exact PSS10 REST controller extraction | controller callback ownership; exact shortcode and route; delegation through legacy runtime; full PSS10 regressions; no wildcard route | PASS in Stage 3.3 on 2026-09-08 | 3 |
 
 ## Out-of-sequence manual real-WordPress evidence
 
@@ -97,12 +98,12 @@ Before any questionnaire can be marked `ready`, all applicable rows below must b
 
 | ID | Requirement | Planned stage | Current result |
 |---|---|---:|---|
-| STATIC-001 | all PHP files lint on minimum supported PHP 8.2 | 3+ | PASS for current Stage 3.2 PHP files on 2026-09-08 |
+| STATIC-001 | all PHP files lint on minimum supported PHP 8.2 | 3+ | PASS for all current Stage 3 PHP files on 2026-09-08 |
 | STATIC-002 | all JS and Apps Script parse | 2+ | PASS for current legacy/test JS and VM-parsed Apps Script in STAGE 2 |
 | STATIC-003 | registry paths are explicit and within plugin | 3 | PASS in Stage 3.2 on 2026-09-08 |
 | STATIC-004 | no visitor-derived include path/directory traversal | 3 | PASS in Stage 3.2 on 2026-09-08 |
 | STATIC-005 | no frontend `script.google.com` | every source stage | baseline PASS |
-| STATIC-006 | no visitor-selected upstream URL | 3/10 | NOT_RUN |
+| STATIC-006 | no visitor-selected upstream URL | 3/10 | PASS for Stage 3 legacy compatibility path on 2026-09-08 |
 | STATIC-007 | no `document.getElementById` or mutable `window.PSS_*` | 2/5/6 | baseline PASS |
 | STATIC-008 | no hardcoded `/wp-content/` | every source stage | baseline PASS |
 | STATIC-009 | no questionnaire/question-ID behavior branches in shared engine | 4+ | NOT_RUN |

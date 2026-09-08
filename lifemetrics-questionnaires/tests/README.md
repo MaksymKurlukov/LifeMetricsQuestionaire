@@ -19,4 +19,6 @@ From Stage 3.1 it also checks one-time plugin initialization, the extracted lega
 
 From Stage 3.2 the registry test checks explicit in-root file resolution, internal lifecycle access, the public `ready` gate, ID/config mismatch, invalid configurations, directory traversal, outside-base mappings, and caching. The production registry remains empty while PSS10 stays on its legacy compatibility path.
 
+From Stage 3.3 the PHP characterization test also verifies shortcode and REST callback ownership by the dedicated controllers, delegation through the legacy compatibility runtime, and the unchanged exact PSS10 route.
+
 Browser screenshots, live timing/focus interaction, responsive layout, WordPress activation, Gutenberg, and Elementor are not claimed here because the isolated WordPress/browser environment is deferred to STAGES 8-9.
