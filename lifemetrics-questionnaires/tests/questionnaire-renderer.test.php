@@ -42,8 +42,8 @@ $html2 = $renderer->render($config);
 if (!$assets->enqueued) die("Assets not enqueued\n");
 
 // Unique ID contract
-if (!str_contains($html1, 'id="lmq-1"')) die("Missing lmq-1\n");
-if (!str_contains($html2, 'id="lmq-2"')) die("Missing lmq-2\n");
+if (!str_contains($html1, 'id="lmq-test_1-1"')) die("Missing lmq-test_1-1\n");
+if (!str_contains($html2, 'id="lmq-test_1-2"')) die("Missing lmq-test_1-2\n");
 
 // JSON config
 if (!str_contains($html1, '<script type="application/json" data-lmq-config>')) die("Missing config script\n");

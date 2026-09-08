@@ -740,7 +740,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Objective:** Establish baseline, schema 2.0.0, freeze PSS10 legacy behavior, extract WP architecture, implement universal scoring, and create shared frontend UI/API.
 
 ## STAGE 6 - Migrate PSS10 to generic configuration
-- **Status:** `NOT_STARTED`
+- **Status:** `PASS`
 - **Objective:** Prove the generic stack supports the structurally different PSS10 legacy profile without changing its observed behavior.
 - **Prerequisites:** STAGES 0-5 PASS.
 - **Scope:** `questionnaires/pss10/questionnaire.php`, legacy adapter hooks.

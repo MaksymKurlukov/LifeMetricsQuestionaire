@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || exit;
+defined('ABSPATH') || exit; $asset_url = LMQ_PLUGIN_URL . 'questionnaires/pss10/assets/';
 
 $gradient_id = $instance_id . '-gauge-gradient';
 $modal_title_id = $instance_id . '-modal-title';

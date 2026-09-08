@@ -21,7 +21,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         }
     }
 
-    public function render_shortcode($attributes): string
+            public function render_shortcode($attributes): string
     {
         $attributes = shortcode_atts(array('id' => ''), $attributes, 'lifemetrics_questionnaire');
         if (sanitize_key($attributes['id']) !== 'pss10') {
@@ -32,16 +32,28 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         wp_enqueue_style('lmq-pss10');
         wp_enqueue_script('lmq-pss10');
 
-        $asset_url = LMQ_PLUGIN_URL . 'questionnaires/pss10/assets/';
-        $submit_url = rest_url('lifemetrics-questionnaires/v1/pss10/submit');
-        $instance_id = wp_unique_id('lmq-pss10-');
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-schema-validator.php';
+        require_once LMQ_PLUGIN_PATH . 'includes/class-assets.php';
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-renderer.php';
 
-        ob_start();
-        include LMQ_PLUGIN_PATH . 'questionnaires/pss10/template.php';
-        return (string) ob_get_clean();
+        $registry = new LifeMetrics_Questionnaire_Registry(
+            LMQ_PLUGIN_PATH . 'questionnaires',
+            array('pss10' => 'pss10/questionnaire.php'),
+            new LifeMetrics_Questionnaire_Schema_Validator()
+        );
+        $config = $registry->get_internal('pss10');
+        if (!$config) return '';
+
+        // The generic renderer dynamically creates the ID using the config id, 
+        // e.g., wp_unique_id('lmq-pss10-')
+        $assets = new LifeMetrics_Questionnaire_Assets(LMQ_PLUGIN_URL, LMQ_PLUGIN_PATH, '1.0.0');
+        $renderer = new LifeMetrics_Questionnaire_Renderer($assets, LMQ_PLUGIN_PATH . 'questionnaires/pss10/template.php');
+
+        return $renderer->render($config, rest_url('lifemetrics-questionnaires/v1/pss10/submit'));
     }
 
-    public function submit(WP_REST_Request $request)
+            public function submit(WP_REST_Request $request)
     {
         if (strlen($request->get_body()) > 8192) {
             return new WP_Error('lmq_payload_too_large', 'Request body is too large.', array('status' => 413));
@@ -56,46 +68,85 @@ final class LifeMetrics_Legacy_PSS10_Runtime
             return new WP_Error('lmq_invalid_json', 'Invalid JSON request.', array('status' => 400));
         }
 
-        $session_id = isset($input['session_id']) ? $input['session_id'] : null;
-        if (!is_string($session_id) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $session_id)) {
-            return new WP_Error('lmq_invalid_session', 'Invalid questionnaire session.', array('status' => 400));
-        }
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-scoring-engine.php';
+        $engine = new LifeMetrics_Questionnaire_Scoring_Engine();
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
+        require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-schema-validator.php';
+        $registry = new LifeMetrics_Questionnaire_Registry(
+            LMQ_PLUGIN_PATH . 'questionnaires',
+            array('pss10' => 'pss10/questionnaire.php'),
+            new LifeMetrics_Questionnaire_Schema_Validator()
+        );
+        $config = $registry->get_internal('pss10');
 
-        $created_at = isset($input['created_at']) ? $input['created_at'] : null;
-        if (
-            !is_string($created_at) ||
-            !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/', $created_at) ||
-            false === strtotime($created_at)
-        ) {
-            return new WP_Error('lmq_invalid_created_at', 'Invalid questionnaire timestamp.', array('status' => 400));
-        }
-
-        $payload = array('created_at' => $created_at, 'session_id' => $session_id);
-        $score_sum = 0;
-
-        for ($question = 1; $question <= 10; $question++) {
-            $key = 'q' . $question;
-            if (!isset($input[$key]) || !is_int($input[$key]) || $input[$key] < 1 || $input[$key] > 5) {
-                return new WP_Error('lmq_invalid_answers', 'All questionnaire answers must be integers from 1 to 5.', array('status' => 400));
+        $is_legacy = !isset($input['answers']);
+        
+        if ($is_legacy) {
+            // Validate legacy fields explicitly to preserve characterization test parity
+            if (empty($input['session_id']) || !is_string($input['session_id']) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $input['session_id'])) {
+                return new WP_Error('lmq_invalid_session', 'Invalid questionnaire session.', array('status' => 400));
             }
-            $payload[$key] = $input[$key];
-            $score_sum += $input[$key];
-        }
+            if (empty($input['created_at']) || !is_string($input['created_at']) || false === strtotime($input['created_at'])) {
+                return new WP_Error('lmq_invalid_created_at', 'Invalid questionnaire timestamp.', array('status' => 400));
+            }
+            for ($i = 1; $i <= 10; $i++) {
+                if (!isset($input['q' . $i]) || !is_int($input['q' . $i])) {
+                    return new WP_Error('lmq_invalid_answers', 'All questionnaire answers must be integers from 1 to 5.', array('status' => 400));
+                }
+            }
+            if (!isset($input['final_score']) || !is_int($input['final_score']) || $input['final_score'] < 10 || $input['final_score'] > 50) {
+                return new WP_Error('lmq_invalid_score', 'Invalid questionnaire score.', array('status' => 400));
+            }
+            if (empty($input['category']) || !in_array($input['category'], array('Stress bas', 'Stress assez élevé', 'Stress très élevé'), true)) {
+                return new WP_Error('lmq_invalid_category', 'Invalid category.', array('status' => 400));
+            }
 
-        $final_score = isset($input['final_score']) ? $input['final_score'] : null;
-        if (!is_int($final_score) || $final_score < 10 || $final_score > 50 || $final_score !== $score_sum) {
-            return new WP_Error('lmq_invalid_score', 'Invalid questionnaire score.', array('status' => 400));
-        }
+            // Convert legacy payload to generic format for engine verification
+            $answers = array();
+            $reverse_questions = array(4, 5, 7, 8);
+            foreach (range(1, 10) as $i) {
+                $val = $input['q' . $i];
+                if (in_array($i, $reverse_questions, true)) {
+                    $answers['q' . $i] = (string)(6 - $val);
+                } else {
+                    $answers['q' . $i] = (string)$val;
+                }
+            }
 
-        $allowed_categories = array('Stress bas', 'Stress assez élevé', 'Stress très élevé');
-        if (!isset($input['category']) || !is_string($input['category']) || !in_array($input['category'], $allowed_categories, true)) {
-            return new WP_Error('lmq_invalid_category', 'Invalid questionnaire category.', array('status' => 400));
-        }
+            $result = $engine->score($config, $answers);
 
-        $payload['final_score'] = $final_score;
-        $payload['category'] = $final_score >= 27
-            ? 'Stress très élevé'
-            : ($final_score >= 21 ? 'Stress assez élevé' : 'Stress bas');
+            // Verify final score matches what the client claimed
+            if ($result['final_score'] !== $input['final_score']) {
+                return new WP_Error('lmq_invalid_score', 'Invalid questionnaire score.', array('status' => 400));
+            }
+
+            // Forward legacy payload exactly as provided BUT with server-calculated category
+            $payload = $input;
+            $payload['category'] = $result['calculated_category'] === 'low' ? 'Stress bas' : ($result['calculated_category'] === 'medium' ? 'Stress assez élevé' : 'Stress très élevé');
+        } else {
+            // New generic frontend
+            if (!is_array($input['answers'])) {
+                return new WP_Error('lmq_invalid_json', 'Invalid JSON request.', array('status' => 400));
+            }
+            $answers = $input['answers'];
+            $result = $engine->score($config, $answers);
+
+            $payload = array(
+                'created_at' => gmdate('Y-m-d\TH:i:s.000\Z'),
+                'session_id' => wp_generate_uuid4(),
+            );
+            $reverse_questions = array(4, 5, 7, 8);
+            for ($i = 1; $i <= 10; $i++) {
+                $val = (int)$answers['q' . $i];
+                if (in_array($i, $reverse_questions, true)) {
+                    $payload['q' . $i] = 6 - $val;
+                } else {
+                    $payload['q' . $i] = $val;
+                }
+            }
+            $payload['final_score'] = $result['final_score'];
+            $payload['category'] = $result['calculated_category'] === 'low' ? 'Stress bas' : ($result['calculated_category'] === 'medium' ? 'Stress assez élevé' : 'Stress très élevé');
+        }
 
         $endpoint = esc_url_raw(LMQ_PSS10_GOOGLE_ENDPOINT);
         if (!$endpoint) {

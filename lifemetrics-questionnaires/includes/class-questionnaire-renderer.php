@@ -17,7 +17,7 @@ final class LifeMetrics_Questionnaire_Renderer
     {
         $this->assets->enqueue();
 
-        $instance_id = wp_unique_id('lmq-');
+        $instance_id = wp_unique_id('lmq-' . $config['id'] . '-');
 
         $client_config = $config;
         unset($client_config['approvals']);

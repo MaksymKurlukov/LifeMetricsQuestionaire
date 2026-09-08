@@ -26,6 +26,11 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Migrated PSS10 to the generic backend scoring engine while retaining legacy frontend rendering for zero-regression visual parity.
+- Adapted the PSS10 REST hook to transparently handle generic answers payloads and calculate backwards-compatible `final_score` and `category` fields, outputting the exact legacy Google Sheet payload.
+- Replaced hardcoded `id="lmq-pss10-1"` logic with dynamic config-driven unique IDs.
+
+
 - Added schema 2.0.0 validation with separate classification/safety messages, authoritative result CTAs, explicit ready approvals, and fail-closed public registry integration.
 - Added pure PHP and JavaScript scoring engines with explicit answer mapping, N/A normalization, half-up rounding, dimensions, attention, weakest dimensions, category caps, safety flags, and canonical JSON parity tests. The generic core is not connected to live rendering or REST submission.
 - Completed Stage 3 with dedicated shortcode and REST controllers. They preserve the exact PSS10 shortcode and `/pss10/submit` route by delegating to the temporary legacy runtime; no wildcard route, generic renderer, scoring, configuration, or backend cutover was introduced.

@@ -56,6 +56,12 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STAGE3-CTRL-001 | shortcode and exact PSS10 REST controller extraction | controller callback ownership; exact shortcode and route; delegation through legacy runtime; full PSS10 regressions; no wildcard route | PASS in Stage 3.3 on 2026-09-08 | 3 |
 | STAGE4-SCHEMA-001 | schema 2.0.0 strict validator and ready gate | required/unknown fields, references, ranges, messages, CTAs, approvals, mutation failures without fatals | PASS on 2026-09-08 | 4 |
 | STAGE4-SCORE-001 | pure PHP/JavaScript scoring and canonical parity | explicit/reverse mapping, N/A normalization, half-up, dimensions, weakest, attention, guardrail, safety, byte-equivalent JSON | PASS on 2026-09-08 | 4 |
+| STAGE5-UI-001 | standalone generic UI render | exact initial HTML structure matching template; data-attribute parsing | PASS on 2026-09-08 | 5 |
+| STAGE5-UI-002 | generic UI interaction | answer selection, section navigation, form validation, error display | PASS on 2026-09-08 | 5 |
+| STAGE5-UI-003 | generic UI submission | fetch to configured endpoint, payload `{answers}`, timeout, abort, redirect, upstream error | PASS on 2026-09-08 | 5 |
+| STAGE6-MIGRATE-001 | legacy schema parsing | `pss10/questionnaire.php` valid | PASS on 2026-09-08 | 6 |
+| STAGE6-MIGRATE-002 | generic UI parity with legacy shortcode | ID/enqueue handles updated, DOM IDs dynamic, generic engine render | PASS on 2026-09-08 | 6 |
+| STAGE6-MIGRATE-003 | legacy scoring parity | `submit()` hook parses answers, scores via generic PHP engine, checks `final_score`/`category`, restores legacy format for GS | PASS on 2026-09-08 | 6 |
 
 ## Out-of-sequence manual real-WordPress evidence
 
