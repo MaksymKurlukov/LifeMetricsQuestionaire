@@ -299,7 +299,7 @@ Application changes only `displayed_category` and records the rule ID/message. `
 ),
 ```
 
-Each result CTA requires non-empty plain-text `label`, `variant` from an allowlist, and boolean `enabled`. An enabled CTA requires an approved same-site root-relative URL or an explicitly approved HTTPS destination; disabled CTAs may retain a future URL without rendering navigation. Questionnaire content cannot define an upstream submission URL. The legacy singular `cta` field is superseded for the future generic schema; its migration occurs only in Stage 3 and does not change the current runtime by this documentation update.
+Each result CTA requires non-empty plain-text `label`, `variant` from an allowlist, and boolean `enabled`. An enabled CTA requires an approved same-site root-relative URL or an explicitly approved HTTPS destination; disabled CTAs may retain a future URL without rendering navigation. Questionnaire content cannot define an upstream submission URL. The legacy singular `cta` field is superseded for the future generic schema; PSS10 migrates to it in Stage 6.
 
 ## Lifecycle validation
 

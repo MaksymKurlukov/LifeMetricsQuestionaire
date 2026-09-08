@@ -61,7 +61,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 - Stored and displayed category labels are not identical; migration must preserve this before any later UX/content decision.
 - STAGE 2 golden fixtures and mutation guards are executable and accepted as the structural-migration/regression baseline by Maksym Kurlukov on 2026-09-04.
 - The current legacy PSS10 path completed the controlled production-runtime cycle on `lifemetrics.fr`: `WORDPRESS_RUNTIME`, `SHEET_WRITE`, `REST_RESPONSE`, `FRONTEND_CONFIRMATION`, `DUPLICATE_CHECK`, and `PSS10_END_TO_END` are all `PASS`. Full evidence and commit chronology are in `STAGE_REPORTS/PSS10-PRODUCTION-RUNTIME-VALIDATION-AND-UI-STABILIZATION.md`.
-- Current result actions are `Je veux faire un bilan` -> `/formulaire-bilan/` (normal relative link) and `Découvrir les autres tests` (intentionally unlinked until `/tests-sante/` exists). Stage 3 must migrate these into `result_ctas` configuration.
+- Current result actions are `Je veux faire un bilan` -> `/formulaire-bilan/` (normal relative link) and `Découvrir les autres tests` (intentionally unlinked until `/tests-sante/` exists). Stage 6 must migrate these into `result_ctas` configuration.
 - This baseline acceptance does not permanently approve legacy UX/content/legal choices for production; changes to wording, CTA behavior, licensing/attribution, or UX require a separate authorized stage.
 
 ### Activité physique
