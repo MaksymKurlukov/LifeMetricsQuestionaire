@@ -12,6 +12,20 @@ require_once __DIR__ . '/../includes/class-questionnaire-registry.php';
 require_once __DIR__ . '/../includes/class-google-apps-script-adapter.php';
 require_once __DIR__ . '/../includes/class-submission-service.php';
 
+if (!class_exists('WP_Error')) {
+    class WP_Error {
+        public function __construct(public string $code, public string $message = '', public array $data = array()) {}
+        public function get_error_code(): string { return $this->code; }
+        public function get_error_message(): string { return $this->message; }
+        public function get_error_data(): array { return $this->data; }
+    }
+}
+if (!function_exists('is_wp_error')) {
+    function is_wp_error($thing) { return $thing instanceof WP_Error; }
+}
+if (!function_exists('esc_url_raw')) {
+    function esc_url_raw($url) { return (string)$url; }
+}
 if (!function_exists('sanitize_key')) {
     function sanitize_key($key) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower($key)); }
 }
@@ -216,8 +230,47 @@ $res_sf_all = $engine->score($config, array_merge($answers_max, array('SLSF01' =
 sl_assert($res_sf_all['final_score'] === 48, 'Score unaffected by multiple safety flags');
 sl_assert($res_sf_all['safety_flag_codes'] === array('HEALTH_ATTENTION_MESSAGE'), 'Multiple triggers deduplicate to unique flag');
 
+if (!class_exists('WP_REST_Request')) {
+    class WP_REST_Request {
+        public function __construct(
+            private array $params = array(),
+            private bool $is_json = true,
+            private ?string $body = null,
+            private array $url_params = array()
+        ) {
+            if ($this->body === null) {
+                $this->body = json_encode($this->params);
+            }
+        }
+        public function get_body(): string { return $this->body; }
+        public function is_json_content_type(): bool { return $this->is_json; }
+        public function get_json_params(): array { return $this->params; }
+        public function get_param(string $key): mixed { return $this->url_params[$key] ?? $this->params[$key] ?? null; }
+    }
+}
+
+if (!function_exists('wp_remote_post')) {
+    function wp_remote_post($url, $args = array()) {
+        $GLOBALS['mock_sommeil_post_log'][] = array('url' => $url, 'args' => $args);
+        return array('response' => array('code' => 200), 'body' => json_encode(array('ok' => true, 'duplicate' => false)));
+    }
+}
+if (!function_exists('wp_remote_retrieve_response_code')) {
+    function wp_remote_retrieve_response_code($response) {
+        if (is_array($response) && isset($response['response']['code'])) return $response['response']['code'];
+        return 200;
+    }
+}
+if (!function_exists('wp_remote_retrieve_body')) {
+    function wp_remote_retrieve_body($response) {
+        return is_array($response) && isset($response['body']) ? $response['body'] : '';
+    }
+}
+
+$GLOBALS['mock_sommeil_post_log'] = array();
+
 // ----------------------------------------------------
-// 8. Registry & Submission Service Integration
+// 8. Registry & Server Scoring Authority
 // ----------------------------------------------------
 $registry = new LifeMetrics_Questionnaire_Registry(
     __DIR__ . '/../questionnaires',
@@ -235,12 +288,28 @@ sl_assert($loaded_config !== null, 'Registry resolves sommeil questionnaire');
 sl_assert($loaded_config['id'] === 'sommeil', 'Loaded config id is sommeil');
 sl_assert($loaded_config['status'] === 'review', 'Status in review');
 
-// Submission Service flow
+// Server scoring authority: client sends claims for final_score=48 and category=SOMMEIL_FAVORABLE,
+// but server evaluates actual answers (answers_15) and computes authoritative final_score=15
+$tampered_client_answers = $answers_15; // Actual answers evaluate to 15
+$server_scored = $engine->score($loaded_config, $tampered_client_answers);
+sl_assert($server_scored['final_score'] === 15, 'Server computes authoritative score (15, ignoring client claim of 48)');
+sl_assert($server_scored['calculated_category'] === 'SOMMEIL_TRES_PERTURBE', 'Server computes authoritative category SOMMEIL_TRES_PERTURBE');
+sl_assert($server_scored['displayed_category'] === 'SOMMEIL_TRES_PERTURBE', 'Server computes authoritative displayed category');
+
+// Submission Service flow with ready-state mock
+$ready_config = array_merge($loaded_config, array('status' => 'ready'));
+$mock_registry = new LifeMetrics_Questionnaire_Registry(
+    __DIR__ . '/../questionnaires',
+    array('sommeil' => 'sommeil/questionnaire.php'),
+    $validator
+);
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
 $submission_service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
 
-$server_scored = $engine->score($loaded_config, $answers_38);
-sl_assert($server_scored['final_score'] === 38, 'Server scoring is authoritative (38/48)');
-sl_assert($server_scored['calculated_category'] === 'SOMMEIL_GLOBALEMENT_SATISFAISANT', 'Server category is authoritative');
+// Verify endpoint resolution
+if (!defined('LMQ_GOOGLE_ENDPOINT')) {
+    define('LMQ_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/central_endpoint/exec');
+}
+sl_assert($submission_service->get_endpoint('sommeil') === 'https://script.google.com/macros/s/central_endpoint/exec', 'Sommeil endpoint resolves to central Google script');
 
 echo "Questionnaire Sommeil PHP Unit & Scoring Tests: ALL PASSED.\n";
