@@ -189,12 +189,12 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 
 ## DEC-020 - Generic submission infrastructure with per-questionnaire server-side routing
 
-- Status: `ACCEPTED` on 2026-09-08 by Maksym Kurlukov.
-- Context: The previous goal of a single monolithic Google Sheet conflicts with the need for clean, distinct analytics and separate Google storage destinations per test.
+- Status: `SUPERSEDED_IN_PART` by DEC-024 on 2026-09-09.
+- Context: The previous goal of a single monolithic results table conflicted with distinct analytics and questionnaire-specific schema needs.
 - Alternatives: One common sheet; client-side routing.
 - Proposal/rationale: The plugin provides generic submission validation and transport, but routes payloads to questionnaire-specific server-side destinations.
-- Consequences: Backend URL/keys become per-questionnaire configuration. Core submission logic remains shared.
-- Rollback/compatibility: Replaces the monolithic Stage 10 plan.
+- Consequences: Backend destination routing is controlled server-side. Core submission logic remains shared.
+- Rollback/compatibility: Replaces the monolithic single-table Stage 10 plan.
 
 ## DEC-021 - PSS10 is a distinct legacy profile, not the universal template
 
@@ -221,7 +221,19 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Alternatives: JSON blobs in a single column; sparse generic columns.
 - Proposal/rationale: Common metadata can be standardized, but the physical Google Sheet schema can be distinct per questionnaire (e.g., HY01-HY12 for Hydratation).
 - Consequences: Easier analytical usage for stakeholders.
-- Rollback/compatibility: Works in tandem with DEC-020.
+- Rollback/compatibility: Works in tandem with DEC-020 and DEC-024.
+
+## DEC-024 - Central Google Spreadsheet with dedicated raw-data worksheets and separated dashboard tabs
+
+- Status: `ACCEPTED` on 2026-09-09 by Maksym Kurlukov.
+- Context: Managing multiple independent Google Spreadsheet files creates administration and aggregation friction. However, combining all test responses into a single flat results table destroys schema clarity and per-test analytics.
+- Alternatives: Eight completely separate Google Spreadsheet files; one single table with sparse columns; one central Google Spreadsheet with dedicated raw-data worksheets per questionnaire and separate dashboard/analytics tabs.
+- Proposal/rationale: Use ONE central Google Spreadsheet ("LifeMetrics — Questionnaires") containing:
+  1. Dedicated RAW DATA worksheets per questionnaire (`PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`) that retain questionnaire-specific physical schemas.
+  2. Dedicated ANALYTICS / DASHBOARD worksheets (`Dashboard_Global`, `Dashboard_<Questionnaire>`) reserved for aggregated metrics/visualizations and strictly separated from raw data writes.
+  3. Server-side allowlisted routing (`questionnaire_id` -> fixed trusted worksheet name) via a central Google Apps Script Web App (`LMQ_GOOGLE_ENDPOINT`), with narrow legacy compatibility exception for `LMQ_PSS10_GOOGLE_ENDPOINT`.
+- Consequences: The browser never selects worksheet names or knows spreadsheet IDs; unknown IDs are rejected; storage administration and unified reporting are simplified; physical schemas remain clean and independent per test.
+- Rollback/compatibility: Supersedes the multi-file assumption of DEC-020 while fully preserving DEC-021, DEC-022, and DEC-023.
 
 ## Approval record
 
@@ -229,6 +241,6 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 |---|---|
 | Decision owner | Maksym Kurlukov |
 | Approver | Maksym Kurlukov |
-| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-019 |
-| Approved decisions | DEC-001 through DEC-019 |
-| Required action | none for STAGE 1; future changes require an amended or superseding ADR |
+| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-023; 2026-09-09 for DEC-024 |
+| Approved decisions | DEC-001 through DEC-024 |
+| Required action | none for STAGE 9 amendment; future changes require an amended or superseding ADR |

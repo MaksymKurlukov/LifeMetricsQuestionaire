@@ -476,23 +476,15 @@ CSRF nonce is not an authorization control for an intentionally public anonymous
 
 # 8. Backend/integration architecture
 
-## 8.1 Storage options
+## 8.1 Storage architecture (DEC-024)
 
-| Option | Advantages | Costs/risks | Decision |
-|---|---|---|---|
-| A. One common submissions sheet | one idempotency index, easy global reporting, one generic adapter | a wide fixed-answer schema becomes sparse; JSON columns are less friendly for manual analysis | viable canonical layer |
-| B. One tab per questionnaire | readable stable columns per instrument; easy manual filtering | fragmented deduplication/reporting, repeated Apps Script branches, version migration in many tabs | reject as sole source of truth |
-| C. Hybrid | common submission ledger plus questionnaire-specific views/details; balances audit and operations | partial-write risk if two canonical writes occur; more migration logic | recommended with only one canonical write |
+Storage uses ONE central Google Spreadsheet ("LifeMetrics — Questionnaires") hosting dedicated raw data worksheets per questionnaire and separated analytics/dashboard tabs:
 
-Recommended hybrid model:
-
-- canonical `submissions` tab: one locked append per completion with common columns and JSON snapshots for `answers`, `dimensions`, and `safety_flags`;
-- global idempotency key: `(questionnaire_id, questionnaire_version, session_id)` or a derived stable submission key;
-- optional per-questionnaire tabs are derived reporting views/exports, not a second source of truth; they may be added only when operations require them;
-- keep questionnaire version and submission schema version in every canonical row;
-- preserve legacy PSS10 `results` unchanged during shadow migration and backfill only through an approved, reversible script.
-
-This avoids a multi-tab partial commit in Apps Script while retaining a path to readable questionnaire-specific reporting. If JSON querying becomes operationally inadequate, move canonical storage to a proper backend rather than growing fragile Apps Script synchronization.
+- **Central Spreadsheet**: Single file simplifies administration, permissions, backups, and cross-instrument analytics.
+- **Dedicated Raw Data Worksheets**: `PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`. Each tab retains its own physical column schema for analytical clarity.
+- **Dedicated Dashboard / Analytics Worksheets**: `Dashboard_Global`, `Dashboard_<Questionnaire>` compute aggregate metrics/visualizations from raw data. Direct submission writes to dashboard tabs are prohibited.
+- **Server-Side Allowlist Routing**: Submissions pass from WordPress REST to a central Google Apps Script endpoint (`LMQ_GOOGLE_ENDPOINT`), which resolves `questionnaire_id` to its dedicated worksheet via an internal allowlist.
+- **Legacy PSS10 Compatibility**: `LMQ_PSS10_GOOGLE_ENDPOINT` is preserved as a narrow legacy exception until PSS10 storage is formally consolidated.
 
 ## 8.2 Integration invariants
 

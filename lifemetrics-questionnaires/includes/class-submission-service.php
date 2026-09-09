@@ -13,32 +13,62 @@ final class LifeMetrics_Submission_Service
 
     /**
      * Resolve the Google Apps Script endpoint for a specific questionnaire ID.
+     *
+     * Preferred architecture:
+     * - Central single Google Apps Script Web App: LMQ_GOOGLE_ENDPOINT
+     * - Legacy compatibility exception: LMQ_PSS10_GOOGLE_ENDPOINT for 'pss10'
+     * - Dynamic filter hook: 'lifemetrics_questionnaire_backend_endpoint'
      */
     public function get_endpoint(string $questionnaire_id): ?string
     {
         $sanitized_id = sanitize_key($questionnaire_id);
         $endpoint = null;
 
-        // 1. Check ID-specific constant (e.g. LMQ_PSS10_GOOGLE_ENDPOINT, LMQ_HYDRATATION_GOOGLE_ENDPOINT)
-        $const_name = 'LMQ_' . strtoupper(str_replace('-', '_', $sanitized_id)) . '_GOOGLE_ENDPOINT';
-        if (defined($const_name)) {
-            $endpoint = constant($const_name);
-        }
-
-        // 2. Check endpoints map constant if defined
-        if (empty($endpoint) && defined('LMQ_GOOGLE_ENDPOINTS')) {
-            $map = constant('LMQ_GOOGLE_ENDPOINTS');
-            if (is_array($map) && isset($map[$sanitized_id])) {
-                $endpoint = $map[$sanitized_id];
+        // 1. Allow filter override first
+        if (function_exists('apply_filters')) {
+            $endpoint = apply_filters('lifemetrics_questionnaire_backend_endpoint', null, $sanitized_id);
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
             }
         }
 
-        // 3. Allow filter override
-        if (function_exists('apply_filters')) {
-            $endpoint = apply_filters('lifemetrics_questionnaire_backend_endpoint', $endpoint, $sanitized_id);
+        // 2. For PSS10 legacy compatibility, check dedicated PSS10 endpoint constant
+        if ($sanitized_id === 'pss10' && defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
+            $endpoint = constant('LMQ_PSS10_GOOGLE_ENDPOINT');
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
+            }
         }
 
-        return is_string($endpoint) && !empty($endpoint) ? $endpoint : null;
+        // 3. Check central single Google Apps Script endpoint constant for all proprietary questionnaires
+        if (defined('LMQ_GOOGLE_ENDPOINT')) {
+            $endpoint = constant('LMQ_GOOGLE_ENDPOINT');
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
+            }
+        }
+
+        // 4. Check ID-specific constant (fallback / override)
+        $const_name = 'LMQ_' . strtoupper(str_replace('-', '_', $sanitized_id)) . '_GOOGLE_ENDPOINT';
+        if (defined($const_name)) {
+            $endpoint = constant($const_name);
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
+            }
+        }
+
+        // 5. Check endpoints map constant if defined
+        if (defined('LMQ_GOOGLE_ENDPOINTS')) {
+            $map = constant('LMQ_GOOGLE_ENDPOINTS');
+            if (is_array($map) && isset($map[$sanitized_id])) {
+                $endpoint = $map[$sanitized_id];
+                if (!empty($endpoint) && is_string($endpoint)) {
+                    return $endpoint;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

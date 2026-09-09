@@ -235,13 +235,14 @@ Moving to `ready` requires recorded source/version/approval and passing contract
 
 ## Storage direction
 
-The generic element is the submission infrastructure; the physical Google destination is NOT common.
+The storage architecture uses ONE central Google Spreadsheet ("LifeMetrics — Questionnaires") with dedicated raw data worksheets and separated analytics/dashboard tabs (DEC-024):
 
-- The plugin provides generic server-side payload validation, routing, and transport via `class-submission-service.php` and an adapter.
-- The destination Google Apps Script endpoint is a server-side configuration mapping specific to each questionnaire (e.g. PSS10 maps to one target, Hydratation maps to another).
-- Physical Google Sheet columns are questionnaire-specific (e.g. `q1...q10` for PSS10 vs `HY01...HY12` + dimensions for Hydratation). Common metadata like `submission_id` and `category` are standardized.
-- The browser never knows or routes to the Google Apps Script endpoint.
-- Monolithic canonical sheets are explicitly avoided in favor of clean analytical utility per questionnaire.
+- **Central Spreadsheet**: Single file (`LifeMetrics — Questionnaires`) simplifies access control, maintenance, backups, and global cross-test aggregation.
+- **Dedicated Raw Data Worksheets**: Each questionnaire writes to its own dedicated immutable raw data worksheet (`PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`).
+- **Dedicated Dashboard / Analytics Worksheets**: Separate sheets (`Dashboard_Global`, `Dashboard_<Questionnaire>`) consume raw data for formulas, charts, and metrics. Submissions NEVER write directly to dashboard tabs.
+- **Questionnaire-Specific Physical Schemas**: Each worksheet preserves its own physical columns (e.g. `q1...q10` for PSS10; `SD01...SD12` + dimensions for Sédentarité; `HY01...HY12` + N/A + dimensions for Hydratation).
+- **Server-Side Allowlist Routing**: Submissions pass from WordPress REST to Google Apps Script (`LMQ_GOOGLE_ENDPOINT`), which maps `questionnaire_id` to the fixed allowlisted worksheet name.
+- **Strict Security Invariants**: The browser never knows the Google Spreadsheet ID, Google endpoint, or worksheet name, and cannot supply or override the destination tab. Unknown IDs are rejected. Formula-injection escaping (`safeSheetText`), script lock, rate limiting, and session deduplication protect every write.
 
 ## Compatibility and migration
 

@@ -133,9 +133,9 @@ require_once dirname(__DIR__) . '/includes/class-questionnaire-registry.php';
 require_once dirname(__DIR__) . '/includes/class-google-apps-script-adapter.php';
 require_once dirname(__DIR__) . '/includes/class-submission-service.php';
 
-// Define mock test constants
-define('LMQ_PSS10_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/pss10_endpoint/exec');
-define('LMQ_HYDRATATION_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/hydratation_endpoint/exec');
+// Define endpoints: PSS10 legacy endpoint & Central Google Apps Script Web App endpoint
+define('LMQ_PSS10_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/pss10_legacy_endpoint/exec');
+define('LMQ_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec');
 
 $validator = new LifeMetrics_Questionnaire_Schema_Validator();
 $engine = new LifeMetrics_Questionnaire_Scoring_Engine();
@@ -148,29 +148,33 @@ $registry = new LifeMetrics_Questionnaire_Registry(
 $service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
 
 // ----------------------------------------------------
-// BACK-001 & BACK-002: Endpoint Resolution via Constants
+// BACK-001 & BACK-002: Endpoint Resolution Architecture
 // ----------------------------------------------------
-expect_true($service->get_endpoint('pss10') === 'https://script.google.com/macros/s/pss10_endpoint/exec', 'BACK-001/002: PSS10 endpoint resolved from constant');
-expect_true($service->get_endpoint('hydratation') === 'https://script.google.com/macros/s/hydratation_endpoint/exec', 'BACK-001/002: Hydratation endpoint resolved from constant');
-expect_true($service->get_endpoint('unknown_q') === null, 'BACK-001/002: Unconfigured endpoint returns null');
+// PSS10 resolves to its dedicated legacy endpoint
+expect_true($service->get_endpoint('pss10') === 'https://script.google.com/macros/s/pss10_legacy_endpoint/exec', 'BACK-001/002: PSS10 endpoint resolved from LMQ_PSS10_GOOGLE_ENDPOINT');
+
+// Proprietary questionnaires resolve to the central LMQ_GOOGLE_ENDPOINT
+expect_true($service->get_endpoint('sedentarite') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Sedentarite resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('hydratation') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Hydratation resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('sommeil') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Sommeil resolves to central LMQ_GOOGLE_ENDPOINT');
 
 // ----------------------------------------------------
 // BACK-003: Filter Hook Endpoint Override
 // ----------------------------------------------------
 add_filter_mock('lifemetrics_questionnaire_backend_endpoint', function ($url, $id) {
-    if ($id === 'custom_test') {
+    if ($id === 'custom_filtered_q') {
         return 'https://script.google.com/macros/s/custom_filtered_endpoint/exec';
     }
     return $url;
 });
-expect_true($service->get_endpoint('custom_test') === 'https://script.google.com/macros/s/custom_filtered_endpoint/exec', 'BACK-003: Endpoint resolved via filter');
+expect_true($service->get_endpoint('custom_filtered_q') === 'https://script.google.com/macros/s/custom_filtered_endpoint/exec', 'BACK-003: Endpoint resolved via filter');
 
 // ----------------------------------------------------
-// BACK-004: Unconfigured Destination Handling
+// BACK-004: Unregistered / Missing Questionnaire Handling
 // ----------------------------------------------------
-$req_unconfigured = new WP_REST_Request(array('answers' => array()));
-$res_unconfigured = $service->submit('unknown_instrument', $req_unconfigured);
-expect_error_code('lmq_not_found', $res_unconfigured, 'BACK-004: Missing questionnaire in registry returns lmq_not_found');
+$req_unregistered = new WP_REST_Request(array('answers' => array()));
+$res_unregistered = $service->submit('unknown_instrument', $req_unregistered);
+expect_error_code('lmq_not_found', $res_unregistered, 'BACK-004: Missing questionnaire in registry returns lmq_not_found');
 
 // ----------------------------------------------------
 // BACK-005: Safe 302 Redirect Handling
@@ -223,7 +227,7 @@ expect_error_code('lmq_upstream_http_error', $adapter_res, 'BACK-008: HTTP 500 r
 // ----------------------------------------------------
 // BACK-009: Upstream Rejection ({ok: false})
 // ----------------------------------------------------
-$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => false, 'code' => 'rate_limited')));
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => false, 'code' => 'sheet_not_found', 'error' => 'Worksheet not found')));
 $adapter_res = $adapter->send('https://script.google.com/macros/s/test/exec', array('test' => 'data'));
 expect_error_code('lmq_upstream_rejected', $adapter_res, 'BACK-009: {ok:false} returns lmq_upstream_rejected');
 
@@ -241,7 +245,7 @@ $adapter_empty_res = $adapter->send('', array('test' => 'data'));
 expect_error_code('lmq_backend_not_configured', $adapter_empty_res, 'BACK-011: Empty endpoint returns lmq_backend_not_configured');
 
 // ----------------------------------------------------
-// BACK-012: Full Multi-Destination Submission Service Flow
+// BACK-012: Full Multi-Destination Submission Service Flow (PSS10)
 // ----------------------------------------------------
 $GLOBALS['mock_remote_post_log'] = array();
 $GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => true, 'duplicate' => false)));
@@ -255,7 +259,7 @@ $res_pss10 = $service->submit('pss10', $req_pss10);
 
 expect_true(is_array($res_pss10) && isset($res_pss10['success']) && $res_pss10['success'] === true, 'BACK-012: PSS10 submission succeeds');
 expect_true(count($GLOBALS['mock_remote_post_log']) === 1, 'BACK-012: Exactly one remote POST dispatched');
-expect_true($GLOBALS['mock_remote_post_log'][0]['url'] === 'https://script.google.com/macros/s/pss10_endpoint/exec', 'BACK-012: POST sent to PSS10 endpoint');
+expect_true($GLOBALS['mock_remote_post_log'][0]['url'] === 'https://script.google.com/macros/s/pss10_legacy_endpoint/exec', 'BACK-012: POST sent to PSS10 endpoint');
 
 $posted_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'], true);
 expect_true($posted_body['session_id'] === '123e4567-e89b-42d3-a456-426614174000', 'BACK-012: Session ID preserved');
