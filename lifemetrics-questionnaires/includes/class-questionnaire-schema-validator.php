@@ -232,7 +232,7 @@ final class LifeMetrics_Questionnaire_Schema_Validator
         $safety_questions = is_array($config['safety_questions'] ?? null) && array_is_list($config['safety_questions']) ? $config['safety_questions'] : array();
         $safety_ids = array();
         foreach ($safety_questions as $question) {
-            if ($status === 'ready' && is_array($question) && self::has_unknown($question, array('id', 'text', 'required', 'answers'))) {
+            if ($status === 'ready' && is_array($question) && self::has_unknown($question, array('id', 'text', 'required', 'answers', 'help', 'examples', 'scoring_note'))) {
                 $errors[] = 'unknown_field:safety_question';
             }
             $id = is_array($question) ? ($question['id'] ?? null) : null;

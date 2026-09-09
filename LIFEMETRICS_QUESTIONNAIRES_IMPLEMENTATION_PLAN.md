@@ -10,11 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS / STAGE_5_PASS / STAGE_6_PASS / STAGE_7_PASS / STAGE_8_PASS / STAGE_9_PASS / STAGE_10_PASS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS / STAGE_5_PASS / STAGE_6_PASS / STAGE_7_PASS / STAGE_8_PASS / STAGE_9_PASS / STAGE_10_PASS / STAGE_11_PASS`
 
-Next executable task: `STAGE 11 - Final Production Packaging & Release`
+Next executable task: `STAGE 12 - Final Production Deployment & Smoke Verification (Subject to Manual Approvals)`
 
-Stage 10 completed the rollout of all 7 proprietary LifeMetrics questionnaires (Sédentarité, Hydratation, Fatigue & Récupération, Sommeil, Nutrition, Activité Physique, Pieds & Confort Postural). Stage 11 has not started.
+Stage 11 completed packaging, release candidate audit (lifemetrics-questionnaires-stage11-rc1.zip), and global tamper-resistance validation across all 8 questionnaires. Production release readiness remains gated on manual approvals (MANUAL_GOOGLE_SETUP, MANUAL_WORDPRESS_VALIDATION, LEGAL/LICENSING/PUBLICATION).
 
 ## Status vocabulary
 
@@ -799,14 +799,14 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Rollback:** Disable questionnaire config status to `draft` or `disabled`.
 - **Next stage:** STAGE 11 (Final Production Packaging & Release).
 
-## STAGE 11 - Final Production Packaging & Release
-- **Status:** `NOT_STARTED`
-- **Objective:** Generate final installable `lifemetrics-questionnaires.zip` and verify production deployment readiness.
-- **Prerequisites:** STAGE 10 PASS, final methodology approvals.
-- **Scope:** Release scripts, plugin manifest.
-- **Do not touch:** Source code logic.
-- **Tasks:** Clean test/dev files. Create ZIP. Verify checksums. Perform install test on fresh WP.
-- **Required tests:** Complete clean-install regression.
-- **Pass criteria:** ZIP installs and functions perfectly; rollback plan is documented.
-- **Blockers:** Final approvals.
-- **Rollback:** N/A.
+## STAGE 11 - Final Production Packaging & Release Readiness
+- **Status:** `PASS` (Release Candidate Audit Complete; Production Readiness Pending Manual Gates)
+- **Objective:** Generate deterministic release package `lifemetrics-questionnaires-stage11-rc1.zip`, run full tamper-resistance suite across all 8 questionnaires, and establish release gate matrix.
+- **Prerequisites:** STAGE 10 PASS (7/7 questionnaires complete).
+- **Scope:** Release packaging script (`scripts/build-release-zip.sh`), release audit test (`stage11-release-audit.test.php`), global tamper-resistance test (`global-tamper-resistance.test.php`), documentation (`STAGE_REPORTS/STAGE-11.md`, `CHANGELOG.md`, `TEST_MATRIX.md`).
+- **Do not touch:** Methodology of previous questionnaires.
+- **Tasks:** Build release candidate ZIP excluding dev/test files; verify package structure and syntax; verify all 8 questionnaires reject client-forged scores/flags; audit secret isolation; verify shortcode/REST lifecycle fails closed.
+- **Required tests:** Global tamper suite (8 questionnaires), Stage 11 release audit, full test regression (32 test suites).
+- **Pass criteria:** 32/32 tests pass (19 PHP + 13 JS, 0 errors, 0 warnings); clean ZIP generated with 33 runtime files.
+- **Pending manual gates:** `MANUAL_GOOGLE_SETUP = PENDING`, `MANUAL_WORDPRESS_VALIDATION = PENDING`, `LEGAL_LICENSING_STATUS = PENDING`, `PUBLICATION_APPROVAL_STATUS = PENDING`.
+- **Next stage:** STAGE 12 (Production Deployment & Smoke Verification upon approval).

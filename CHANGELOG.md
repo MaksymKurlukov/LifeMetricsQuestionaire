@@ -26,6 +26,13 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 11 (Final Production Packaging & Release Readiness): built deterministic release candidate archive `lifemetrics-questionnaires-stage11-rc1.zip` containing all runtime-required plugin files with strict exclusion of development artifacts (`tests/`, `.DS_Store`, `.git*`).
+- Created release packaging script `scripts/build-release-zip.sh`.
+- Added global tamper-resistance test suite `tests/global-tamper-resistance.test.php` proving that for all 8 questionnaires (PSS10 + 7 proprietary instruments), forged client scores, categories, dimensions, and safety flags are strictly rejected in favor of server-side raw answer evaluation.
+- Added release audit test suite `tests/stage11-release-audit.test.php` verifying inventory completeness, secret/absolute path scan clean status, and lifecycle fail-closed behavior for unapproved review questionnaires.
+- Verified complete test suite matrix (32/32 PASS across 19 PHP and 13 JS test suites).
+- Documented manual WordPress activation checklist and Google Apps Script deployment procedure in `STAGE_REPORTS/STAGE-11.md`.
+
 - Completed Stage 10.7 (Pieds & Confort Postural): implemented canonical configuration `questionnaires/pieds-confort-postural/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf`.
 - Registered `pieds-confort-postural` in `LifeMetrics_Questionnaire_Registry` mapping.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-pieds-confort-postural.test.php` and `tests/questionnaire-pieds-confort-postural.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 6 dimensions with 8 pts capacity each (48 total), dimension attention threshold rule ($\le 2/8$ emitting `ATTENTION_*` messages without category capping), 4 non-scored safety questions (PFSF01–PFSF04) emitting `PIEDS_ATTENTION_MESSAGE`, empty classification rules (`GUARDRAILS_PRESENT = NO`), weakest dimension ordering with deterministic tie-breaking, Profile E arithmetic verification, and server scoring authority.
