@@ -26,6 +26,10 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.1 (Sédentarité): implemented canonical configuration `questionnaires/sedentarite/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sedentarite_V1.pdf`.
+- Registered `sedentarite` in `LifeMetrics_Questionnaire_Registry` mapping.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-sedentarite.test.php` and `tests/questionnaire-sedentarite.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization for optional occupational items SD07/SD08, D1 guardrail capping at `SEDENTARITE_A_REDUIRE`, dimension attention rules, weakest dimension ordering, and all synthetic validation profiles A–F.
+
 - Completed Stage 9 Multi-Destination Google Backend Architecture: implemented generic server-side submission transport routing (`class-submission-service.php`, `class-google-apps-script-adapter.php`, and `backend/generic-google-apps-script.gs`).
 - Added dynamic endpoint resolution supporting per-instrument constants (e.g. `LMQ_PSS10_GOOGLE_ENDPOINT`, `LMQ_HYDRATATION_GOOGLE_ENDPOINT`), mapping array `LMQ_GOOGLE_ENDPOINTS`, and filter hook `lifemetrics_questionnaire_backend_endpoint`.
 - Added strict HTTPS 302 redirect verification (accepting only `script.googleusercontent.com` targets), formula-injection protection, idempotency handling, and comprehensive error mapping (500 for unconfigured storage, 502 for upstream network/HTTP/rejection errors).

@@ -67,6 +67,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STAGE8-WP-001 | isolated WordPress runtime integration | bootstrap, shortcode rendering, REST dispatch, filemtime assets, upstream Google post simulation | PASS on 2026-09-09 | 8 |
 | STAGE8-RESP-001 | browser & responsive lifecycle matrix | 375px mobile, 768px tablet, 1440px desktop user walkthrough, scoring, REST submission, 0 errors | PASS on 2026-09-09 | 8 |
 | STAGE9-BACK-001 | multi-destination routing & Apps Script transport | BACK-001 through BACK-012: per-instrument endpoints, filter hooks, safe 302 redirects, formula escaping, idempotency, upstream errors | PASS on 2026-09-09 | 9 |
+| STAGE10-SED-001 | Sédentarité configuration, scoring & parity | PHP/JS unit test suites (`tests/questionnaire-sedentarite.test.php` and `tests/questionnaire-sedentarite.test.js`): Schema 2.0.0 validation, boundaries 0/15/16/27/28/38/39/48, N/A normalization on SD07/SD08, D1 guardrail capping at `SEDENTARITE_A_REDUIRE`, dimension attention, weakest dimensions, synthetic profiles A-F | PASS on 2026-09-09 | 10 |
 
 ## Out-of-sequence manual real-WordPress evidence
 

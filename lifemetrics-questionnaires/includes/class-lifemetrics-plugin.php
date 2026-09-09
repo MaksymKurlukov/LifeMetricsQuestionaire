@@ -31,6 +31,7 @@ final class LifeMetrics_Plugin
             LMQ_PLUGIN_PATH . 'questionnaires',
             array(
                 'pss10' => 'pss10/questionnaire.php',
+                'sedentarite' => 'sedentarite/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

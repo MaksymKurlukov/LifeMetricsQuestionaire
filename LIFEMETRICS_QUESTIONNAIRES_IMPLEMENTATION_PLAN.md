@@ -781,16 +781,23 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 10.
 
 ## STAGE 10 - Proprietary Questionnaires Rollout
-- **Status:** `NOT_STARTED`
+- **Status:** `IN_PROGRESS` (Sequential execution: 1/7 complete)
+  - 1. Sédentarité (`sedentarite`): `PASS` (Stage 10.1 on 2026-09-09)
+  - 2. Hydratation (`hydratation`): `NOT_STARTED` (Next)
+  - 3. Fatigue & Récupération (`fatigue-recuperation`): `NOT_STARTED`
+  - 4. Sommeil (`sommeil`): `NOT_STARTED`
+  - 5. Nutrition (`nutrition`): `NOT_STARTED`
+  - 6. Activité Physique (`activite-physique`): `NOT_STARTED`
+  - 7. Pieds & Confort Postural (`pieds-confort-postural`): `NOT_STARTED`
 - **Objective:** Implement the proprietary questionnaires sequentially (Sédentarité, Hydratation, Fatigue, Sommeil, Nutrition, Activité, Pieds).
 - **Prerequisites:** STAGE 9 PASS, methodology approvals.
 - **Scope:** `questionnaires/<id>/questionnaire.php`, `presentation.php` (if needed).
 - **Do not touch:** Shared core engine, `questionnaire-ui.js`, PSS10.
-- **Tasks:** Process in logical batches. For each: create `questionnaire.php`, add storage mapping, create optional presentation templates if layouts differ.
-- **Required tests:** Full scoring fixtures per PDF. Runtime acceptance gate.
-- **Pass criteria:** Each test completes independently and submits to its own destination.
+- **Tasks:** Process sequentially one questionnaire per execution. For each: create `questionnaire.php`, register in registry mapping, verify Schema 2.0.0 compliance, add dedicated test suite matching PDF synthetic profiles.
+- **Required tests:** Full scoring fixtures and synthetic profiles per PDF.
+- **Pass criteria:** Each test completes independently and passes all schema, boundary, and scoring tests.
 - **Rollback:** Disable questionnaire config status to `draft` or `disabled`.
-- **Next stage:** STAGE 11.
+- **Next stage:** STAGE 10.2 (Hydratation).
 
 ## STAGE 11 - Final Production Packaging & Release
 - **Status:** `NOT_STARTED`
