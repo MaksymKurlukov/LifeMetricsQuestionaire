@@ -26,6 +26,12 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Enhanced Central Google Sheets Storage Format: transitioned from monolithic JSON blobs to deterministic, human-readable column-by-column layout across all 7 proprietary worksheets (`Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`).
+- Added canonical scored question headers (`QUESTION_ID — question text`) and safety question headers in canonical order.
+- Enriched server-side scoring engine output with authoritative human-readable answer labels (`label`).
+- Enforced strict header schema validation in Google Apps Script with fail-safe rejection (`schema_conflict`) on incompatible existing headers.
+- Added test suites `tests/google-sheets-storage-format.test.php` and `tests/google-sheets-storage-format.test.js` verifying schema generation, formula-injection protection, and tamper resistance across all 34 test suites.
+
 - Completed Stage 11 (Final Production Packaging & Release Readiness): built deterministic release candidate archive `lifemetrics-questionnaires-stage11-rc1.zip` containing all runtime-required plugin files with strict exclusion of development artifacts (`tests/`, `.DS_Store`, `.git*`).
 - Created release packaging script `scripts/build-release-zip.sh`.
 - Added global tamper-resistance test suite `tests/global-tamper-resistance.test.php` proving that for all 8 questionnaires (PSS10 + 7 proprietary instruments), forged client scores, categories, dimensions, and safety flags are strictly rejected in favor of server-side raw answer evaluation.

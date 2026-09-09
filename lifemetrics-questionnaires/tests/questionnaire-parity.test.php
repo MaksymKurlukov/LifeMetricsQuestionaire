@@ -16,8 +16,8 @@ $javascript = stream_get_contents($pipes[1]);
 $error = stream_get_contents($pipes[2]);
 fclose($pipes[1]); fclose($pipes[2]);
 $status = proc_close($node);
-if ($status !== 0 || $javascript !== json_encode($php)) {
-    fwrite(STDERR, "PHP/JavaScript parity failed.\n" . $error . "\nPHP: " . json_encode($php) . "\nJS: " . $javascript . "\n");
+if ($status !== 0 || $javascript !== json_encode($php, JSON_UNESCAPED_UNICODE)) {
+    fwrite(STDERR, "PHP/JavaScript parity failed.\n" . $error . "\nPHP: " . json_encode($php, JSON_UNESCAPED_UNICODE) . "\nJS: " . $javascript . "\n");
     exit(1);
 }
 echo "Questionnaire PHP/JavaScript parity passed.\n";

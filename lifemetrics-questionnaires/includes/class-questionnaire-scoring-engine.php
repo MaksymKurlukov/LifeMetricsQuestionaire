@@ -38,6 +38,7 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
             $answer = $this->find_answer($question['answers'], $answers[$question['id']]);
             $selected[$question['id']] = array(
                 'value' => $answer['value'],
+                'label' => $answer['label'] ?? '',
                 'points' => $answer['points'],
                 'applicable' => $answer['applicable'],
             );
@@ -132,7 +133,11 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
         $trigger_order = 0;
         foreach ($config['safety_questions'] as $question) {
             $answer = $this->find_answer($question['answers'], $answers[$question['id']]);
-            $safety_answers[$question['id']] = array('value' => $answer['value'], 'triggers' => $answer['triggers']);
+            $safety_answers[$question['id']] = array(
+                'value' => $answer['value'],
+                'label' => $answer['label'] ?? '',
+                'triggers' => $answer['triggers'],
+            );
             foreach ($answer['triggers'] as $code) {
                 if (!isset($triggered[$code])) {
                     $triggered[$code] = array('priority' => $config['safety_messages'][$code]['priority'], 'order' => $trigger_order++);

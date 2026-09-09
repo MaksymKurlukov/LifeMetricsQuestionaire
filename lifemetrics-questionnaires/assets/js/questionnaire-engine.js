@@ -54,7 +54,7 @@
       var answer = findAnswer(question.answers, answers[question.id]);
       fullMin += minimum;
       fullMax += maximum;
-      selected[question.id] = { value: answer.value, points: answer.points, applicable: answer.applicable };
+      selected[question.id] = { value: answer.value, label: answer.label || '', points: answer.points, applicable: answer.applicable };
       if (!answer.applicable) { removedCapacity = true; return; }
       raw += answer.points;
       availableMin += minimum;
@@ -126,7 +126,7 @@
     var triggerOrder = 0;
     config.safety_questions.forEach(function (question) {
       var answer = findAnswer(question.answers, answers[question.id]);
-      safetyAnswers[question.id] = { value: answer.value, triggers: answer.triggers };
+      safetyAnswers[question.id] = { value: answer.value, label: answer.label || '', triggers: answer.triggers };
       answer.triggers.forEach(function (code) {
         if (!triggered[code]) triggered[code] = { priority: config.safety_messages[code].priority, order: triggerOrder++ };
       });
