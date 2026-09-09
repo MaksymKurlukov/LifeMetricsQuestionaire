@@ -26,6 +26,10 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.6 (Activité Physique): implemented canonical configuration `questionnaires/activite-physique/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Activite_Physique_V1.pdf`.
+- Registered `activite-physique` in `LifeMetrics_Questionnaire_Registry` mapping.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-activite-physique.test.php` and `tests/questionnaire-activite-physique.test.js`) verifying Schema 2.0.0 compliance, AP04 duplicate 4-point maximum (options 3 & 4 = 4 pts), boundary score classification (0, 15, 16, 27, 28, 39, 40, 48), 5 dimensions with capacities 12/8/8/8/12 (48 total), weakest dimension percentage ranking with deterministic tie-breaking, and server scoring authority.
+
 - Completed Stage 10.5 (Nutrition): implemented canonical configuration `questionnaires/nutrition/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Nutrition_V1.pdf`.
 - Registered `nutrition` in `LifeMetrics_Questionnaire_Registry` mapping.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-nutrition.test.php` and `tests/questionnaire-nutrition.test.js`) verifying Schema 2.0.0 compliance, duplicate 4-point mappings (NT03: options 3 & 4 = 4 pts, NT06: options 3 & 4 = 4 pts), non-linear fruit scoring (NT02: option 3 = 4 pts [max], option 4 = 3 pts), reverse scoring (NT09 and NT10), boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 6 dimensions with 8 pts capacity each (48 total), safety questions (NTSF01–NTSF03) score independence with `NUTRITION_ATTENTION_MESSAGE`, weakest dimension ordering, and server scoring authority.

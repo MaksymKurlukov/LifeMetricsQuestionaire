@@ -158,6 +158,7 @@ expect_true($service->get_endpoint('sedentarite') === 'https://script.google.com
 expect_true($service->get_endpoint('hydratation') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Hydratation resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('sommeil') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Sommeil resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('nutrition') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Nutrition resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('activite-physique') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Activite Physique resolves to central LMQ_GOOGLE_ENDPOINT');
 
 // ----------------------------------------------------
 // BACK-003: Filter Hook Endpoint Override

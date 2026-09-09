@@ -36,6 +36,7 @@ final class LifeMetrics_Plugin
                 'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php',
                 'sommeil' => 'sommeil/questionnaire.php',
                 'nutrition' => 'nutrition/questionnaire.php',
+                'activite-physique' => 'activite-physique/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

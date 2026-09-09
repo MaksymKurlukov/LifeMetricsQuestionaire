@@ -781,14 +781,14 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 10.
 
 ## STAGE 10 - Proprietary Questionnaires Rollout
-- **Status:** `IN_PROGRESS` (Sequential execution: 5/7 complete)
+- **Status:** `IN_PROGRESS` (Sequential execution: 6/7 complete)
   - 1. Sédentarité (`sedentarite`): `PASS` (Stage 10.1 on 2026-09-09)
   - 2. Hydratation (`hydratation`): `PASS` (Stage 10.2 on 2026-09-09)
   - 3. Fatigue & Récupération (`fatigue-recuperation`): `PASS` (Stage 10.3 on 2026-09-09)
   - 4. Sommeil (`sommeil`): `PASS` (Stage 10.4 on 2026-09-09)
   - 5. Nutrition (`nutrition`): `PASS` (Stage 10.5 on 2026-09-09)
-  - 6. Activité Physique (`activite-physique`): `NOT_STARTED` (Next)
-  - 7. Pieds & Confort Postural (`pieds-confort-postural`): `NOT_STARTED`
+  - 6. Activité Physique (`activite-physique`): `PASS` (Stage 10.6 on 2026-09-09)
+  - 7. Pieds & Confort Postural (`pieds-confort-postural`): `NOT_STARTED` (Next)
 - **Objective:** Implement the proprietary questionnaires sequentially (Sédentarité, Hydratation, Fatigue, Sommeil, Nutrition, Activité, Pieds).
 - **Prerequisites:** STAGE 9 PASS, methodology approvals.
 - **Scope:** `questionnaires/<id>/questionnaire.php`, `presentation.php` (if needed).
@@ -797,7 +797,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Required tests:** Full scoring fixtures and synthetic profiles per PDF.
 - **Pass criteria:** Each test completes independently and passes all schema, boundary, and scoring tests.
 - **Rollback:** Disable questionnaire config status to `draft` or `disabled`.
-- **Next stage:** STAGE 10.6 (Activité Physique).
+- **Next stage:** STAGE 10.7 (Pieds & Confort Postural).
 
 ## STAGE 11 - Final Production Packaging & Release
 - **Status:** `NOT_STARTED`

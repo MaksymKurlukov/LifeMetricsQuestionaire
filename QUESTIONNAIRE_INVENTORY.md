@@ -41,7 +41,7 @@ PDF files are external read-only sources and are not tracked by this repository.
 | ID | Content | Scoring | Safety | N/A | Guardrail/attention | CTA | Implementation | Approval/blocker |
 |---|---|---|---|---|---|---|---|---|
 | `pss10` | existing plugin/standalone behavior; no separate questionnaire PDF found | executable freeze approved for structural migration: 1-5, reverse Q4/Q5/Q7/Q8, 10-50, boundaries 20/21/26/27 | none | none | none | primary `/formulaire-bilan/`; secondary reserved for `/tests-sante/` and currently unlinked | `BLOCKED_BY_APPROVAL` | runtime/E2E stabilized and passed; licensing/attribution and publication approval remain separate blockers |
-| `activite-physique` | `CONTENT_READY` | ranges defined, but source requires synthetic validation/pilot | none | none | none | VitaScan | `BLOCKED_BY_SCORING` | confirm AP04 duplicate 4-point mapping; run/approve profiles; owner/date/URL pending |
+| `activite-physique` | `CONTENT_READY` | `SCORING_READY` | none | none | none | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.6 (`status: review`); publication/legal approvals pending |
 | `sommeil` | `CONTENT_READY` | `SCORING_READY` | SLSF01-SLSF03 | none | none | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.4 (`status: review`); publication/legal approvals pending |
 | `hydratation` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation | HYSF01-HYSF03 | HY05 | weakest dimensions; no category guardrail | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.2 (`status: review`); publication/legal approvals pending |
 | `nutrition` | `CONTENT_READY` | `SCORING_READY` | NTSF01-NTSF03 | none | none | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.5 (`status: review`); publication/legal approvals pending |
@@ -66,10 +66,10 @@ PDF files are external read-only sources and are not tracked by this repository.
 
 ### Activité physique
 
-- AP01-AP12, 12 x 0-4, max 48, five dimensions.
+- AP01-AP12, max 48, five dimensions (capacities 12/8/8/8/12 = 48), four result levels (0-15, 16-27, 28-39, 40-48).
 - No safety/N/A/guardrail.
-- AP04 source assigns 4 points both to `2 jours par semaine` and `3 jours ou plus`; implementation must not correct or reinterpret it without explicit confirmation.
-- Source explicitly requires synthetic profiles before production.
+- AP04 confirmed duplicate 4-point maximum for options 3 (`2 jours par semaine`) and 4 (`3 jours ou plus par semaine`).
+- Synthetic validation profiles are not defined in source PDF (`SYNTHETIC_PROFILE_STATUS = NOT_DEFINED_IN_SOURCE`); technical validation uses automated engine test fixtures.
 
 ### Sommeil
 
