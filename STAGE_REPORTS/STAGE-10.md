@@ -55,7 +55,9 @@
   - `FRSF03`: Signes associés ou récupération anormalement difficile
   - Emit priority safety flag `FATIGUE_ATTENTION_MESSAGE` without mutating numeric scores or categories.
 - **Result CTAs & Disclaimers**:
-  - Configured for VitaScan and Metabolism Analytics with clear boundary separation between questionnaire self-evaluation and physiological measurements.
+  - Primary CTA: `Découvrir mon bilan VitaScan` (`/vitascan/`, `enabled: true`), directly satisfying Section 11 of the authoritative PDF.
+  - Secondary CTA: `Découvrir les autres tests` (`/tests-sante/`, `enabled: false`, pending publication approval).
+  - Ecosystem Link: Explicit non-diagnostic boundary separation between questionnaire self-evaluation, VitaScan body measurements, and Metabolism Analytics longitudinal visualization as specified in PDF Section 11.
 
 ### 2.2 Plugin Registry Mapping (`includes/class-lifemetrics-plugin.php`)
 - Added `'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php'` to `LifeMetrics_Questionnaire_Registry`.
