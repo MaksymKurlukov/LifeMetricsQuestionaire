@@ -26,6 +26,10 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.2 (Hydratation): implemented canonical configuration `questionnaires/hydratation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Hydratation_V1.pdf`.
+- Registered `hydratation` in `LifeMetrics_Questionnaire_Registry` mapping and aligned Submission Service payload attributes.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-hydratation.test.php` and `tests/questionnaire-hydratation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization on HY05 (44/44 -> 48/48, non-integer rounding), safety questions (HYSF01–HYSF03) score independence and priority triggering, weakest dimension ordering, and all synthetic validation profiles 1–5.
+
 - Completed Stage 10.1 (Sédentarité): implemented canonical configuration `questionnaires/sedentarite/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sedentarite_V1.pdf`.
 - Registered `sedentarite` in `LifeMetrics_Questionnaire_Registry` mapping.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-sedentarite.test.php` and `tests/questionnaire-sedentarite.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization for optional occupational items SD07/SD08, D1 guardrail capping at `SEDENTARITE_A_REDUIRE`, dimension attention rules, weakest dimension ordering, and all synthetic validation profiles A–F.

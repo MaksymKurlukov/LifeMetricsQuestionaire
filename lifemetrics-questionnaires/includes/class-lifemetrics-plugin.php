@@ -32,6 +32,7 @@ final class LifeMetrics_Plugin
             array(
                 'pss10' => 'pss10/questionnaire.php',
                 'sedentarite' => 'sedentarite/questionnaire.php',
+                'hydratation' => 'hydratation/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

@@ -214,7 +214,7 @@ final class LifeMetrics_Submission_Service
                 'received_at' => gmdate('Y-m-d\TH:i:s.000\Z'),
                 'locale' => isset($config['locale']) ? $config['locale'] : 'fr-FR',
                 'source_page' => $source_page,
-                'answers' => $result['answers'],
+                'answers' => isset($result['selected_answers']) ? $result['selected_answers'] : (isset($result['answers']) ? $result['answers'] : array()),
                 'raw_score' => $result['raw_score'],
                 'available_min' => $result['available_min'],
                 'available_max' => $result['available_max'],
@@ -224,7 +224,8 @@ final class LifeMetrics_Submission_Service
                 'applied_classification_rules' => isset($result['applied_classification_rules']) ? $result['applied_classification_rules'] : array(),
                 'dimensions' => isset($result['dimensions']) ? $result['dimensions'] : array(),
                 'weakest_dimensions' => isset($result['weakest_dimensions']) ? $result['weakest_dimensions'] : array(),
-                'safety_flags' => isset($result['safety_flags']) ? $result['safety_flags'] : array(),
+                'safety_flags' => isset($result['safety_flag_codes']) ? $result['safety_flag_codes'] : (isset($result['safety_flags']) ? $result['safety_flags'] : array()),
+                'safety_answers' => isset($result['safety_answers']) ? $result['safety_answers'] : array(),
             );
         }
 
