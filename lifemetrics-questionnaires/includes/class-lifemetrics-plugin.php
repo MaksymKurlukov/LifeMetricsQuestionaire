@@ -34,6 +34,7 @@ final class LifeMetrics_Plugin
                 'sedentarite' => 'sedentarite/questionnaire.php',
                 'hydratation' => 'hydratation/questionnaire.php',
                 'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php',
+                'sommeil' => 'sommeil/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

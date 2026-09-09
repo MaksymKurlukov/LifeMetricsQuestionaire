@@ -1,7 +1,7 @@
 # Stage 10: Proprietary Questionnaires Rollout
 
-**Status:** IN_PROGRESS (3/7 Questionnaires Complete)
-**Completion Date (Stage 10.3):** 2026-09-09
+**Status:** IN_PROGRESS (4/7 Questionnaires Complete)
+**Completion Date (Stage 10.4):** 2026-09-09
 
 ---
 
@@ -12,74 +12,73 @@
 | 1 | Sédentarité | `sedentarite` | **PASS** | 2026-09-09 (Stage 10.1) | `review` |
 | 2 | Hydratation | `hydratation` | **PASS** | 2026-09-09 (Stage 10.2) | `review` |
 | 3 | Fatigue & Récupération | `fatigue-recuperation` | **PASS** | 2026-09-09 (Stage 10.3) | `review` |
-| 4 | Sommeil | `sommeil` | **NOT_STARTED** | Next (Stage 10.4) | `draft` |
-| 5 | Nutrition | `nutrition` | **NOT_STARTED** | Pending | `draft` |
+| 4 | Sommeil | `sommeil` | **PASS** | 2026-09-09 (Stage 10.4) | `review` |
+| 5 | Nutrition | `nutrition` | **NOT_STARTED** | Next (Stage 10.5) | `draft` |
 | 6 | Activité Physique | `activite-physique` | **NOT_STARTED** | Pending | `draft` |
 | 7 | Pieds & Confort Postural | `pieds-confort-postural` | **NOT_STARTED** | Pending | `draft` |
 
 ---
 
-## 2. Stage 10.3: Fatigue & Récupération Implementation Summary
+## 2. Stage 10.4: Sommeil Implementation Summary
 
-### 2.1 Canonical Configuration (`questionnaires/fatigue-recuperation/questionnaire.php`)
+### 2.1 Canonical Configuration (`questionnaires/sommeil/questionnaire.php`)
 - **Metadata**:
   - `schema_version`: `2.0.0`
-  - `id`: `fatigue-recuperation`
+  - `id`: `sommeil`
   - `version`: `1.0.0`
   - `status`: `review`
   - `locale`: `fr-FR`
-  - `title`: `Score LifeMetrics - Fatigue & récupération`
-  - `seo_title`: `Auto-évaluation LifeMetrics - Comment récupérez-vous au quotidien ?`
+  - `title`: `Score LifeMetrics - Sommeil`
+  - `seo_title`: `Auto-évaluation LifeMetrics - Quelle est la qualité de votre sommeil ?`
+  - `description`: `Évaluer le profil global du sommeil : suffisance, continuité, régularité, récupération et retentissement diurne.`
   - `scoring_direction`: `higher_is_better`
   - `score`: `target_min: 0`, `target_max: 48`, `normalize_when_unavailable: false`, `rounding: half_up`
-- **12 Scored Questions (FR01–FR12)**:
-  - Exact verbatim French text, answer labels, and 0–4 scale points from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`.
-  - Reverse scoring properly defined on FR05, FR06, and FR10.
-- **6 Dimensions (D1–D6)**:
-  - `energie-recuperation-reveil`: FR01, FR02 (Max 8 pts, attention threshold <= 2)
-  - `energie-fonctionnement-journee`: FR03, FR04 (Max 8 pts, attention threshold <= 2)
-  - `retentissement-fatigue`: FR05, FR06 (Max 8 pts, attention threshold <= 2)
-  - `recuperation-effort`: FR07, FR08 (Max 8 pts, attention threshold <= 2)
-  - `efficacite-repos`: FR09, FR10 (Max 8 pts, attention threshold <= 2)
-  - `stabilite-recuperation-globale`: FR11, FR12 (Max 8 pts, attention threshold <= 2)
+- **12 Scored Questions (SL01–SL12)**:
+  - Exact verbatim French text, answer labels, and points from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sommeil_V1.pdf`.
+  - Non-linear scoring on Q1 (SL01): `< 5 h` = 0 pts, `5 h à moins de 6 h` = 1 pt, `6 h à moins de 7 h` = 2 pts, `7 h à 9 h` = 4 pts (max), `Plus de 9 h` = 3 pts.
+- **5 Dimensions (D1–D5)**:
+  - `duree-suffisance`: SL01, SL02 (Max 8 pts)
+  - `endormissement-continuite`: SL03, SL04, SL05 (Max 12 pts)
+  - `regularite-rythme`: SL06, SL07 (Max 8 pts)
+  - `recuperation-fonctionnement-diurne`: SL08, SL09, SL10 (Max 12 pts)
+  - `habitudes-favorables`: SL11, SL12 (Max 8 pts)
+  - Total Capacity: $8 + 12 + 8 + 12 + 8 = 48$ points.
 - **Result Levels (0–48 Target Score)**:
-  - 0–15: `FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE`
-  - 16–27: `RECUPERATION_A_RENFORCER`
-  - 28–38: `RECUPERATION_GLOBALEMENT_FAVORABLE`
-  - 39–48: `TRES_BON_PROFIL_RECUPERATION`
-- **Dimension Attention Rule**:
-  - Automatically flags any dimension with score $\le 2/8$ as `attention === true` with descriptive point-of-attention messages without altering numeric score or calculated category.
-- **Safety Questions (FRSF01, FRSF02, FRSF03)**:
-  - `FRSF01`: Fatigue persistante malgré le repos
-  - `FRSF02`: Retentissement important
-  - `FRSF03`: Signes associés ou récupération anormalement difficile
-  - Emit priority safety flag `FATIGUE_ATTENTION_MESSAGE` without mutating numeric scores or categories.
+  - 0–15: `SOMMEIL_TRES_PERTURBE`
+  - 16–27: `SOMMEIL_A_AMELIORER`
+  - 28–38: `SOMMEIL_GLOBALEMENT_SATISFAISANT`
+  - 39–48: `SOMMEIL_FAVORABLE`
+- **Safety Questions (SLSF01, SLSF02, SLSF03)**:
+  - `SLSF01`: Respiration nocturne (Non / Je ne sais pas / Oui)
+  - `SLSF02`: Somnolence dangereuse (Non / Oui)
+  - `SLSF03`: Retentissement persistant (Non / Oui)
+  - Emit priority safety flag `HEALTH_ATTENTION_MESSAGE` without mutating numeric score or calculated category.
 - **Result CTAs & Disclaimers**:
-  - Primary CTA: `Découvrir mon bilan VitaScan` (`/vitascan/`, `enabled: true`), directly satisfying Section 11 of the authoritative PDF.
+  - Primary CTA: `Découvrir le bilan VitaScan` (`/vitascan/`, `enabled: true`), matching Page 9 of the PDF.
   - Secondary CTA: `Découvrir les autres tests` (`/tests-sante/`, `enabled: false`, pending publication approval).
-  - Ecosystem Link: Explicit non-diagnostic boundary separation between questionnaire self-evaluation, VitaScan body measurements, and Metabolism Analytics longitudinal visualization as specified in PDF Section 11.
 
 ### 2.2 Plugin Registry Mapping (`includes/class-lifemetrics-plugin.php`)
-- Added `'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php'` to `LifeMetrics_Questionnaire_Registry`.
+- Added `'sommeil' => 'sommeil/questionnaire.php'` to `LifeMetrics_Questionnaire_Registry`.
 
 ### 2.3 Unit & Parity Test Suites
-- **PHP Unit Test Suite (`tests/questionnaire-fatigue-recuperation.test.php`)**:
+- **PHP Unit Test Suite (`tests/questionnaire-sommeil.test.php`)**:
   - Schema 2.0.0 validation: PASS.
+  - Non-linear Q1 scoring verification: PASS.
   - Boundary scores (0, 15, 16, 27, 28, 38, 39, 48): PASS.
-  - Dimension attention trigger (threshold $\le 2/8$): PASS.
+  - 5 dimensions with capacities 8/12/8/12/8: PASS.
   - Safety questions score/category independence: PASS.
-  - Authoritative synthetic profiles 1–7 from PDF: PASS.
   - Registry and submission service integration: PASS.
-- **JavaScript Unit Test Suite (`tests/questionnaire-fatigue-recuperation.test.js`)**:
-  - Scoring engine parity for boundaries, dimension attention, safety questions, and synthetic profiles: PASS.
+- **JavaScript Unit Test Suite (`tests/questionnaire-sommeil.test.js`)**:
+  - Dynamic canonical loading via PHP CLI bridge: PASS.
+  - Parity guard and scoring engine equality across all boundaries and options: PASS.
 
 ---
 
-## 3. Full Test Suite Matrix (22 Test Suites)
+## 3. Full Test Suite Matrix (24 Test Suites)
 
-All 22 PHP and JavaScript test suites executed cleanly with 0 errors and 0 warnings.
+All 14 PHP and 10 JavaScript test suites executed cleanly with 0 errors and 0 warnings.
 
 ---
 
 ## 4. Next Step
-- **Stage 10.4**: Implement the next proprietary questionnaire in sequence: **Sommeil** (`sommeil`).
+- **Stage 10.5**: Implement the next proprietary questionnaire in sequence: **Nutrition** (`nutrition`).

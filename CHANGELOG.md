@@ -26,6 +26,10 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.4 (Sommeil): implemented canonical configuration `questionnaires/sommeil/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sommeil_V1.pdf`.
+- Registered `sommeil` in `LifeMetrics_Questionnaire_Registry` mapping.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-sommeil.test.php` and `tests/questionnaire-sommeil.test.js`) verifying Schema 2.0.0 compliance, non-linear Q1 scoring (SL01: 0, 1, 2, 4, 3 points), boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 5 dimensions with capacities 8/12/8/12/8 (48 total), safety questions (SLSF01–SLSF03) score independence, and weakest dimension ordering.
+
 - Completed Stage 10.3 (Fatigue & Récupération): implemented canonical configuration `questionnaires/fatigue-recuperation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`.
 - Registered `fatigue-recuperation` in `LifeMetrics_Questionnaire_Registry` mapping.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-fatigue-recuperation.test.php` and `tests/questionnaire-fatigue-recuperation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), dimension attention rules ($\le 2/8$ threshold), safety questions (FRSF01–FRSF03) score independence, weakest dimension ordering, and all synthetic validation profiles 1–7.
