@@ -30,22 +30,20 @@
   - `locale`: `fr-FR`
   - `title`: `Score LifeMetrics - Nutrition`
   - `seo_title`: `Auto-évaluation LifeMetrics - Comment évaluer la qualité globale de votre alimentation ?`
-  - `description`: `Évaluer le profil global des habitudes alimentaires : diversité végétale, qualité des glucides et fibres, variété des sources protéiques, matières grasses, produits à limiter et organisation des repas.`
+  - `description`: `Évaluer la qualité générale des habitudes alimentaires : diversité végétale, fibres, protéines, qualité des graisses, produits à limiter et organisation alimentaire.`
   - `population`: `Adultes de 18 à 64 ans`
-  - `recall_period`: `7 derniers jours`
-  - `estimated_duration`: `3-4 minutes`
+  - `recall_period`: `Habitudes habituelles des 14 derniers jours`
+  - `estimated_duration`: `Environ 3 minutes`
   - `scoring_direction`: `higher_is_better`
   - `score`: `target_min: 0`, `target_max: 48`, `normalize_when_unavailable: false`, `rounding: half_up`
 - **12 Scored Questions (NT01–NT12)**:
   - Exact verbatim French text, answer labels, and points from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Nutrition_V1.pdf`.
   - **Duplicate 4-point mappings**:
     - `NT03` (Légumes secs): `2 fois par semaine` = 4 pts, `3 fois ou plus par semaine` = 4 pts.
-    - `NT06` (Poisson & alternatives): `Environ 2 fois par semaine` = 4 pts, `Plus de 2 fois par semaine...` = 4 pts.
-  - **Non-linear scoring**:
-    - `NT02` (Fruits frais): `2 fruits par jour` = 4 pts (optimal max), `3 fruits ou plus par jour` = 3 pts.
-  - **Reverse scoring**:
+    - `NT06` (Poisson & alternatives): `Environ 2 fois par semaine` = 4 pts, `Plus de 2 fois par semaine avec une bonne variété` = 4 pts.
+  - **Explicit answer mappings (higher-is-better without engine branching)**:
     - `NT09` (Boissons sucrées): `Plusieurs fois par jour` = 0 pts ... `Rarement ou jamais` = 4 pts.
-    - `NT10` (Produits ultra-transformés): `Plusieurs fois par jour` = 0 pts ... `Rarement (1 fois par semaine ou moins)` = 4 pts.
+    - `NT10` (Produits gras/sucrés/salés/ultra-transformés): `Plusieurs fois par jour` = 0 pts ... `Rarement` = 4 pts.
 - **6 Dimensions (D1–D6)**:
   - `fruits-legumes-diversite`: NT01, NT02 (Max 8 pts)
   - `fibres-glucides-qualite`: NT03, NT04 (Max 8 pts)
@@ -55,15 +53,19 @@
   - `organisation-equilibre-global`: NT11, NT12 (Max 8 pts)
   - Total Capacity: $8 \times 6 = 48$ points.
 - **Result Levels (0–48 Target Score)**:
-  - 0–15: `HABITUDES_A_AMELIORER` (Habitudes nutritionnelles à améliorer)
+  - 0–15: `HABITUDES_A_AMELIORER` (Habitudes alimentaires à améliorer)
   - 16–27: `EQUILIBRE_A_RENFORCER` (Équilibre nutritionnel à renforcer)
-  - 28–38: `PROFIL_GLOBALEMENT_FAVORABLE` (Profil nutritionnel globalement favorable)
-  - 39–48: `HABITUDES_TRES_FAVORABLES` (Habitudes nutritionnelles très favorables)
+  - 28–38: `PROFIL_GLOBALEMENT_FAVORABLE` (Profil alimentaire globalement favorable)
+  - 39–48: `HABITUDES_TRES_FAVORABLES` (Habitudes alimentaires très favorables)
 - **Safety Questions (NTSF01, NTSF02, NTSF03)**:
-  - `NTSF01`: Régime alimentaire médicalement prescrit (Non / Oui)
-  - `NTSF02`: Variation pondérale involontaire importante (Non / Oui)
-  - `NTSF03`: Difficultés alimentaires ou troubles sévères (Non / Oui)
+  - `NTSF01`: Régime médical spécifique (Non / Oui)
+  - `NTSF02`: Variation pondérale involontaire (Non / Oui)
+  - `NTSF03`: Difficulté ou préoccupation alimentaire importante (Non / Oui)
   - Emit priority safety flag `NUTRITION_ATTENTION_MESSAGE` without mutating numeric score or calculated category.
+- **Synthetic Validation Status**:
+  - `PDF_SYNTHETIC_PROFILES_PRESENT`: `NO`
+  - `SYNTHETIC_PROFILE_STATUS`: `NOT_DEFINED_IN_SOURCE`
+  - Validation is conducted via automated engine test fixtures (`ENGINE_TEST_FIXTURES`), covering all boundary thresholds, duplicate points, reverse mappings, and safety independence.
 - **Result CTAs & Disclaimers**:
   - Primary CTA: `Découvrir le bilan VitaScan` (`/vitascan/`, `enabled: true`), matching Page 9 of the PDF.
   - Secondary CTA: `Découvrir les autres tests` (`/tests-sante/`, `enabled: false`, pending publication approval).
@@ -76,14 +78,14 @@
 - **PHP Unit Test Suite (`tests/questionnaire-nutrition.test.php`)**:
   - Schema 2.0.0 validation: PASS.
   - Duplicate 4-point mapping on NT03 and NT06: PASS.
-  - Non-linear NT02 and reverse NT09/NT10 scoring: PASS.
+  - Reverse mapping on NT09/NT10: PASS.
   - Boundary scores (0, 15, 16, 27, 28, 38, 39, 48): PASS.
   - 6 dimensions with 8 pts capacity each: PASS.
   - Weakest dimensions deterministic tie-breaking: PASS.
   - Safety questions score/category independence: PASS.
-  - Registry and server scoring authority: PASS.
+  - Registry and server scoring authority (client score/category tampering overridden): PASS.
 - **JavaScript Unit Test Suite (`tests/questionnaire-nutrition.test.js`)**:
-  - Dynamic canonical loading via PHP CLI bridge: PASS.
+  - Dynamic canonical loading via PHP CLI bridge: PASS (`JS_CONFIG_DUPLICATION = NO`).
   - Parity guard and scoring engine equality across all boundaries, options, duplicate mappings, reverse scoring, and safety questions: PASS.
 
 ---

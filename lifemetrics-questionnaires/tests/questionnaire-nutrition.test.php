@@ -67,21 +67,12 @@ nut_assert($config['score']['target_min'] === 0, 'Target min is 0');
 nut_assert($config['score']['target_max'] === 48, 'Target max is 48');
 
 // ----------------------------------------------------
-// 2. Question Counts, Duplicate Points & Non-Linear Verification
+// 2. Question Counts, Duplicate Points & Answer Points Verification
 // ----------------------------------------------------
 nut_assert(count($config['questions']) === 12, 'Must have exactly 12 scored questions');
 
 $q_ids = array_map(function ($q) { return $q['id']; }, $config['questions']);
 nut_assert($q_ids === array('NT01', 'NT02', 'NT03', 'NT04', 'NT05', 'NT06', 'NT07', 'NT08', 'NT09', 'NT10', 'NT11', 'NT12'), 'Exact NT01-NT12 sequence');
-
-// NT02 (Fruits) non-linear points verification (optimal at 2 fruits = 4 pts, >3 fruits = 3 pts)
-$q2 = $config['questions'][1];
-nut_assert($q2['id'] === 'NT02', 'Q2 is NT02');
-nut_assert($q2['answers'][0]['points'] === 0, 'NT02 opt 0 = 0 pts');
-nut_assert($q2['answers'][1]['points'] === 1, 'NT02 opt 1 = 1 pt');
-nut_assert($q2['answers'][2]['points'] === 2, 'NT02 opt 2 = 2 pts');
-nut_assert($q2['answers'][3]['points'] === 4, 'NT02 opt 3 (2 fruits) = 4 pts [MAX]');
-nut_assert($q2['answers'][4]['points'] === 3, 'NT02 opt 4 (3+ fruits) = 3 pts [NON-LINEAR]');
 
 // NT03 (Légumes secs) duplicate 4 pts verification
 $q3 = $config['questions'][2];
@@ -89,8 +80,8 @@ nut_assert($q3['id'] === 'NT03', 'Q3 is NT03');
 nut_assert($q3['answers'][0]['points'] === 0, 'NT03 opt 0 = 0 pts');
 nut_assert($q3['answers'][1]['points'] === 1, 'NT03 opt 1 = 1 pt');
 nut_assert($q3['answers'][2]['points'] === 2, 'NT03 opt 2 = 2 pts');
-nut_assert($q3['answers'][3]['points'] === 4, 'NT03 opt 3 (2x/sem) = 4 pts [DUPLICATE MAX]');
-nut_assert($q3['answers'][4]['points'] === 4, 'NT03 opt 4 (3x+/sem) = 4 pts [DUPLICATE MAX]');
+nut_assert($q3['answers'][3]['points'] === 4, 'NT03 opt 3 (2 fois par semaine) = 4 pts [DUPLICATE MAX]');
+nut_assert($q3['answers'][4]['points'] === 4, 'NT03 opt 4 (3 fois ou plus par semaine) = 4 pts [DUPLICATE MAX]');
 
 // NT06 (Poisson & alternatives) duplicate 4 pts verification
 $q6 = $config['questions'][5];
@@ -98,25 +89,25 @@ nut_assert($q6['id'] === 'NT06', 'Q6 is NT06');
 nut_assert($q6['answers'][0]['points'] === 0, 'NT06 opt 0 = 0 pts');
 nut_assert($q6['answers'][1]['points'] === 1, 'NT06 opt 1 = 1 pt');
 nut_assert($q6['answers'][2]['points'] === 2, 'NT06 opt 2 = 2 pts');
-nut_assert($q6['answers'][3]['points'] === 4, 'NT06 opt 3 (~2x/sem) = 4 pts [DUPLICATE MAX]');
-nut_assert($q6['answers'][4]['points'] === 4, 'NT06 opt 4 (>2x/sem) = 4 pts [DUPLICATE MAX]');
+nut_assert($q6['answers'][3]['points'] === 4, 'NT06 opt 3 (Environ 2 fois par semaine) = 4 pts [DUPLICATE MAX]');
+nut_assert($q6['answers'][4]['points'] === 4, 'NT06 opt 4 (Plus de 2 fois par semaine...) = 4 pts [DUPLICATE MAX]');
 
-// NT09 (Boissons sucrées) reverse scoring verification
+// NT09 (Boissons sucrées) explicit point mapping
 $q9 = $config['questions'][8];
 nut_assert($q9['id'] === 'NT09', 'Q9 is NT09');
-nut_assert($q9['answers'][0]['points'] === 0, 'NT09 opt 0 (Plusieurs fois/j) = 0 pts');
-nut_assert($q9['answers'][1]['points'] === 1, 'NT09 opt 1 (1x/j) = 1 pt');
-nut_assert($q9['answers'][2]['points'] === 2, 'NT09 opt 2 (3-5x/sem) = 2 pts');
-nut_assert($q9['answers'][3]['points'] === 3, 'NT09 opt 3 (1-2x/sem) = 3 pts');
+nut_assert($q9['answers'][0]['points'] === 0, 'NT09 opt 0 (Plusieurs fois par jour) = 0 pts');
+nut_assert($q9['answers'][1]['points'] === 1, 'NT09 opt 1 (Environ 1 fois par jour) = 1 pt');
+nut_assert($q9['answers'][2]['points'] === 2, 'NT09 opt 2 (4-6 fois par semaine) = 2 pts');
+nut_assert($q9['answers'][3]['points'] === 3, 'NT09 opt 3 (1-3 fois par semaine) = 3 pts');
 nut_assert($q9['answers'][4]['points'] === 4, 'NT09 opt 4 (Rarement ou jamais) = 4 pts');
 
-// NT10 (Produits transformés) reverse scoring verification
+// NT10 (Produits transformés) explicit point mapping
 $q10 = $config['questions'][9];
 nut_assert($q10['id'] === 'NT10', 'Q10 is NT10');
-nut_assert($q10['answers'][0]['points'] === 0, 'NT10 opt 0 (Plusieurs fois/j) = 0 pts');
-nut_assert($q10['answers'][1]['points'] === 1, 'NT10 opt 1 (Au moins 1x/j) = 1 pt');
-nut_assert($q10['answers'][2]['points'] === 2, 'NT10 opt 2 (4-6x/sem) = 2 pts');
-nut_assert($q10['answers'][3]['points'] === 3, 'NT10 opt 3 (2-3x/sem) = 3 pts');
+nut_assert($q10['answers'][0]['points'] === 0, 'NT10 opt 0 (Plusieurs fois par jour) = 0 pts');
+nut_assert($q10['answers'][1]['points'] === 1, 'NT10 opt 1 (Environ tous les jours) = 1 pt');
+nut_assert($q10['answers'][2]['points'] === 2, 'NT10 opt 2 (4-6 fois par semaine) = 2 pts');
+nut_assert($q10['answers'][3]['points'] === 3, 'NT10 opt 3 (1-3 fois par semaine) = 3 pts');
 nut_assert($q10['answers'][4]['points'] === 4, 'NT10 opt 4 (Rarement) = 4 pts');
 
 // ----------------------------------------------------
@@ -156,9 +147,9 @@ nut_assert($res_0['final_score'] === 0, 'Min score is 0');
 nut_assert($res_0['calculated_category'] === 'HABITUDES_A_AMELIORER', 'Score 0 category is HABITUDES_A_AMELIORER');
 nut_assert($res_0['displayed_category'] === 'HABITUDES_A_AMELIORER', 'Score 0 displayed category is HABITUDES_A_AMELIORER');
 
-// Max score (NT01=4 [4pts], NT02=3 [4pts], NT03=3 [4pts], NT04=4 [4pts], NT05=4 [4pts], NT06=3 [4pts], NT07=4 [4pts], NT08=4 [4pts], NT09=4 [4pts], NT10=4 [4pts], NT11=4 [4pts], NT12=4 [4pts]) -> 48/48 -> HABITUDES_TRES_FAVORABLES
+// Max score (NT01-NT12 max answers) -> 48/48 -> HABITUDES_TRES_FAVORABLES
 $answers_max = array_merge($base_safety, array(
-    'NT01' => '4', 'NT02' => '3', 'NT03' => '3', 'NT04' => '4',
+    'NT01' => '4', 'NT02' => '4', 'NT03' => '3', 'NT04' => '4',
     'NT05' => '4', 'NT06' => '3', 'NT07' => '4', 'NT08' => '4',
     'NT09' => '4', 'NT10' => '4', 'NT11' => '4', 'NT12' => '4',
 ));
@@ -213,7 +204,7 @@ nut_assert($res_28['calculated_category'] === 'PROFIL_GLOBALEMENT_FAVORABLE', 'S
 
 // Boundary 38 -> PROFIL_GLOBALEMENT_FAVORABLE
 $answers_38 = array_merge($base_safety, array(
-    'NT01' => '4', 'NT02' => '4', // D1: 4+3=7 (NT02 '4' is 3pts)
+    'NT01' => '4', 'NT02' => '3', // D1: 4+3=7
     'NT03' => '3', 'NT04' => '3', // D2: 4+3=7 (NT03 '3' is 4pts)
     'NT05' => '3', 'NT06' => '3', // D3: 3+4=7 (NT06 '3' is 4pts)
     'NT07' => '3', 'NT08' => '3', // D4: 3+3=6

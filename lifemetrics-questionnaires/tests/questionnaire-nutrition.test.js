@@ -31,7 +31,7 @@ assert.equal(config.questions.length, 12, 'Must have exactly 12 scored questions
 const questionIds = config.questions.map(q => q.id);
 assert.deepEqual(questionIds, ['NT01', 'NT02', 'NT03', 'NT04', 'NT05', 'NT06', 'NT07', 'NT08', 'NT09', 'NT10', 'NT11', 'NT12']);
 
-// Non-linear NT02 (Fruits) points verification
+// NT02 (Diversité végétale) linear points verification (0, 1, 2, 3, 4)
 const q2 = config.questions.find(q => q.id === 'NT02');
 assert.equal(q2.answers[0].value, '0');
 assert.equal(q2.answers[0].points, 0);
@@ -40,9 +40,9 @@ assert.equal(q2.answers[1].points, 1);
 assert.equal(q2.answers[2].value, '2');
 assert.equal(q2.answers[2].points, 2);
 assert.equal(q2.answers[3].value, '3');
-assert.equal(q2.answers[3].points, 4); // 2 fruits = 4 pts (max)
+assert.equal(q2.answers[3].points, 3);
 assert.equal(q2.answers[4].value, '4');
-assert.equal(q2.answers[4].points, 3); // 3+ fruits = 3 pts (non-linear)
+assert.equal(q2.answers[4].points, 4);
 
 // Duplicate 4 pts on NT03 (Légumes secs)
 const q3 = config.questions.find(q => q.id === 'NT03');
@@ -60,20 +60,20 @@ assert.equal(q6.answers[2].points, 2);
 assert.equal(q6.answers[3].points, 4); // ~2x/sem = 4 pts
 assert.equal(q6.answers[4].points, 4); // >2x/sem = 4 pts
 
-// Reverse scoring on NT09 (Boissons sucrées)
+// Explicit point mapping on NT09 (Boissons sucrées)
 const q9 = config.questions.find(q => q.id === 'NT09');
 assert.equal(q9.answers[0].points, 0); // Plusieurs fois/j
-assert.equal(q9.answers[1].points, 1); // 1x/j
-assert.equal(q9.answers[2].points, 2); // 3-5x/sem
-assert.equal(q9.answers[3].points, 3); // 1-2x/sem
+assert.equal(q9.answers[1].points, 1); // Environ 1 fois/j
+assert.equal(q9.answers[2].points, 2); // 4-6 fois/sem
+assert.equal(q9.answers[3].points, 3); // 1-3 fois/sem
 assert.equal(q9.answers[4].points, 4); // Rarement ou jamais
 
-// Reverse scoring on NT10 (Produits transformés)
+// Explicit point mapping on NT10 (Produits transformés)
 const q10 = config.questions.find(q => q.id === 'NT10');
 assert.equal(q10.answers[0].points, 0); // Plusieurs fois/j
-assert.equal(q10.answers[1].points, 1); // Au moins 1x/j
-assert.equal(q10.answers[2].points, 2); // 4-6x/sem
-assert.equal(q10.answers[3].points, 3); // 2-3x/sem
+assert.equal(q10.answers[1].points, 1); // Environ tous les jours
+assert.equal(q10.answers[2].points, 2); // 4-6 fois/sem
+assert.equal(q10.answers[3].points, 3); // 1-3 fois/sem
 assert.equal(q10.answers[4].points, 4); // Rarement
 
 // Dimensions verification
@@ -139,7 +139,7 @@ assert.equal(res_0.displayed_category, 'HABITUDES_A_AMELIORER');
 // Score 48 Boundary: All max answers
 const answers_max = {
   ...baseSafety,
-  NT01: '4', NT02: '3', NT03: '3', NT04: '4',
+  NT01: '4', NT02: '4', NT03: '3', NT04: '4',
   NT05: '4', NT06: '3', NT07: '4', NT08: '4',
   NT09: '4', NT10: '4', NT11: '4', NT12: '4'
 };
@@ -201,7 +201,7 @@ assert.equal(res_28.calculated_category, 'PROFIL_GLOBALEMENT_FAVORABLE');
 // Boundary 38 -> PROFIL_GLOBALEMENT_FAVORABLE
 const answers_38 = {
   ...baseSafety,
-  NT01: '4', NT02: '4', // D1: 4+3=7 (NT02 '4' is 3pts)
+  NT01: '4', NT02: '3', // D1: 4+3=7
   NT03: '3', NT04: '3', // D2: 4+3=7 (NT03 '3' is 4pts)
   NT05: '3', NT06: '3', // D3: 3+4=7 (NT06 '3' is 4pts)
   NT07: '3', NT08: '3', // D4: 3+3=6

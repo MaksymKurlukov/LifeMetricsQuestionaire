@@ -85,9 +85,12 @@ PDF files are external read-only sources and are not tracked by this repository.
 
 ### Nutrition
 
-- NT01-NT12, max 48, six dimensions, four result levels.
-- Three non-scored safety questions.
+- NT01-NT12, max 48, six dimensions (8 pts capacity each), four result levels (0-15, 16-27, 28-38, 39-48).
+- NT03 and NT06 assign duplicate 4-point maxima for options 3 and 4.
+- NT09 and NT10 use explicit point mappings (0 to 4 pts).
+- Three non-scored safety questions (NTSF01-NTSF03) emitting `NUTRITION_ATTENTION_MESSAGE`.
 - No N/A or category guardrail documented.
+- Synthetic validation profiles are not defined in source PDF (`SYNTHETIC_PROFILE_STATUS = NOT_DEFINED_IN_SOURCE`); technical validation uses automated engine test fixtures.
 
 ### Fatigue & récupération
 

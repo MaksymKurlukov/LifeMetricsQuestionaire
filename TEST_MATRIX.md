@@ -71,6 +71,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STAGE10-HYD-001 | Hydratation configuration, scoring & parity | PHP/JS unit test suites (`tests/questionnaire-hydratation.test.php` and `tests/questionnaire-hydratation.test.js`): Schema 2.0.0 validation, boundaries 0/15/16/27/28/38/39/48, N/A normalization on HY05 (44/44 -> 48/48, partial non-integers, rounding), safety questions (HYSF01-03) score independence, weakest dimensions, synthetic profiles 1-5 | PASS on 2026-09-09 | 10 |
 | STAGE10-FR-001 | Fatigue & Récupération configuration, scoring & parity | PHP/JS unit test suites (`tests/questionnaire-fatigue-recuperation.test.php` and `tests/questionnaire-fatigue-recuperation.test.js`): Schema 2.0.0 validation, boundaries 0/15/16/27/28/38/39/48, dimension attention rules (score <= 2/8), safety questions (FRSF01-03) score independence, weakest dimensions, synthetic profiles 1-7 | PASS on 2026-09-09 | 10 |
 | STAGE10-SOM-001 | Sommeil configuration, scoring & parity | PHP/JS unit test suites (`tests/questionnaire-sommeil.test.php` and `tests/questionnaire-sommeil.test.js`): Schema 2.0.0 validation, boundaries 0/15/16/27/28/38/39/48, non-linear Q1 (SL01: 0, 1, 2, 4, 3), 5 dimensions (8/12/8/12/8 = 48 max), safety questions (SLSF01-03) score independence, weakest dimensions | PASS on 2026-09-09 | 10 |
+| STAGE10-NUT-001 | Nutrition configuration, scoring & parity | PHP/JS unit test suites (`tests/questionnaire-nutrition.test.php` and `tests/questionnaire-nutrition.test.js`): Schema 2.0.0 validation, boundaries 0/15/16/27/28/38/39/48, duplicate 4-point mappings (NT03 options 3 & 4 = 4 pts, NT06 options 3 & 4 = 4 pts), reverse scoring (NT09 and NT10), 6 dimensions (8 pts each = 48 max), safety questions (NTSF01-03) score independence, weakest dimensions, server scoring authority and tamper resistance | PASS on 2026-09-09 | 10 |
 
 ## Out-of-sequence manual real-WordPress evidence
 
@@ -244,7 +245,7 @@ Before any questionnaire can be marked `ready`, all applicable rows below must b
 | Hydratation | documented profiles; 44/44 -> 48; HY05 N/A; high-score+safety |
 | Fatigue & récupération | seven source profiles; final FR10; <=2/8 attention; high-score+safety |
 | Sommeil | approved synthetic profiles; non-linear SL01; safety; all boundaries |
-| Nutrition | approved synthetic profiles; safety; all boundaries |
+| Nutrition | engine test fixtures (synthetic profiles not defined in source PDF); safety; all boundaries; server authority |
 | Activité physique | five source-requested profiles; AP04 decision; AP12; all boundaries |
 | Pieds & confort postural | profiles A-F; approved PF09-PF10 decision; four safety flags |
 | Missing-source questionnaires | no fixtures/implementation until complete approved source |
