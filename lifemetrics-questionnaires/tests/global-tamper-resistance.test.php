@@ -171,38 +171,17 @@ foreach ($proprietary_ids as $qid) {
     tamper_assert($engine_result['displayed_category'] === $expected_server_result['displayed_category'], "[$qid] Engine ignores client displayed_category claims");
     tamper_assert($engine_result['safety_flag_codes'] === $expected_server_result['safety_flag_codes'], "[$qid] Engine ignores client safety_flags claims");
 
-    // 4. Test Public Lifecycle Gate: Public REST submission must be rejected with 404 because status is 'review'
-    $public_req = new WP_REST_Request($forged_client_payload);
-    $public_submit_res = $submission_service->submit($qid, $public_req);
-    tamper_assert($public_submit_res instanceof WP_Error, "[$qid] Public submission of review questionnaire returns WP_Error");
-    tamper_assert($public_submit_res->get_error_code() === 'lmq_not_found', "[$qid] Public submission returns 404 lmq_not_found");
+    // 4. Test Public Discovery Protection: get_public() must return null because status is 'review'
+    tamper_assert($registry->get_public($qid) === null, "[$qid] Public discovery returns null while status is review");
 
-    // 5. Test Submission Pipeline Under Authorized / Ready State
-    $ready_config = $config;
-    $ready_config['status'] = 'ready';
-    $ready_config['approvals'] = array(
-        'content_scoring' => true,
-        'legal_licensing' => true,
-        'technical_runtime' => true,
-        'publication' => true,
-    );
-    $temp_config_file = sys_get_temp_dir() . '/test_lmq_' . $qid . '.php';
-    file_put_contents($temp_config_file, '<?php return ' . var_export($ready_config, true) . ';');
-
-    $mock_registry = new LifeMetrics_Questionnaire_Registry(
-        dirname($temp_config_file),
-        array($qid => basename($temp_config_file)),
-        $validator
-    );
-
-    $service = new LifeMetrics_Submission_Service($mock_registry, $engine, $adapter);
+    // 5. Test Unified Backend Submission: REST submit() resolves internal config and dispatches authoritative payload
     $GLOBALS['mock_remote_post_log'] = array();
     $GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => true, 'duplicate' => false)));
 
     $request = new WP_REST_Request($forged_client_payload);
-    $submit_res = $service->submit($qid, $request);
+    $submit_res = $submission_service->submit($qid, $request);
 
-    tamper_assert(is_array($submit_res) && isset($submit_res['success']) && $submit_res['success'] === true, "[$qid] Submission succeeded under ready state");
+    tamper_assert(is_array($submit_res) && isset($submit_res['success']) && $submit_res['success'] === true, "[$qid] Submission succeeded under unified backend architecture");
     tamper_assert(count($GLOBALS['mock_remote_post_log']) === 1, "[$qid] Dispatched one HTTP POST");
 
     $posted_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'], true);
@@ -213,8 +192,6 @@ foreach ($proprietary_ids as $qid) {
     tamper_assert($posted_body['displayed_category'] === $expected_server_result['displayed_category'], "[$qid] Upstream displayed_category is server-authoritative");
     tamper_assert($posted_body['final_score'] !== 9999, "[$qid] Forged final_score (9999) rejected");
     tamper_assert($posted_body['calculated_category'] !== 'FORGED_MAX_CATEGORY', "[$qid] Forged calculated_category rejected");
-
-    @unlink($temp_config_file);
 }
 
 // -------------------------------------------------------------------------

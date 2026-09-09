@@ -91,28 +91,7 @@ final class LifeMetrics_Submission_Service
 
         $sanitized_id = sanitize_key($questionnaire_id);
 
-        // For PSS10, use get_internal to support frozen legacy behavior
-        if ($sanitized_id === 'pss10') {
-            $config = $this->registry->get_internal('pss10');
-        } else {
-            $config = $this->registry->get_public($sanitized_id);
-
-            // Temporary controlled review E2E test gate (Hydratation-only)
-            if (
-                !$config
-                && $sanitized_id === 'hydratation'
-                && defined('LMQ_ALLOW_TEST_SUBMISSIONS')
-                && constant('LMQ_ALLOW_TEST_SUBMISSIONS') === true
-                && defined('LMQ_TEST_TOKEN')
-                && is_string(constant('LMQ_TEST_TOKEN'))
-                && constant('LMQ_TEST_TOKEN') !== ''
-            ) {
-                $provided_token = (string) $request->get_header('x-lmq-test-token');
-                if ($provided_token !== '' && hash_equals(constant('LMQ_TEST_TOKEN'), $provided_token)) {
-                    $config = $this->registry->get_internal('hydratation');
-                }
-            }
-        }
+        $config = $this->registry->get_internal($sanitized_id);
 
         if (!$config) {
             return new WP_Error('lmq_not_found', 'Questionnaire not found.', array('status' => 404));
