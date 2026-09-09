@@ -156,9 +156,11 @@ expect_true($service->get_endpoint('pss10') === 'https://script.google.com/macro
 // Proprietary questionnaires resolve to the central LMQ_GOOGLE_ENDPOINT
 expect_true($service->get_endpoint('sedentarite') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Sedentarite resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('hydratation') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Hydratation resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('fatigue-recuperation') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Fatigue Recuperation resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('sommeil') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Sommeil resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('nutrition') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Nutrition resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('activite-physique') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Activite Physique resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('pieds-confort-postural') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Pieds Confort Postural resolves to central LMQ_GOOGLE_ENDPOINT');
 
 // ----------------------------------------------------
 // BACK-003: Filter Hook Endpoint Override

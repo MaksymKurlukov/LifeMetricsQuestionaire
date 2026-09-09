@@ -247,8 +247,7 @@ Before any questionnaire can be marked `ready`, all applicable rows below must b
 | Fatigue & récupération | seven source profiles; final FR10; <=2/8 attention; high-score+safety |
 | Sommeil | approved synthetic profiles; non-linear SL01; safety; all boundaries |
 | Nutrition | engine test fixtures (synthetic profiles not defined in source PDF); safety; all boundaries; server authority |
-| Activité physique | engine test fixtures (synthetic profiles not defined in source PDF); AP04 duplicate max; all boundaries; server authority |
-| Pieds & confort postural | profiles A-F; approved PF09-PF10 decision; four safety flags |
+| Pieds & confort postural | engine test fixtures (synthetic profiles not defined in source PDF); PFSF01-PFSF04 safety flags; dimension <=2/8 attention; Profile E non-capping verification; all boundaries; server authority |
 | Missing-source questionnaires | no fixtures/implementation until complete approved source |
 
 ## Evidence rule

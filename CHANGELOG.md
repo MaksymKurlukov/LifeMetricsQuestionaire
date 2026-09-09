@@ -26,6 +26,11 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.7 (Pieds & Confort Postural): implemented canonical configuration `questionnaires/pieds-confort-postural/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf`.
+- Registered `pieds-confort-postural` in `LifeMetrics_Questionnaire_Registry` mapping.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-pieds-confort-postural.test.php` and `tests/questionnaire-pieds-confort-postural.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 6 dimensions with 8 pts capacity each (48 total), dimension attention threshold rule ($\le 2/8$ emitting `ATTENTION_*` messages without category capping), 4 non-scored safety questions (PFSF01–PFSF04) emitting `PIEDS_ATTENTION_MESSAGE`, empty classification rules (`GUARDRAILS_PRESENT = NO`), weakest dimension ordering with deterministic tie-breaking, Profile E arithmetic verification, and server scoring authority.
+- Completed Stage 10: all 7 proprietary LifeMetrics questionnaires (Sédentarité, Hydratation, Fatigue & Récupération, Sommeil, Nutrition, Activité Physique, Pieds & Confort Postural) are implemented, registered, and verified across all 30 automated test suites.
+
 - Completed Stage 10.6 (Activité Physique): implemented canonical configuration `questionnaires/activite-physique/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Activite_Physique_V1.pdf`.
 - Registered `activite-physique` in `LifeMetrics_Questionnaire_Registry` mapping.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-activite-physique.test.php` and `tests/questionnaire-activite-physique.test.js`) verifying Schema 2.0.0 compliance, AP04 duplicate 4-point maximum (options 3 & 4 = 4 pts), boundary score classification (0, 15, 16, 27, 28, 39, 40, 48), 5 dimensions with capacities 12/8/8/8/12 (48 total), weakest dimension percentage ranking with deterministic tie-breaking, and server scoring authority.

@@ -37,6 +37,7 @@ final class LifeMetrics_Plugin
                 'sommeil' => 'sommeil/questionnaire.php',
                 'nutrition' => 'nutrition/questionnaire.php',
                 'activite-physique' => 'activite-physique/questionnaire.php',
+                'pieds-confort-postural' => 'pieds-confort-postural/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

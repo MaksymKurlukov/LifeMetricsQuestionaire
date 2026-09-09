@@ -46,8 +46,8 @@ PDF files are external read-only sources and are not tracked by this repository.
 | `hydratation` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation | HYSF01-HYSF03 | HY05 | weakest dimensions; no category guardrail | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.2 (`status: review`); publication/legal approvals pending |
 | `nutrition` | `CONTENT_READY` | `SCORING_READY` | NTSF01-NTSF03 | none | none | VitaScan | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.5 (`status: review`); publication/legal approvals pending |
 | `fatigue-recuperation` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation | FRSF01-FRSF03 | none | weakest 1-2; attention <=2/8 | VitaScan + Metabolism Analytics | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.3 (`status: review`); publication/legal approvals pending |
-| `sedentarite` | `CONTENT_READY` | `SCORING_READY`; documented profiles A-F | none | SD07, SD08 | D1 <=2/8 caps display at `SEDENTARITE_A_REDUIRE`; weakest/attention | VitaScan + Metabolism Analytics | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10 (`status: review`); publication/legal approvals pending |
-| `pieds-confort-postural` | `CONTENT_READY` | categories provisional; PF09-PF10 guardrail unresolved | PFSF01-PFSF04 | none | weakest/attention; category guardrail undecided | Podos360 | `BLOCKED_BY_SCORING` | profiles A-F, guardrail/ranges, owner/date/URL pending |
+| `sedentarite` | `CONTENT_READY` | `SCORING_READY`; documented profiles A-F | none | SD07, SD08 | D1 <=2/8 caps display at `SEDENTARITE_A_REDUIRE`; weakest/attention | VitaScan + Metabolism Analytics | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.1 (`status: review`); publication/legal approvals pending |
+| `pieds-confort-postural` | `CONTENT_READY` | `SCORING_READY` | PFSF01-PFSF04 | none | weakest/attention; no category guardrail in V1 | Podos360 | `IMPLEMENTATION_READY` | Canonical configuration and unit tests complete in Stage 10.7 (`status: review`); publication/legal approvals pending |
 | `stress-equilibre` | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | no source found |
 | `composition-corporelle` | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | no source found |
 | `bien-etre-general` | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | no source found; aggregate-vs-standalone scope also unknown |
@@ -107,10 +107,12 @@ PDF files are external read-only sources and are not tracked by this repository.
 
 ### Pieds & confort postural
 
-- PF01-PF12, max 48, six dimensions; PFSF01-PFSF04 non-scored safety.
-- Result ranges remain provisional.
-- Source requires deciding whether PF09-PF10 needs a guardrail after profiles A-F.
-- CTA is Podos360, not VitaScan.
+- PF01-PF12, max 48, six dimensions (capacities 8/8/8/8/8/8 = 48), four result levels (0-15, 16-27, 28-38, 39-48).
+- Four non-scored safety questions (PFSF01-PFSF04) emitting `PIEDS_ATTENTION_MESSAGE`.
+- Dimension attention threshold rule: if any dimension <= 2/8, emit attention message; does not alter calculated category.
+- No category guardrail in V1 (`classification_rules = []`, `GUARDRAILS_PRESENT = NO`).
+- Profile E documented as open methodological case in source Section 15 (`SYNTHETIC_PROFILE_STATUS = NOT_DEFINED_IN_SOURCE`).
+- Primary CTA is Podos360 (`/podos360/`), secondary `/tests-sante/` (unlinked).
 
 ## Planned Tests santé catalogue
 
