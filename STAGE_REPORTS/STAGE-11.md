@@ -36,6 +36,16 @@ Stage 11 establishes the final packaging, release validation, and deployment rea
 
 *Approvals legend: CS = Content Scoring, LL = Legal Licensing, TR = Technical Runtime, PB = Publication.*
 
+### 2.1 Synthetic Validation Status by Instrument
+- **`pss10`**: Validated against characterization golden fixtures and live production snapshots.
+- **`sedentarite`**: Source-defined synthetic profiles present in authoritative PDF (Profiles 1, 2, 3 tested).
+- **`hydratation`**: Source-defined synthetic profiles present in authoritative PDF (Profiles 1, 2, 3 tested).
+- **`fatigue-recuperation`**: Source-defined synthetic profiles present in authoritative PDF (Profiles 1, 2, 3 tested).
+- **`sommeil`**: `PDF_SYNTHETIC_PROFILES_PRESENT = NO` (validated against canonical scoring rules, boundary fixtures, and dimension test cases).
+- **`nutrition`**: `PDF_SYNTHETIC_PROFILES_PRESENT = NO` (validated against canonical scoring rules, boundary fixtures, and dimension test cases).
+- **`activite-physique`**: `PDF_SYNTHETIC_PROFILES_PRESENT = NO` (validated against canonical scoring rules, boundary fixtures, and dimension test cases).
+- **`pieds-confort-postural`**: Narrative roadmap case present in source; numerical synthetic profiles are engine test fixtures based on scoring logic.
+
 ---
 
 ## 3. Lifecycle & Publication Gate Audit
