@@ -26,6 +26,9 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 7 All-PDF Capability Audit: verified full PHP and JavaScript engine support for all 7 proprietary LifeMetrics questionnaire methodologies (duplicate point mappings, non-linear scoring, N/A capacity normalization, category guardrails, dimension attention thresholds, weakest dimension ordering, and priority-sorted safety messages).
+- Added standalone PHP and Node.js audit test suites (`all-pdf-capability-audit.test.php` and `all-pdf-capability-audit.test.js`).
+
 - Migrated PSS10 to the generic configuration engine (`questionnaires/pss10/questionnaire.php`) strictly validated under Schema 2.0.0.
 - Wired PSS10 shortcode to render via `LifeMetrics_Questionnaire_Renderer` with the shared generic frontend runtime (`questionnaire-ui.js` + `questionnaire-engine.js`) and PSS10 presentation overrides (`template.php`, `style.css`), retaining `app.js` on disk strictly as a rollback asset.
 - Upgraded PSS10 REST submission adapter in `class-legacy-pss10-runtime.php` to score submissions via `LifeMetrics_Questionnaire_Scoring_Engine` and construct the exact flat payload required by Google Apps Script.

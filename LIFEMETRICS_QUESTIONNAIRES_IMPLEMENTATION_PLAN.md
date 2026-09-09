@@ -753,7 +753,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 7.
 
 ## STAGE 7 - All-PDF Capability Audit & Engine Hardening
-- **Status:** `NOT_STARTED`
+- **Status:** `PASS`
 - **Objective:** Prove the common platform supports all proprietary LifeMetrics PDF methodologies before building them, and harden the engine against any gaps.
 - **Prerequisites:** STAGE 6 PASS.
 - **Scope:** `QUESTIONNAIRE_INVENTORY.md`, `class-questionnaire-scoring-engine.php`, `questionnaire-engine.js`.
