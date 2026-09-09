@@ -204,6 +204,24 @@ final class LifeMetrics_Submission_Service
                 $client_version = function_exists('sanitize_text_field') ? sanitize_text_field($input['client_version']) : strip_tags($input['client_version']);
             }
 
+            $scored_schema = array();
+            foreach ($config['questions'] as $q) {
+                $scored_schema[] = array(
+                    'id' => $q['id'],
+                    'text' => $q['text'],
+                );
+            }
+
+            $safety_schema = array();
+            if (!empty($config['safety_questions'])) {
+                foreach ($config['safety_questions'] as $sq) {
+                    $safety_schema[] = array(
+                        'id' => $sq['id'],
+                        'text' => $sq['text'],
+                    );
+                }
+            }
+
             $payload = array(
                 'submission_schema_version' => '1.0.0',
                 'questionnaire_id' => $config['id'],
@@ -214,6 +232,10 @@ final class LifeMetrics_Submission_Service
                 'received_at' => gmdate('Y-m-d\TH:i:s.000\Z'),
                 'locale' => isset($config['locale']) ? $config['locale'] : 'fr-FR',
                 'source_page' => $source_page,
+                'questions_schema' => array(
+                    'scored' => $scored_schema,
+                    'safety' => $safety_schema,
+                ),
                 'answers' => isset($result['selected_answers']) ? $result['selected_answers'] : (isset($result['answers']) ? $result['answers'] : array()),
                 'raw_score' => $result['raw_score'],
                 'available_min' => $result['available_min'],

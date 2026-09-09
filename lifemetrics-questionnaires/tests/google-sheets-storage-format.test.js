@@ -35,7 +35,7 @@ const sandbox = {
 
 const scriptFn = new Function(
   'SpreadsheetApp', 'LockService', 'CacheService', 'ContentService', 'console',
-  gasCode + '\nreturn { QUESTIONNAIRE_SCHEMAS, getHeaderList, getSchema, getTargetSheetName, safeSheetText, isValidSessionId, isValidTimestamp, extractAnswerData, extractDimensionScore, doPost };'
+  gasCode + '\nreturn { QUESTIONNAIRE_SCHEMAS, getHeaderList, getSchema, getTargetSheetName, safeSheetText, isValidSessionId, isValidTimestamp, extractAnswerData, doPost };'
 );
 
 const gasEnv = scriptFn(
@@ -49,55 +49,55 @@ const gasEnv = scriptFn(
 const schemas = gasEnv.QUESTIONNAIRE_SCHEMAS;
 
 const expectedSchemas = {
-  'sedentarite': { sheet: 'Sedentarite', scoredCount: 12, safetyCount: 0, dimsCount: 6, hasSafety: false, totalCols: 40 },
-  'hydratation': { sheet: 'Hydratation', scoredCount: 12, safetyCount: 3, dimsCount: 6, hasSafety: true, totalCols: 44 },
-  'fatigue-recuperation': { sheet: 'Fatigue', scoredCount: 12, safetyCount: 3, dimsCount: 6, hasSafety: true, totalCols: 44 },
-  'sommeil': { sheet: 'Sommeil', scoredCount: 12, safetyCount: 3, dimsCount: 5, hasSafety: true, totalCols: 43 },
-  'nutrition': { sheet: 'Nutrition', scoredCount: 12, safetyCount: 3, dimsCount: 6, hasSafety: true, totalCols: 44 },
-  'activite-physique': { sheet: 'Activite_Physique', scoredCount: 12, safetyCount: 0, dimsCount: 5, hasSafety: false, totalCols: 39 },
-  'pieds-confort-postural': { sheet: 'Pieds_Confort', scoredCount: 12, safetyCount: 4, dimsCount: 6, hasSafety: true, totalCols: 45 }
+  'sedentarite': { sheet: 'Sedentarite', scoredCount: 12, safetyCount: 0, hasSafety: false, totalCols: 31 },
+  'hydratation': { sheet: 'Hydratation', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
+  'fatigue-recuperation': { sheet: 'Fatigue', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
+  'sommeil': { sheet: 'Sommeil', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
+  'nutrition': { sheet: 'Nutrition', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
+  'activite-physique': { sheet: 'Activite_Physique', scoredCount: 12, safetyCount: 0, hasSafety: false, totalCols: 31 },
+  'pieds-confort-postural': { sheet: 'Pieds_Confort', scoredCount: 12, safetyCount: 4, hasSafety: true, totalCols: 36 }
 };
 
-// 1. Verify schema definitions and physical column layouts
+// 1. Verify schema definitions and physical column layouts for all 7 proprietary questionnaires
 for (const [id, exp] of Object.entries(expectedSchemas)) {
   const schema = schemas[id];
   assert(schema, `Schema defined for ${id}`);
   assert.strictEqual(schema.sheetName, exp.sheet, `Sheet name matches for ${id}`);
   assert.strictEqual(schema.scoredQuestions.length, exp.scoredCount, `Scored count matches for ${id}`);
   assert.strictEqual(schema.safetyQuestions.length, exp.safetyCount, `Safety count matches for ${id}`);
-  assert.strictEqual(schema.dimensions.length, exp.dimsCount, `Dimensions count matches for ${id}`);
   assert.strictEqual(schema.hasSafety, exp.hasSafety, `hasSafety matches for ${id}`);
 
   const headers = gasEnv.getHeaderList(schema);
   assert.strictEqual(headers.length, exp.totalCols, `Total physical columns match for ${id} (expected ${exp.totalCols}, got ${headers.length})`);
   
-  // Metadata columns (5 columns)
+  // Metadata columns (3 columns)
   assert.strictEqual(headers[0], 'completed_at');
   assert.strictEqual(headers[1], 'session_id');
-  assert.strictEqual(headers[2], 'questionnaire_id');
-  assert.strictEqual(headers[3], 'questionnaire_version');
-  assert.strictEqual(headers[4], 'source_page');
+  assert.strictEqual(headers[2], 'questionnaire_version');
 
-  // Verify removed columns are NOT in headers
+  // Verify removed technical columns are NOT in headers
+  assert(!headers.includes('questionnaire_id'), `questionnaire_id removed from ${id}`);
+  assert(!headers.includes('source_page'), `source_page removed from ${id}`);
   assert(!headers.includes('client_version'), `client_version removed from ${id}`);
   assert(!headers.includes('locale'), `locale removed from ${id}`);
   assert(!headers.includes('available_min'), `available_min removed from ${id}`);
   assert(!headers.includes('dimensions_json'), `dimensions_json removed from ${id}`);
   assert(!headers.includes('safety_flags_json'), `safety_flags_json removed from ${id}`);
+  assert(!headers.includes('calculated_category'), `calculated_category removed from physical header in ${id}`);
 
-  // Scored question columns: adjacent Réponse and Points
-  let colIdx = 5;
+  // Scored question columns: adjacent "<ID> - <TEXT>" and "<ID> — Points"
+  let colIdx = 3;
   for (let i = 0; i < schema.scoredQuestions.length; i++) {
-    const qId = schema.scoredQuestions[i];
-    assert.strictEqual(headers[colIdx], qId + ' — Réponse');
-    assert.strictEqual(headers[colIdx + 1], qId + ' — Points');
+    const q = schema.scoredQuestions[i];
+    assert.strictEqual(headers[colIdx], q.id + ' - ' + q.text, `Scored header col 1 matches for ${q.id}`);
+    assert.strictEqual(headers[colIdx + 1], q.id + ' — Points', `Scored header col 2 matches for ${q.id}`);
     colIdx += 2;
   }
 
-  // Safety question columns: Réponse only
+  // Safety question columns: "<ID> - <TEXT>" (no points column)
   for (let j = 0; j < schema.safetyQuestions.length; j++) {
-    const sqId = schema.safetyQuestions[j];
-    assert.strictEqual(headers[colIdx], sqId + ' — Réponse');
+    const sq = schema.safetyQuestions[j];
+    assert.strictEqual(headers[colIdx], sq.id + ' - ' + sq.text, `Safety header matches for ${sq.id}`);
     colIdx++;
   }
 
@@ -106,16 +106,10 @@ for (const [id, exp] of Object.entries(expectedSchemas)) {
   assert.strictEqual(headers[colIdx++], 'available_max');
   assert.strictEqual(headers[colIdx++], 'final_score');
 
-  // Flattened dimension columns
-  for (let k = 0; k < schema.dimensions.length; k++) {
-    assert.strictEqual(headers[colIdx++], schema.dimensions[k].label);
-  }
+  // Human-facing category
+  assert.strictEqual(headers[colIdx++], 'category');
 
-  // Categories
-  assert.strictEqual(headers[colIdx++], 'calculated_category');
-  assert.strictEqual(headers[colIdx++], 'displayed_category');
-
-  // Safety attention
+  // Safety attention summary
   if (exp.hasSafety) {
     assert.strictEqual(headers[colIdx++], 'safety_attention');
   }
@@ -169,7 +163,7 @@ class MockSpreadsheet {
 const mockSpreadsheet = new MockSpreadsheet();
 sandbox.SpreadsheetApp.getActiveSpreadsheet = () => mockSpreadsheet;
 
-// Test A: Empty sheet receives auto-generated headers + data row with adjacent Réponse/Points and flattened dimensions
+// Test A: Empty sheet receives auto-generated headers + data row with adjacent Réponse/Points
 const testPayloadSed = {
   session_id: '12345678-1234-4234-8234-123456789abc',
   completed_at: '2026-09-09T11:00:00Z',
@@ -185,15 +179,7 @@ const testPayloadSed = {
   available_max: 48,
   final_score: 24,
   calculated_category: 'Modéré',
-  displayed_category: 'Sédentarité modérée',
-  dimensions: [
-    { id: 'temps-sedentaire-quotidien', raw_score: 5 },
-    { id: 'continuite-periodes-assises', raw_score: 4 },
-    { id: 'ruptures-sedentarite', raw_score: 3 },
-    { id: 'travail-etudes-deplacements', raw_score: 4 },
-    { id: 'loisirs-sedentaires', raw_score: 4 },
-    { id: 'mouvement-quotidien-regularite', raw_score: 4 }
-  ]
+  displayed_category: 'Sédentarité modérée'
 };
 
 let res = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testPayloadSed) } }).text);
@@ -202,24 +188,38 @@ assert.strictEqual(res.duplicate, false);
 
 const sedSheet = mockSpreadsheet.getSheetByName('Sedentarite');
 assert.strictEqual(sedSheet.getLastRow(), 2, 'Header row + 1 data row created');
-assert.strictEqual(sedSheet.rows[0].length, 40, 'Header row has 40 columns');
-assert.strictEqual(sedSheet.rows[1].length, 40, 'Data row has 40 columns');
+assert.strictEqual(sedSheet.rows[0].length, 31, 'Header row has 31 columns');
+assert.strictEqual(sedSheet.rows[1].length, 31, 'Data row has 31 columns');
 
-// Verify SD01 (cols 5, 6)
-assert.strictEqual(sedSheet.rows[0][5], 'SD01 — Réponse');
-assert.strictEqual(sedSheet.rows[0][6], 'SD01 — Points');
-assert.strictEqual(sedSheet.rows[1][5], '4 à 6 heures', 'SD01 Réponse label');
-assert.strictEqual(sedSheet.rows[1][6], 3, 'SD01 Points');
+// Verify metadata (cols 0..2)
+assert.strictEqual(sedSheet.rows[0][0], 'completed_at');
+assert.strictEqual(sedSheet.rows[0][1], 'session_id');
+assert.strictEqual(sedSheet.rows[0][2], 'questionnaire_version');
+assert.strictEqual(sedSheet.rows[1][0], '2026-09-09T11:00:00Z');
+assert.strictEqual(sedSheet.rows[1][1], '12345678-1234-4234-8234-123456789abc');
+assert.strictEqual(sedSheet.rows[1][2], '1.0.0');
 
-// Verify SD07 N/A (cols 17, 18)
-assert.strictEqual(sedSheet.rows[0][17], 'SD07 — Réponse');
-assert.strictEqual(sedSheet.rows[0][18], 'SD07 — Points');
-assert.strictEqual(sedSheet.rows[1][17], 'Non concerné', 'SD07 N/A label');
-assert.strictEqual(sedSheet.rows[1][18], '', 'SD07 N/A Points is blank');
+// Verify SD01 (cols 3, 4)
+assert.strictEqual(sedSheet.rows[0][3], "SD01 - Au cours des 14 derniers jours, combien de temps avez-vous passé en moyenne assis ou allongé pendant vos heures d'éveil ?");
+assert.strictEqual(sedSheet.rows[0][4], 'SD01 — Points');
+assert.strictEqual(sedSheet.rows[1][3], '4 à 6 heures', 'SD01 answer label');
+assert.strictEqual(sedSheet.rows[1][4], 3, 'SD01 numeric Points');
 
-// Verify Dimensions (cols 32..37)
-assert.strictEqual(sedSheet.rows[0][32], 'D1 — Temps sédentaire quotidien');
-assert.strictEqual(sedSheet.rows[1][32], 5, 'D1 dimension score');
+// Verify SD07 N/A (cols 15, 16)
+assert.strictEqual(sedSheet.rows[0][15], 'SD07 - Pendant vos périodes de travail ou d\'études, à quelle fréquence alternez-vous volontairement les périodes assises avec des moments debout ou en mouvement ?');
+assert.strictEqual(sedSheet.rows[0][16], 'SD07 — Points');
+assert.strictEqual(sedSheet.rows[1][15], 'Non concerné', 'SD07 N/A label');
+assert.strictEqual(sedSheet.rows[1][16], '', 'SD07 N/A Points is blank');
+
+// Verify Scores & Category (cols 27..30)
+assert.strictEqual(sedSheet.rows[0][27], 'raw_score');
+assert.strictEqual(sedSheet.rows[1][27], 24);
+assert.strictEqual(sedSheet.rows[0][28], 'available_max');
+assert.strictEqual(sedSheet.rows[1][28], 48);
+assert.strictEqual(sedSheet.rows[0][29], 'final_score');
+assert.strictEqual(sedSheet.rows[1][29], 24);
+assert.strictEqual(sedSheet.rows[0][30], 'category');
+assert.strictEqual(sedSheet.rows[1][30], 'Sédentarité modérée');
 
 // Test B: Hydratation with safety questions and safety_attention = "Oui"
 const testHydraSafety = {
@@ -227,7 +227,6 @@ const testHydraSafety = {
   completed_at: '2026-09-09T11:05:00Z',
   questionnaire_id: 'hydratation',
   questionnaire_version: '1.0.0',
-  source_page: '/test-hydratation',
   answers: {
     'HY01': { value: 3, label: 'Principale boisson', points: 3, applicable: true }
   },
@@ -239,14 +238,6 @@ const testHydraSafety = {
   final_score: 30,
   calculated_category: 'Bon',
   displayed_category: 'Bonne hydratation',
-  dimensions: [
-    { id: 'place-eau', raw_score: 6 },
-    { id: 'repartition-hydratation', raw_score: 5 },
-    { id: 'adaptation-activite-chaleur', raw_score: 5 },
-    { id: 'choix-boissons', raw_score: 5 },
-    { id: 'alimentation-environnement', raw_score: 5 },
-    { id: 'anticipation-regularite', raw_score: 4 }
-  ],
   safety_flags: ['ALERT']
 };
 
@@ -255,15 +246,17 @@ assert.strictEqual(hydraRes.ok, true);
 
 const hydraSheet = mockSpreadsheet.getSheetByName('Hydratation');
 assert.strictEqual(hydraSheet.getLastRow(), 2, 'Header row + 1 data row created');
-assert.strictEqual(hydraSheet.rows[0].length, 44, 'Header row has 44 columns');
+assert.strictEqual(hydraSheet.rows[0].length, 35, 'Header row has 35 columns');
 
-// Verify HYSF01 (col 29)
-assert.strictEqual(hydraSheet.rows[0][29], 'HYSF01 — Réponse');
-assert.strictEqual(hydraSheet.rows[1][29], 'Oui', 'HYSF01 answer');
+// Verify HYSF01 (col 27)
+assert.strictEqual(hydraSheet.rows[0][27], 'HYSF01 - Un professionnel de santé vous a-t-il demandé de limiter, contrôler ou adapter précisément votre consommation de liquides ?');
+assert.strictEqual(hydraSheet.rows[1][27], 'Oui', 'HYSF01 answer');
 
-// Verify safety_attention (last col 43)
-assert.strictEqual(hydraSheet.rows[0][43], 'safety_attention');
-assert.strictEqual(hydraSheet.rows[1][43], 'Oui', 'safety_attention is Oui');
+// Verify category (col 33) and safety_attention (last col 34)
+assert.strictEqual(hydraSheet.rows[0][33], 'category');
+assert.strictEqual(hydraSheet.rows[1][33], 'Bonne hydratation');
+assert.strictEqual(hydraSheet.rows[0][34], 'safety_attention');
+assert.strictEqual(hydraSheet.rows[1][34], 'Oui', 'safety_attention is Oui');
 
 // Test C: Conflicting headers in sheet fail safely (no silent corruption)
 const conflictSheet = mockSpreadsheet.getSheetByName('Nutrition');
@@ -297,7 +290,6 @@ const testFormulaPayload = {
   completed_at: '2026-09-09T11:15:00Z',
   questionnaire_id: 'sedentarite',
   questionnaire_version: '1.0.0',
-  source_page: '=HYPERLINK("http://malicious.com")',
   answers: {
     'SD01': { value: '=CMD()', label: '+SUM(1,2)', points: 0, applicable: true }
   },
@@ -305,16 +297,13 @@ const testFormulaPayload = {
   available_max: 48,
   final_score: 0,
   calculated_category: '-DANGEROUS',
-  displayed_category: '@INJECTION',
-  dimensions: []
+  displayed_category: '@INJECTION'
 };
 
 let formulaRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testFormulaPayload) } }).text);
 assert.strictEqual(formulaRes.ok, true);
 const formulaRow = sedSheet.rows[2];
-assert(formulaRow[4].startsWith("'="), 'Formula in source_page escaped with single quote');
-assert(formulaRow[5].startsWith("'+"), 'Formula in answer label escaped with single quote');
-assert(formulaRow[38].startsWith("'-"), 'Formula in calculated_category escaped with single quote');
-assert(formulaRow[39].startsWith("'@"), 'Formula in displayed_category escaped with single quote');
+assert(formulaRow[3].startsWith("'+"), 'Formula in answer label escaped with single quote');
+assert(formulaRow[30].startsWith("'@"), 'Formula in displayed_category escaped with single quote');
 
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');
