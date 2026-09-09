@@ -64,6 +64,8 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STAGE6-MIGRATE-003 | legacy scoring parity | `submit()` hook parses answers, scores via generic PHP engine, checks `final_score`/`category`, restores legacy format for GS | PASS on 2026-09-08 | 6 |
 | STAGE7-AUDIT-001 | 7 PDF methodologies PHP capability audit | non-linear SL01, AP04 duplicates, HY05 N/A normalization, SD01-02 guardrail, FR01-04 attention, PF01 safety priorities | PASS on 2026-09-09 | 7 |
 | STAGE7-AUDIT-002 | 7 PDF methodologies JS capability audit | duplicate mappings, non-linear scoring, N/A normalization, guardrail capping, attention rules, priority-sorted safety flags in Node | PASS on 2026-09-09 | 7 |
+| STAGE8-WP-001 | isolated WordPress runtime integration | bootstrap, shortcode rendering, REST dispatch, filemtime assets, upstream Google post simulation | PASS on 2026-09-09 | 8 |
+| STAGE8-RESP-001 | browser & responsive lifecycle matrix | 375px mobile, 768px tablet, 1440px desktop user walkthrough, scoring, REST submission, 0 errors | PASS on 2026-09-09 | 8 |
 
 ## Out-of-sequence manual real-WordPress evidence
 

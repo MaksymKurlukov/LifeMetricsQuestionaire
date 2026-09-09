@@ -26,6 +26,9 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 8 Isolated Local WordPress & PSS10 Validation: verified complete WordPress runtime lifecycle (plugin bootstrap, shortcode rendering, dynamic instance IDs, asset enqueues, REST dispatch, server-side scoring, and upstream Google Sheet forwarding).
+- Added responsive browser simulation matrix tests across mobile (375px), tablet (768px), and desktop (1440px) with 0 errors (`tests/wordpress-integration.test.php` and `tests/pss10-browser-responsive.test.js`).
+
 - Completed Stage 7 All-PDF Capability Audit: verified full PHP and JavaScript engine support for all 7 proprietary LifeMetrics questionnaire methodologies (duplicate point mappings, non-linear scoring, N/A capacity normalization, category guardrails, dimension attention thresholds, weakest dimension ordering, and priority-sorted safety messages).
 - Added standalone PHP and Node.js audit test suites (`all-pdf-capability-audit.test.php` and `all-pdf-capability-audit.test.js`).
 

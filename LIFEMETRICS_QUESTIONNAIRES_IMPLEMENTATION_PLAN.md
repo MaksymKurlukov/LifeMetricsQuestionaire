@@ -765,7 +765,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 8.
 
 ## STAGE 8 - Isolated Local WordPress & PSS10 Validation
-- **Status:** `NOT_STARTED`
+- **Status:** `PASS`
 - **Objective:** Create real local WordPress runtime, test generic REST routing, and prove migrated PSS10 end-to-end.
 - **Prerequisites:** STAGE 7 PASS.
 - **Scope:** Local WP environment, `class-rest-controller.php`.
