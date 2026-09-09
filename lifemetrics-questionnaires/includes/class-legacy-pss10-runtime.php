@@ -2,7 +2,16 @@
 
 defined('ABSPATH') || exit;
 
-/** Temporary compatibility path for the validated PSS10 runtime. */
+/**
+ * PSS10 legacy compatibility runtime.
+ *
+ * Narrow legacy compatibility exception:
+ * PSS10 is an existing production instrument whose legal/licensing approval
+ * remains unresolved (status = review). To maintain uninterrupted, frozen
+ * functionality without inventing approvals or exposing other review instruments,
+ * this runtime explicitly resolves 'pss10' via get_internal('pss10') while
+ * routing submissions through the generic scoring engine.
+ */
 final class LifeMetrics_Legacy_PSS10_Runtime
 {
     public function register_assets(): void
@@ -21,7 +30,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         }
     }
 
-            public function render_shortcode($attributes): string
+    public function render_shortcode($attributes): string
     {
         $attributes = shortcode_atts(array('id' => ''), $attributes, 'lifemetrics_questionnaire');
         if (sanitize_key($attributes['id']) !== 'pss10') {
@@ -30,7 +39,6 @@ final class LifeMetrics_Legacy_PSS10_Runtime
 
         $this->register_assets();
         wp_enqueue_style('lmq-pss10');
-        wp_enqueue_script('lmq-pss10');
 
         require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
         require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-schema-validator.php';
@@ -43,9 +51,11 @@ final class LifeMetrics_Legacy_PSS10_Runtime
             new LifeMetrics_Questionnaire_Schema_Validator()
         );
         $config = $registry->get_internal('pss10');
-        if (!$config) return '';
+        if (!$config) {
+            return '';
+        }
 
-        // The generic renderer dynamically creates the ID using the config id, 
+        // The generic renderer dynamically creates the root ID using the config id,
         // e.g., wp_unique_id('lmq-pss10-')
         $assets = new LifeMetrics_Questionnaire_Assets(LMQ_PLUGIN_URL, LMQ_PLUGIN_PATH, '1.0.0');
         $renderer = new LifeMetrics_Questionnaire_Renderer($assets, LMQ_PLUGIN_PATH . 'questionnaires/pss10/template.php');
@@ -53,7 +63,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         return $renderer->render($config, rest_url('lifemetrics-questionnaires/v1/pss10/submit'));
     }
 
-            public function submit(WP_REST_Request $request)
+    public function submit(WP_REST_Request $request)
     {
         if (strlen($request->get_body()) > 8192) {
             return new WP_Error('lmq_payload_too_large', 'Request body is too large.', array('status' => 413));
@@ -80,7 +90,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
         $config = $registry->get_internal('pss10');
 
         $is_legacy = !isset($input['answers']);
-        
+
         if ($is_legacy) {
             // Validate legacy fields explicitly to preserve characterization test parity
             if (empty($input['session_id']) || !is_string($input['session_id']) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $input['session_id'])) {
@@ -107,9 +117,9 @@ final class LifeMetrics_Legacy_PSS10_Runtime
             foreach (range(1, 10) as $i) {
                 $val = $input['q' . $i];
                 if (in_array($i, $reverse_questions, true)) {
-                    $answers['q' . $i] = (string)(6 - $val);
+                    $answers['Q' . $i] = (string)(6 - $val);
                 } else {
-                    $answers['q' . $i] = (string)$val;
+                    $answers['Q' . $i] = (string)$val;
                 }
             }
 
@@ -122,13 +132,17 @@ final class LifeMetrics_Legacy_PSS10_Runtime
 
             // Forward legacy payload exactly as provided BUT with server-calculated category
             $payload = $input;
-            $payload['category'] = $result['calculated_category'] === 'low' ? 'Stress bas' : ($result['calculated_category'] === 'medium' ? 'Stress assez élevé' : 'Stress très élevé');
+            $payload['category'] = $result['calculated_category'] === 'LOW' ? 'Stress bas' : ($result['calculated_category'] === 'MEDIUM' ? 'Stress assez élevé' : 'Stress très élevé');
         } else {
             // New generic frontend
             if (!is_array($input['answers'])) {
                 return new WP_Error('lmq_invalid_json', 'Invalid JSON request.', array('status' => 400));
             }
-            $answers = $input['answers'];
+            $answers = array();
+            for ($i = 1; $i <= 10; $i++) {
+                $key = isset($input['answers']['Q' . $i]) ? 'Q' . $i : 'q' . $i;
+                $answers['Q' . $i] = isset($input['answers'][$key]) ? (string)$input['answers'][$key] : '';
+            }
             $result = $engine->score($config, $answers);
 
             $payload = array(
@@ -137,7 +151,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
             );
             $reverse_questions = array(4, 5, 7, 8);
             for ($i = 1; $i <= 10; $i++) {
-                $val = (int)$answers['q' . $i];
+                $val = (int)$answers['Q' . $i];
                 if (in_array($i, $reverse_questions, true)) {
                     $payload['q' . $i] = 6 - $val;
                 } else {
@@ -145,7 +159,7 @@ final class LifeMetrics_Legacy_PSS10_Runtime
                 }
             }
             $payload['final_score'] = $result['final_score'];
-            $payload['category'] = $result['calculated_category'] === 'low' ? 'Stress bas' : ($result['calculated_category'] === 'medium' ? 'Stress assez élevé' : 'Stress très élevé');
+            $payload['category'] = $result['calculated_category'] === 'LOW' ? 'Stress bas' : ($result['calculated_category'] === 'MEDIUM' ? 'Stress assez élevé' : 'Stress très élevé');
         }
 
         $endpoint = esc_url_raw(LMQ_PSS10_GOOGLE_ENDPOINT);
