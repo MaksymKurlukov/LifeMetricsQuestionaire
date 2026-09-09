@@ -2,7 +2,7 @@
 
 **Status:** RELEASE CANDIDATE AUDIT COMPLETE (PASS)  
 **Date:** 2026-09-09  
-**Release Artifact:** `lifemetrics-questionnaires-stage11-rc1.zip`  
+**Release Artifact:** `lifemetrics-questionnaires-stage11-rc2.zip` (supersedes `rc1`)  
 **Production Readiness:** PENDING MANUAL VALIDATION & LEGAL/PUBLICATION APPROVALS  
 
 ---
@@ -79,74 +79,85 @@ Verified by `tests/global-tamper-resistance.test.php`:
 
 ---
 
-## 6. Central Storage Routing Audit
+## 6. Central Physical Storage Architecture Audit
 
 - **Target Spreadsheet**: "LifeMetrics — Questionnaires"
 - **Worksheet Routing Table**:
   - `pss10` $\rightarrow$ `PSS10` (Dedicated endpoint `LMQ_PSS10_GOOGLE_ENDPOINT`)
-  - `sedentarite` $\rightarrow$ `Sedentarite` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `hydratation` $\rightarrow$ `Hydratation` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `fatigue-recuperation` $\rightarrow$ `Fatigue` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `sommeil` $\rightarrow$ `Sommeil` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `nutrition` $\rightarrow$ `Nutrition` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `activite-physique` $\rightarrow$ `Activite_Physique` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
-  - `pieds-confort-postural` $\rightarrow$ `Pieds_Confort` (Central endpoint `LMQ_GOOGLE_ENDPOINT`)
+  - `sedentarite` $\rightarrow$ `Sedentarite` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 40 columns)
+  - `hydratation` $\rightarrow$ `Hydratation` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 44 columns)
+  - `fatigue-recuperation` $\rightarrow$ `Fatigue` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 44 columns)
+  - `sommeil` $\rightarrow$ `Sommeil` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 43 columns)
+  - `nutrition` $\rightarrow$ `Nutrition` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 44 columns)
+  - `activite-physique` $\rightarrow$ `Activite_Physique` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 39 columns)
+  - `pieds-confort-postural` $\rightarrow$ `Pieds_Confort` (Central endpoint `LMQ_GOOGLE_ENDPOINT` — 45 columns)
+- **Refined Physical Column Layout**:
+  - **Metadata (5 cols)**: `completed_at`, `session_id`, `questionnaire_id`, `questionnaire_version`, `source_page`
+  - **Scored Questions**: Adjacent `QUESTION_ID — Réponse` and `QUESTION_ID — Points` (blank for N/A)
+  - **Safety Questions (if present)**: `QUESTION_ID — Réponse` (no points column)
+  - **Score Summary (3 cols)**: `raw_score`, `available_max`, `final_score`
+  - **Flattened Dimensions**: Physical columns `D<n> — <label>` storing numeric dimension scores
+  - **Categories (2 cols)**: `calculated_category`, `displayed_category`
+  - **Safety Summary**: `safety_attention` (`Oui` / `Non`) for instruments with safety questions
+  - **Removed from Physical Sheet**: `client_version`, `locale`, `available_min`, `dimensions_json`, `safety_flags_json`
 - **Security & Integrity**:
-  - Request cannot select arbitrary spreadsheets or worksheets.
+  - Header schema validation: incompatible existing headers fail safe with `schema_conflict` error.
   - Formula injection protection (`safeSheetText` prepends single quote to `=+\-@`).
-  - Idempotent deduplication by `session_id`.
+  - Idempotent deduplication by `session_id` in Column 2.
   - Concurrency locking with 10s timeout.
 
 ---
 
 ## 7. Release Candidate ZIP Verification
 
-- **Archive File**: `lifemetrics-questionnaires-stage11-rc1.zip`
+- **Archive File**: `lifemetrics-questionnaires-stage11-rc2.zip` (supersedes `rc1`)
 - **ZIP Root**: Contains `lifemetrics-questionnaires/` directory.
 - **File Count**: 33 runtime files.
 - **Exclusion Audit**: `tests/` directory and `.DS_Store` are completely excluded.
-- **Syntax Check**: All extracted PHP files passed `php -l` with 0 syntax errors.
+- **Syntax Check**: All 22 extracted PHP files passed `php -l` with 0 syntax errors.
 - **Secret Scan**: No hardcoded API keys, private credentials, or absolute local machine paths found.
 
 ---
 
-## 8. Full Automated Test Suite Matrix (32/32 PASS)
+## 8. Full Automated Test Suite Matrix (34/34 PASS)
 
-### PHP Test Suites (19/19 PASS)
+### PHP Test Suites (20/20 PASS)
 1. `tests/all-pdf-capability-audit.test.php`
 2. `tests/backend-routing.test.php`
 3. `tests/global-tamper-resistance.test.php`
-4. `tests/pss10-rest-characterization.test.php`
-5. `tests/questionnaire-activite-physique.test.php`
-6. `tests/questionnaire-assets.test.php`
-7. `tests/questionnaire-fatigue-recuperation.test.php`
-8. `tests/questionnaire-hydratation.test.php`
-9. `tests/questionnaire-nutrition.test.php`
-10. `tests/questionnaire-parity.test.php`
-11. `tests/questionnaire-pieds-confort-postural.test.php`
-12. `tests/questionnaire-registry.test.php`
-13. `tests/questionnaire-renderer.test.php`
-14. `tests/questionnaire-schema.test.php`
-15. `tests/questionnaire-scoring.test.php`
-16. `tests/questionnaire-sedentarite.test.php`
-17. `tests/questionnaire-sommeil.test.php`
-18. `tests/stage11-release-audit.test.php`
-19. `tests/wordpress-integration.test.php`
+4. `tests/google-sheets-storage-format.test.php`
+5. `tests/pss10-rest-characterization.test.php`
+6. `tests/questionnaire-activite-physique.test.php`
+7. `tests/questionnaire-assets.test.php`
+8. `tests/questionnaire-fatigue-recuperation.test.php`
+9. `tests/questionnaire-hydratation.test.php`
+10. `tests/questionnaire-nutrition.test.php`
+11. `tests/questionnaire-parity.test.php`
+12. `tests/questionnaire-pieds-confort-postural.test.php`
+13. `tests/questionnaire-registry.test.php`
+14. `tests/questionnaire-renderer.test.php`
+15. `tests/questionnaire-schema.test.php`
+16. `tests/questionnaire-scoring.test.php`
+17. `tests/questionnaire-sedentarite.test.php`
+18. `tests/questionnaire-sommeil.test.php`
+19. `tests/stage11-release-audit.test.php`
+20. `tests/wordpress-integration.test.php`
 
-### JavaScript Test Suites (13/13 PASS)
+### JavaScript Test Suites (14/14 PASS)
 1. `tests/all-pdf-capability-audit.test.js`
 2. `tests/backend-logic.test.js`
-3. `tests/pss10-browser-responsive.test.js`
-4. `tests/pss10-frontend-characterization.test.js`
-5. `tests/questionnaire-activite-physique.test.js`
-6. `tests/questionnaire-engine.test.js`
-7. `tests/questionnaire-fatigue-recuperation.test.js`
-8. `tests/questionnaire-hydratation.test.js`
-9. `tests/questionnaire-nutrition.test.js`
-10. `tests/questionnaire-pieds-confort-postural.test.js`
-11. `tests/questionnaire-sedentarite.test.js`
-12. `tests/questionnaire-sommeil.test.js`
-13. `tests/shared-frontend.test.js`
+3. `tests/google-sheets-storage-format.test.js`
+4. `tests/pss10-browser-responsive.test.js`
+5. `tests/pss10-frontend-characterization.test.js`
+6. `tests/questionnaire-activite-physique.test.js`
+7. `tests/questionnaire-engine.test.js`
+8. `tests/questionnaire-fatigue-recuperation.test.js`
+9. `tests/questionnaire-hydratation.test.js`
+10. `tests/questionnaire-nutrition.test.js`
+11. `tests/questionnaire-pieds-confort-postural.test.js`
+12. `tests/questionnaire-sedentarite.test.js`
+13. `tests/questionnaire-sommeil.test.js`
+14. `tests/shared-frontend.test.js`
 
 ---
 
