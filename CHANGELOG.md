@@ -26,6 +26,10 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 10.3 (Fatigue & Récupération): implemented canonical configuration `questionnaires/fatigue-recuperation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`.
+- Registered `fatigue-recuperation` in `LifeMetrics_Questionnaire_Registry` mapping.
+- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-fatigue-recuperation.test.php` and `tests/questionnaire-fatigue-recuperation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), dimension attention rules ($\le 2/8$ threshold), safety questions (FRSF01–FRSF03) score independence, weakest dimension ordering, and all synthetic validation profiles 1–7.
+
 - Completed Stage 10.2 (Hydratation): implemented canonical configuration `questionnaires/hydratation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Hydratation_V1.pdf`.
 - Registered `hydratation` in `LifeMetrics_Questionnaire_Registry` mapping and aligned Submission Service payload attributes.
 - Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-hydratation.test.php` and `tests/questionnaire-hydratation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization on HY05 (44/44 -> 48/48, non-integer rounding), safety questions (HYSF01–HYSF03) score independence and priority triggering, weakest dimension ordering, and all synthetic validation profiles 1–5.

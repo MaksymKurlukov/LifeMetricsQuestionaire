@@ -33,6 +33,7 @@ final class LifeMetrics_Plugin
                 'pss10' => 'pss10/questionnaire.php',
                 'sedentarite' => 'sedentarite/questionnaire.php',
                 'hydratation' => 'hydratation/questionnaire.php',
+                'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );

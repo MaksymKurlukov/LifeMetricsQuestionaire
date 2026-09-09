@@ -1,7 +1,7 @@
 # Stage 10: Proprietary Questionnaires Rollout
 
-**Status:** IN_PROGRESS (2/7 Questionnaires Complete)
-**Completion Date (Stage 10.2):** 2026-09-09
+**Status:** IN_PROGRESS (3/7 Questionnaires Complete)
+**Completion Date (Stage 10.3):** 2026-09-09
 
 ---
 
@@ -11,75 +11,73 @@
 |---|---|---|---|---|---|
 | 1 | Sédentarité | `sedentarite` | **PASS** | 2026-09-09 (Stage 10.1) | `review` |
 | 2 | Hydratation | `hydratation` | **PASS** | 2026-09-09 (Stage 10.2) | `review` |
-| 3 | Fatigue & Récupération | `fatigue-recuperation` | **NOT_STARTED** | Next (Stage 10.3) | `draft` |
-| 4 | Sommeil | `sommeil` | **NOT_STARTED** | Pending | `draft` |
+| 3 | Fatigue & Récupération | `fatigue-recuperation` | **PASS** | 2026-09-09 (Stage 10.3) | `review` |
+| 4 | Sommeil | `sommeil` | **NOT_STARTED** | Next (Stage 10.4) | `draft` |
 | 5 | Nutrition | `nutrition` | **NOT_STARTED** | Pending | `draft` |
 | 6 | Activité Physique | `activite-physique` | **NOT_STARTED** | Pending | `draft` |
 | 7 | Pieds & Confort Postural | `pieds-confort-postural` | **NOT_STARTED** | Pending | `draft` |
 
 ---
 
-## 2. Stage 10.2: Hydratation Implementation Summary
+## 2. Stage 10.3: Fatigue & Récupération Implementation Summary
 
-### 2.1 Canonical Configuration (`questionnaires/hydratation/questionnaire.php`)
+### 2.1 Canonical Configuration (`questionnaires/fatigue-recuperation/questionnaire.php`)
 - **Metadata**:
   - `schema_version`: `2.0.0`
-  - `id`: `hydratation`
+  - `id`: `fatigue-recuperation`
   - `version`: `1.0.0`
   - `status`: `review`
   - `locale`: `fr-FR`
-  - `title`: `Score LifeMetrics - Hydratation`
-  - `seo_title`: `Auto-évaluation LifeMetrics - Vos habitudes d'hydratation sont-elles adaptées ?`
+  - `title`: `Score LifeMetrics - Fatigue & récupération`
+  - `seo_title`: `Auto-évaluation LifeMetrics - Comment récupérez-vous au quotidien ?`
   - `scoring_direction`: `higher_is_better`
-  - `score`: `target_min: 0`, `target_max: 48`, `normalize_when_unavailable: true`, `rounding: half_up`
-- **12 Scored Questions (HY01–HY12)**:
-  - Exact verbatim French text, answer labels, and 0–4 scale points from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Hydratation_V1.pdf`.
-  - `HY05` supports `value: 'na'`, `points: null`, `applicable: false` for respondents without significant physical activity.
+  - `score`: `target_min: 0`, `target_max: 48`, `normalize_when_unavailable: false`, `rounding: half_up`
+- **12 Scored Questions (FR01–FR12)**:
+  - Exact verbatim French text, answer labels, and 0–4 scale points from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`.
+  - Reverse scoring properly defined on FR05, FR06, and FR10.
 - **6 Dimensions (D1–D6)**:
-  - `place-eau` (Place de l'eau): HY01, HY02 (Max 8 pts)
-  - `repartition-hydratation` (Répartition de l'hydratation): HY03, HY04 (Max 8 pts)
-  - `adaptation-activite-chaleur` (Adaptation à l'activité et à la chaleur): HY05, HY06 (Max 8 pts, or 4 pts when HY05 is N/A)
-  - `choix-boissons` (Choix des boissons): HY07, HY08 (Max 8 pts)
-  - `alimentation-environnement` (Alimentation et environnement): HY09, HY10 (Max 8 pts)
-  - `anticipation-regularite` (Anticipation et régularité): HY11, HY12 (Max 8 pts)
+  - `energie-recuperation-reveil`: FR01, FR02 (Max 8 pts, attention threshold <= 2)
+  - `energie-fonctionnement-journee`: FR03, FR04 (Max 8 pts, attention threshold <= 2)
+  - `retentissement-fatigue`: FR05, FR06 (Max 8 pts, attention threshold <= 2)
+  - `recuperation-effort`: FR07, FR08 (Max 8 pts, attention threshold <= 2)
+  - `efficacite-repos`: FR09, FR10 (Max 8 pts, attention threshold <= 2)
+  - `stabilite-recuperation-globale`: FR11, FR12 (Max 8 pts, attention threshold <= 2)
 - **Result Levels (0–48 Target Score)**:
-  - 0–15: `HABITUDES_HYDRATATION_INSUFFISANTES`
-  - 16–27: `HYDRATATION_A_RENFORCER`
-  - 28–38: `HABITUDES_HYDRATATION_FAVORABLES`
-  - 39–48: `TRES_BONNES_HABITUDES_HYDRATATION`
-- **Safety Questions (HYSF01, HYSF02, HYSF03)**:
-  - `HYSF01`: Restriction ou adaptation médicale des liquides
-  - `HYSF02`: Pertes hydriques inhabituelles
-  - `HYSF03`: Signes nécessitant une attention particulière
-  - Emit priority safety flag `HYDRATION_ATTENTION_MESSAGE` without mutating numeric scores or categories.
-- **N/A Normalization Validation**:
-  - `HY05 = na`: 44/44 available raw capacity normalizes strictly to 48/48.
-  - Partial non-integer scores verified against `half_up` rounding.
+  - 0–15: `FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE`
+  - 16–27: `RECUPERATION_A_RENFORCER`
+  - 28–38: `RECUPERATION_GLOBALEMENT_FAVORABLE`
+  - 39–48: `TRES_BON_PROFIL_RECUPERATION`
+- **Dimension Attention Rule**:
+  - Automatically flags any dimension with score $\le 2/8$ as `attention === true` with descriptive point-of-attention messages without altering numeric score or calculated category.
+- **Safety Questions (FRSF01, FRSF02, FRSF03)**:
+  - `FRSF01`: Fatigue persistante malgré le repos
+  - `FRSF02`: Retentissement important
+  - `FRSF03`: Signes associés ou récupération anormalement difficile
+  - Emit priority safety flag `FATIGUE_ATTENTION_MESSAGE` without mutating numeric scores or categories.
 - **Result CTAs & Disclaimers**:
-  - Configured for VitaScan LifeMetrics with strict separation between declared questionnaire habits and clinical body measurements.
+  - Configured for VitaScan and Metabolism Analytics with clear boundary separation between questionnaire self-evaluation and physiological measurements.
 
 ### 2.2 Plugin Registry Mapping (`includes/class-lifemetrics-plugin.php`)
-- Added `'hydratation' => 'hydratation/questionnaire.php'` to `LifeMetrics_Questionnaire_Registry`.
-- Aligned Submission Service payload keys with scoring engine output.
+- Added `'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php'` to `LifeMetrics_Questionnaire_Registry`.
 
 ### 2.3 Unit & Parity Test Suites
-- **PHP Unit Test Suite (`tests/questionnaire-hydratation.test.php`)**:
+- **PHP Unit Test Suite (`tests/questionnaire-fatigue-recuperation.test.php`)**:
   - Schema 2.0.0 validation: PASS.
   - Boundary scores (0, 15, 16, 27, 28, 38, 39, 48): PASS.
-  - HY05 N/A normalization (44/44 -> 48, partial rounding): PASS.
+  - Dimension attention trigger (threshold $\le 2/8$): PASS.
   - Safety questions score/category independence: PASS.
-  - Authoritative synthetic profiles 1–5 from PDF: PASS.
+  - Authoritative synthetic profiles 1–7 from PDF: PASS.
   - Registry and submission service integration: PASS.
-- **JavaScript Unit Test Suite (`tests/questionnaire-hydratation.test.js`)**:
-  - Scoring engine parity for boundaries, N/A normalization, safety questions, and synthetic profiles: PASS.
+- **JavaScript Unit Test Suite (`tests/questionnaire-fatigue-recuperation.test.js`)**:
+  - Scoring engine parity for boundaries, dimension attention, safety questions, and synthetic profiles: PASS.
 
 ---
 
-## 3. Full Test Suite Matrix (20 Test Suites)
+## 3. Full Test Suite Matrix (22 Test Suites)
 
-All 20 PHP and JavaScript test suites executed cleanly with 0 errors and 0 warnings.
+All 22 PHP and JavaScript test suites executed cleanly with 0 errors and 0 warnings.
 
 ---
 
 ## 4. Next Step
-- **Stage 10.3**: Implement the next proprietary questionnaire in sequence: **Fatigue & Récupération** (`fatigue-recuperation`).
+- **Stage 10.4**: Implement the next proprietary questionnaire in sequence: **Sommeil** (`sommeil`).

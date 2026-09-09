@@ -781,11 +781,11 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 10.
 
 ## STAGE 10 - Proprietary Questionnaires Rollout
-- **Status:** `IN_PROGRESS` (Sequential execution: 2/7 complete)
+- **Status:** `IN_PROGRESS` (Sequential execution: 3/7 complete)
   - 1. Sédentarité (`sedentarite`): `PASS` (Stage 10.1 on 2026-09-09)
   - 2. Hydratation (`hydratation`): `PASS` (Stage 10.2 on 2026-09-09)
-  - 3. Fatigue & Récupération (`fatigue-recuperation`): `NOT_STARTED` (Next)
-  - 4. Sommeil (`sommeil`): `NOT_STARTED`
+  - 3. Fatigue & Récupération (`fatigue-recuperation`): `PASS` (Stage 10.3 on 2026-09-09)
+  - 4. Sommeil (`sommeil`): `NOT_STARTED` (Next)
   - 5. Nutrition (`nutrition`): `NOT_STARTED`
   - 6. Activité Physique (`activite-physique`): `NOT_STARTED`
   - 7. Pieds & Confort Postural (`pieds-confort-postural`): `NOT_STARTED`
@@ -797,7 +797,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Required tests:** Full scoring fixtures and synthetic profiles per PDF.
 - **Pass criteria:** Each test completes independently and passes all schema, boundary, and scoring tests.
 - **Rollback:** Disable questionnaire config status to `draft` or `disabled`.
-- **Next stage:** STAGE 10.3 (Fatigue & Récupération).
+- **Next stage:** STAGE 10.4 (Sommeil).
 
 ## STAGE 11 - Final Production Packaging & Release
 - **Status:** `NOT_STARTED`
