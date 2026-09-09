@@ -66,6 +66,7 @@ Authority: this file owns test case IDs and execution evidence. Required stage g
 | STAGE7-AUDIT-002 | 7 PDF methodologies JS capability audit | duplicate mappings, non-linear scoring, N/A normalization, guardrail capping, attention rules, priority-sorted safety flags in Node | PASS on 2026-09-09 | 7 |
 | STAGE8-WP-001 | isolated WordPress runtime integration | bootstrap, shortcode rendering, REST dispatch, filemtime assets, upstream Google post simulation | PASS on 2026-09-09 | 8 |
 | STAGE8-RESP-001 | browser & responsive lifecycle matrix | 375px mobile, 768px tablet, 1440px desktop user walkthrough, scoring, REST submission, 0 errors | PASS on 2026-09-09 | 8 |
+| STAGE9-BACK-001 | multi-destination routing & Apps Script transport | BACK-001 through BACK-012: per-instrument endpoints, filter hooks, safe 302 redirects, formula escaping, idempotency, upstream errors | PASS on 2026-09-09 | 9 |
 
 ## Out-of-sequence manual real-WordPress evidence
 

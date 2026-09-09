@@ -26,6 +26,11 @@ All notable LifeMetrics Questionnaires plugin/project changes are documented her
 
 ### Runtime
 
+- Completed Stage 9 Multi-Destination Google Backend Architecture: implemented generic server-side submission transport routing (`class-submission-service.php`, `class-google-apps-script-adapter.php`, and `backend/generic-google-apps-script.gs`).
+- Added dynamic endpoint resolution supporting per-instrument constants (e.g. `LMQ_PSS10_GOOGLE_ENDPOINT`, `LMQ_HYDRATATION_GOOGLE_ENDPOINT`), mapping array `LMQ_GOOGLE_ENDPOINTS`, and filter hook `lifemetrics_questionnaire_backend_endpoint`.
+- Added strict HTTPS 302 redirect verification (accepting only `script.googleusercontent.com` targets), formula-injection protection, idempotency handling, and comprehensive error mapping (500 for unconfigured storage, 502 for upstream network/HTTP/rejection errors).
+- Added multi-destination routing test suite `tests/backend-routing.test.php` verifying BACK-001 through BACK-012.
+
 - Completed Stage 8 Isolated Local WordPress & PSS10 Validation: verified complete WordPress runtime lifecycle (plugin bootstrap, shortcode rendering, dynamic instance IDs, asset enqueues, REST dispatch, server-side scoring, and upstream Google Sheet forwarding).
 - Added responsive browser simulation matrix tests across mobile (375px), tablet (768px), and desktop (1440px) with 0 errors (`tests/wordpress-integration.test.php` and `tests/pss10-browser-responsive.test.js`).
 

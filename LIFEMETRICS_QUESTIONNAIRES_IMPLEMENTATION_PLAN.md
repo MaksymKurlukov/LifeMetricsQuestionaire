@@ -10,11 +10,11 @@ Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
 
 Scope of this document: planning only; no implementation is authorized by this document's creation.
 
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS`
+Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS / STAGE_5_PASS / STAGE_6_PASS / STAGE_7_PASS / STAGE_8_PASS / STAGE_9_PASS`
 
-Next executable task: `STAGE 5 - Shared frontend UI, API, template, and assets`
+Next executable task: `STAGE 10 - Proprietary Questionnaires Rollout`
 
-Stage 4 completed schema 2.0.0 validation and pure PHP/JavaScript scoring parity without changing the PSS10 public runtime. Stage 5 has not started.
+Stage 9 completed the multi-destination Google backend architecture, transport adapter, submission service, and REST routing. Stage 10 has not started.
 
 ## Status vocabulary
 
@@ -777,7 +777,7 @@ Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PA
 - **Next stage:** STAGE 9.
 
 ## STAGE 9 - Multi-Destination Google Backend Architecture
-- **Status:** `NOT_STARTED`
+- **Status:** `PASS`
 - **Objective:** Implement generic server-side submission transport routing to questionnaire-specific Google Sheets targets.
 - **Prerequisites:** STAGE 8 PASS.
 - **Scope:** `class-submission-service.php`, `class-google-apps-script-adapter.php`, backend configuration metadata.
