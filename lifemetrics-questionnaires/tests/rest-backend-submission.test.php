@@ -123,13 +123,20 @@ $service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
 
 define('LMQ_GOOGLE_ENDPOINT', 'https://script.google.com/macros/s/CENTRAL_DEPLOYMENT_URL/exec');
 
-// 1. Verify that public registry still protects review questionnaires from frontend discovery
+// 1. Verify endpoint resolution for all questionnaires in zero-config environment
+foreach (array_keys($all_questionnaires) as $id) {
+    $ep = $service->get_endpoint($id);
+    sub_assert(!empty($ep), "get_endpoint('$id') resolves to non-empty string");
+    sub_assert(str_starts_with($ep, 'https://script.google.com/macros/s/'), "get_endpoint('$id') points to Google Apps Script");
+}
+
+// 2. Verify that public registry still protects review questionnaires from frontend discovery
 foreach (array_keys($all_questionnaires) as $id) {
     sub_assert($registry->get_public($id) === null, "get_public('$id') returns null while status=review");
     sub_assert($registry->get_internal($id) !== null, "get_internal('$id') returns valid configuration");
 }
 
-// 2. Test all 7 proprietary questionnaires submit cleanly via REST backend without tokens or wp-config constants
+// 3. Test all 7 proprietary questionnaires submit cleanly via REST backend without tokens or wp-config constants
 $proprietary_ids = array(
     'sedentarite', 'hydratation', 'fatigue-recuperation', 'sommeil',
     'nutrition', 'activite-physique', 'pieds-confort-postural'
