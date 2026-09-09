@@ -96,6 +96,22 @@ final class LifeMetrics_Submission_Service
             $config = $this->registry->get_internal('pss10');
         } else {
             $config = $this->registry->get_public($sanitized_id);
+
+            // Temporary controlled review E2E test gate (Hydratation-only)
+            if (
+                !$config
+                && $sanitized_id === 'hydratation'
+                && defined('LMQ_ALLOW_TEST_SUBMISSIONS')
+                && constant('LMQ_ALLOW_TEST_SUBMISSIONS') === true
+                && defined('LMQ_TEST_TOKEN')
+                && is_string(constant('LMQ_TEST_TOKEN'))
+                && constant('LMQ_TEST_TOKEN') !== ''
+            ) {
+                $provided_token = (string) $request->get_header('x-lmq-test-token');
+                if ($provided_token !== '' && hash_equals(constant('LMQ_TEST_TOKEN'), $provided_token)) {
+                    $config = $this->registry->get_internal('hydratation');
+                }
+            }
         }
 
         if (!$config) {
