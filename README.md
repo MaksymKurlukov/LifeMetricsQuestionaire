@@ -1,153 +1,164 @@
-# PSS-10 — Questionnaire de stress perçu
+# LifeMetrics Questionnaires
 
-Application **standalone** (SPA) : échelle PSS-10 (Cohen, Kamarck & Mermelstein). Une seule page HTML, logique en JavaScript, sauvegarde des résultats via **Google Apps Script** dans **Google Sheets**. Aucun serveur applicatif, aucune base de données tierce.
-
-**Stack :** HTML5, CSS3, JavaScript (vanilla), Google Apps Script, Google Sheets.
+WordPress plugin providing a unified questionnaire runtime for LifeMetrics health, wellness, and lifestyle assessments.
 
 ---
 
-## Documentation
+## Supported Questionnaires
 
-| Public | Fichier | Contenu |
-|--------|---------|---------|
-| **Équipe LifeMetrics (non-dev)** | [LIFEMETRICS-GUIDE.md](./LIFEMETRICS-GUIDE.md) | Où ouvrir la Sheet, déployer le script, dépanner « données ne s’écrivent pas », changer l’URL. |
-| **Développeurs** | Ce README | Architecture, configuration, API, structure, déploiement. |
-
----
-
-## Prérequis techniques
-
-- Navigateur moderne (ES5+)
-- Hébergement statique (Netlify, Vercel, GitHub Pages, ou serveur web local)
-- Compte Google (Google Workspace) pour Sheets + Apps Script
+| Canonical ID | Questionnaire Name | Target Score Range | Scoring Direction | Target Storage Tab | Status |
+|---|---|---|---|---|---|
+| `pss10` | Échelle de Stress Perçu (PSS-10) | 10 – 50 | Higher is worse | `PSS10` | `review` (Frozen Legacy) |
+| `sedentarite` | Score Sédentarité | 0 – 48 | Higher is better | `Sedentarite` | `review` |
+| `hydratation` | Score Hydratation | 0 – 48 | Higher is better | `Hydratation` | `review` |
+| `fatigue-recuperation` | Score Fatigue & Récupération | 0 – 48 | Higher is better | `Fatigue` | `review` |
+| `sommeil` | Score Sommeil | 0 – 48 | Higher is better | `Sommeil` | `review` |
+| `nutrition` | Score Nutrition | 0 – 48 | Higher is better | `Nutrition` | `review` |
+| `activite-physique` | Score Activité Physique | 0 – 48 | Higher is better | `Activite_Physique` | `review` |
+| `pieds-confort-postural` | Score Pieds & Confort Postural | 0 – 48 | Higher is better | `Pieds_Confort` | `review` |
 
 ---
 
-## Structure du projet
+## Lifecycle Model
 
-```
-pss/
-├── index.html                 # Point d’entrée unique (intro / test / résultat + modal)
-├── README.md                  # Documentation développeur (ce fichier)
-├── LIFEMETRICS-GUIDE.md       # Guide support équipe LifeMetrics
-├── google-apps-script.gs      # Code à déployer dans Apps Script (doPost, validation, rate limit)
-└── assets/
-    ├── css/style.css
-    ├── js/
-    │   ├── config.js          # URL du Web App (googleScriptUrl) — ne pas commiter de secret
-    │   └── app.js             # Logique SPA : state, scoring, envoi Sheets
-    └── icons/                 # SVG (shield, lock, clock)
-```
+Each questionnaire configuration declares a lifecycle `status`:
+- `review`: Questionnaire is under editorial, scientific, or clinical review. Excluded from public discovery (`get_public()` returns `null`). Can be rendered explicitly via WordPress shortcode for testing and validation.
+- `ready` / `published`: Fully approved and eligible for public discovery and listing.
+
+> [!NOTE]
+> Explicit shortcode rendering for testing must NOT be confused with public publication. All 7 proprietary questionnaires remain in `review` status during development and testing.
 
 ---
 
-## Configuration
+## WordPress Shortcode
 
-### 1. Google Sheet
+Use the unified shortcode on any WordPress page or post:
 
-- Créer une Google Sheet.
-- Premier onglet nommé **`results`** (ou le script utilisera le premier onglet).
-- Ligne 1 = en-têtes :  
-  `created_at` | `session_id` | `q1` | `q2` | … | `q10` | `final_score` | `category`
-
-### 2. Apps Script (Web App)
-
-1. Dans la Sheet : **Extensions** → **Apps Script**.
-2. Coller le contenu de **`google-apps-script.gs`** dans l’éditeur (remplacer le contenu par défaut). Sauvegarder.
-3. **Déployer** → **Nouveau déploiement** → type **Application Web** :
-   - Exécuter en tant que : **Moi**
-   - Qui a accès : **Toute personne** (pour accepter les requêtes du front public).
-4. Copier l’**URL du déploiement** (ex. `https://script.google.com/macros/s/.../exec`).
-
-### 3. Front : config.js
-
-Dans **`assets/js/config.js`** :
-
-```js
-window.PSS_CONFIG = {
-  googleScriptUrl: 'https://script.google.com/macros/s/VOTRE_ID/exec'
-};
+```text
+[lifemetrics_questionnaire id="<questionnaire-id>"]
 ```
 
-Remplacer par l’URL réelle du déploiement. **Ne pas** ajouter de secret côté client (voir section Sécurité).
+### Routing Behavior
+- `id="pss10"` (or empty `id`): Routes directly to `LifeMetrics_Legacy_PSS10_Runtime` to execute the frozen legacy PSS-10 experience.
+- `id="<proprietary-id>"`: Resolves configuration via `LifeMetrics_Questionnaire_Registry` and renders via `LifeMetrics_Questionnaire_Renderer` using shared generic assets (`questionnaire.css`, `questionnaire-engine.js`, `questionnaire-ui.js`).
+- Unknown `id`: Safely returns an empty string without throwing errors or leaking information.
 
 ---
 
-## API (contrat Google Apps Script)
+## Frontend Architecture
 
-### Requête POST
+The generic questionnaire frontend is structured around 3 sequential views:
 
-- **Content-Type :** `application/json`
-- **Corps (JSON) :**
-  - `created_at` (string, ISO 8601)
-  - `session_id` (string, UUID)
-  - `q1` … `q10` (number, 1–5 ; pour les questions inversées 4,5,7,8 le client envoie déjà `6 - value`)
-  - `final_score` (number, 10–50)
-  - `category` (string : `low` | `medium` | `high`)
+1. **Intro Screen**:
+   - Title, description, and metadata badges (duration, questions count, target population, recall period).
+   - "COMMENCER" start button.
+   - "En savoir plus" modal link with structured methodology explanations.
 
-### Réponse
+2. **Question Screen**:
+   - Dynamic progress indicator (`Question X sur Y`) and visual progress bar.
+   - Question text and optional contextual help.
+   - Vertical answer cards with hover/focus states and keyboard accessibility.
+   - Declarative N/A option handling (`applicable: false`).
+   - Safety questions (if configured) with immediate clinical disclaimer flags.
+   - Back navigation button (`Retour`) with preserved state.
+   - Automatic smooth advance (400ms delay) on answer selection.
 
-- **200** + JSON `{ "ok": true }` en cas de succès.
-- **200** + JSON `{ "ok": false, "error": "..." }` en cas d’erreur (validation, rate limit, doublon session_id, etc.).
+3. **Result Screen**:
+   - SVG circular gauge visualization with dynamic needle animation.
+   - Numerical score display (`X / Y`) and category badge.
+   - Detailed interpretation title and clinical analysis text.
+   - Dimension analysis breakdowns (progress bars, percentages, attention flags).
+   - Prominent safety alerts (rendered before recommendations if safety questions are flagged).
+   - Configurable Call to Action (CTA) buttons (e.g. VitaScan, Podos360, Metabolism Analytics).
+   - "Refaire le test" restart button.
+   - Non-intrusive save error banner with idempotent "Réessayer" retry button.
 
-Le front utilise `fetch` en **no-cors** : le corps de la réponse n’est pas lu. Succès = pas d’erreur réseau. Si `googleScriptUrl` est vide, l’app affiche « Enregistrement non configuré » et n’envoie pas.
-
-### Côté script (résumé)
-
-- Validation : champs requis, `q1`…`q10` ∈ [1,5], `final_score` ∈ [10,50], `sum(q1..q10) === final_score`.
-- Rate limit par `session_id` (CacheService, 5 s).
-- Rejet si `session_id` déjà présent dans la feuille (une ligne par session).
-- Pas de `PSS_SECRET` en production (ne pas définir dans Script Properties ; ne pas commiter de secret dans le repo).
+### Client-Side Mechanics
+- **Immediate UI Feedback**: Instant client-side scoring via `assets/js/questionnaire-engine.js`.
+- **Silent Asynchronous Submission**: Submits payload to WordPress REST API using `fetch` with 25s timeout and `credentials: 'same-origin'`.
+- **Session Tracking & Idempotency**: A unique UUID v4 `session_id` is generated at test start and preserved across retry attempts to guarantee deduplication.
 
 ---
 
-## Lancer en local
+## Backend Architecture & Security Boundaries
+
+```
+[Browser Client]
+       │  (1) POST answers + session_id
+       ▼
+[WordPress REST Controller]
+  /wp-json/lifemetrics-questionnaires/v1/<id>/submit
+       │
+       ▼
+[Questionnaire Registry] ──> loads canonical configuration
+       │
+       ▼
+[Server Scoring Engine] ──> Authoritative recalculation of score,
+       │                    categories, dimensions, and safety flags
+       ▼
+[Submission Service] ──> Builds canonical tamper-resistant payload
+       │
+       ▼
+[Google Apps Script Adapter] ──> wp_remote_post with SSL verification
+       │
+       ▼
+[Google Apps Script Web App] ──> Validates schema & deduplicates session_id
+       │
+       ▼
+[Google Sheets Spreadsheet] ──> Appends row to questionnaire tab
+```
+
+### Security & Authority Invariants
+1. **Raw Input Only**: The browser sends only question answers, `session_id`, and client timestamp.
+2. **Server-Authoritative Calculation**: Browser-calculated scores and categories are never trusted. WordPress recalculates all scores, category thresholds, dimension percentages, and safety flags on the server.
+3. **No Sheet Selection by Client**: The client never provides or controls worksheet tab names. Tab mapping is handled strictly by Google Apps Script based on the server-authenticated `questionnaire_id`.
+4. **Isolated Endpoints**: Google Apps Script endpoints are stored server-side in WordPress constants (`LMQ_GOOGLE_ENDPOINT`, `LMQ_PSS10_GOOGLE_ENDPOINT`) and are never exposed to client-side scripts.
+
+---
+
+## PSS-10 Frozen Legacy Compatibility
+
+PSS-10 is the clinical reference benchmark for the LifeMetrics platform:
+- Implemented via `LifeMetrics_Legacy_PSS10_Runtime` in `questionnaires/pss10/`.
+- Protected by 13 characterization mutation guards and automated regression test suites.
+- Preserves dedicated styling, exact scoring rules, and independent storage endpoint.
+
+---
+
+## Current Verification State
+
+| Verification Level | Target | Status | Notes |
+|---|---|---|---|
+| **Automated Unit & Parity** | All 8 Questionnaires | **PASS** | 20 PHP test suites, 11 JS test suites passing (0 failures). |
+| **Tamper Resistance** | All 8 Questionnaires | **PASS** | Verified that malicious client payloads are overridden by server authority. |
+| **Backend Storage E2E** | All 8 Questionnaires | **PASS** | Real Google Apps Script webhook writes verified for all 8 worksheets. |
+| **Real Browser E2E** | `hydratation` | **PASS** | Verified on live WordPress: Intro ➔ Questions ➔ Results ➔ REST ➔ Google Apps Script ➔ Google Sheets. |
+| **PSS10 Regression** | `pss10` | **PASS** | Verified 100% intact with 13 mutation guards and responsive visual tests. |
+
+---
+
+## Build & Deployment
+
+To build a clean release ZIP for WordPress installation:
 
 ```bash
-# Depuis la racine du projet
-python3 -m http.server 8000
-# Puis ouvrir http://localhost:8000/
+bash scripts/build-release-zip.sh lifemetrics-questionnaires-stage11-rc12.zip
 ```
 
-Ou placer le dossier sous un serveur web (XAMPP, MAMP, etc.) et ouvrir l’URL correspondante.
+Installation: Upload and activate `lifemetrics-questionnaires-stage11-rc12.zip` in WordPress Plugins. Zero manual database or `wp-config.php` configuration required.
 
 ---
 
-## Flow applicatif
+## Next Phase: Questionnaire Content & Specification Review
 
-1. **Intro** — Titre, texte, bouton « COMMENCER », lien « En savoir plus » (modal).
-2. **Test** — 10 questions PSS-10, une par écran, auto-avancement au clic sur une réponse, bouton « Retour ».
-3. **Résultat** — Score (10–50), catégorie (low / medium / high), jauge, texte d’analyse, bouton « Refaire le test », CTA (stubs), « Réessayer » si l’envoi a échoué.
-4. **Sauvegarde** — Un seul POST en fin de test vers l’URL configurée ; toast « Résultat enregistré » ou « Résultat non sauvegardé » / « Enregistrement non configuré » si URL vide.
-
----
-
-## Scoring PSS-10
-
-- Réponses 1–5 (Jamais → Très souvent).
-- Questions **inversées** 4, 5, 7, 8 : `score_value = 6 - selected_value`.
-- Score final = somme des 10 scores ∈ [10, 50].
-- Catégories : **0–20** low, **21–26** medium, **≥27** high.
-
----
-
-
-## Déploiement (production)
-
-- **Front :** déployer le contenu du dossier (HTML, CSS, JS, assets) sur un hébergement statique (Netlify, Vercel, GitHub Pages, etc.). Aucun build requis.
-- **Config :** s’assurer que `config.js` contient la bonne `googleScriptUrl` pour l’environnement (variable d’environnement au build ou fichier spécifique à l’env si besoin).
-- **Apps Script :** déjà hébergé par Google ; en cas de nouveau déploiement, mettre à jour l’URL dans le front et redéployer le site. Voir [LIFEMETRICS-GUIDE.md](./LIFEMETRICS-GUIDE.md) pour la procédure côté équipe support.
-
----
-
-## Sécurité
-
-- **Pas de secret dans le repo.** Ne pas commiter `pssSecret` (ou équivalent) dans `config.js`. En production, nous n’utilisons pas de secret côté client.
-- Données strictement anonymes : `session_id`, réponses, score, catégorie. Pas d’email, pas d’IP, pas de login.
-- Protection côté script : validation stricte, rate limit, unicité `session_id` dans la feuille.
-
----
-
-## Références
-
-- PSS-10 : [Cohen & Williamson, 1983](https://www.psy.cmu.edu/~scohen/) — [psy.cmu.edu](https://www.psy.cmu.edu/~scohen/)
+The next phase is **not** public release, but an in-depth **specification and content review** of each proprietary questionnaire using PSS-10 as the structural reference model:
+1. Introduction & user guidance wording
+2. Clinical purpose & population context
+3. Question clarity & answer scales
+4. Scoring formulas & normalization rules
+5. Result threshold categories & severity labels
+6. Interpretation & analysis texts
+7. Dimension breakdown presentation
+8. Safety flags & disclaimer messaging
+9. Call-to-action alignment
+10. Historical tracking & comparison readiness
