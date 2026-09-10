@@ -209,6 +209,18 @@ wp_assert(in_array('lmq-pss10', $GLOBALS['wp_enqueued_styles'], true), 'PSS10 sp
 wp_assert(in_array('lmq-shared-style', $GLOBALS['wp_enqueued_styles'], true), 'Shared stylesheet enqueued');
 wp_assert(in_array('lmq-shared-ui', $GLOBALS['wp_enqueued_scripts'], true), 'Shared UI script enqueued');
 
+// 4b. Render proprietary questionnaire shortcode (Hydratation)
+$html_hydra = do_shortcode('[lifemetrics_questionnaire id="hydratation"]');
+wp_assert(!empty($html_hydra), 'Hydratation shortcode renders non-empty HTML');
+wp_assert(str_contains($html_hydra, 'class="lmq-questionnaire-root"'), 'Hydratation HTML contains root container');
+wp_assert(str_contains($html_hydra, 'data-lmq-questionnaire="hydratation"'), 'Hydratation HTML contains questionnaire data attribute');
+wp_assert(str_contains($html_hydra, 'data-lmq-config'), 'Hydratation HTML contains config script');
+wp_assert(str_contains($html_hydra, 'https://example.test/wp-json/lifemetrics-questionnaires/v1/hydratation/submit'), 'Hydratation submit URL points to exact REST endpoint');
+
+// 4c. Unknown shortcode ID renders empty string
+$html_unknown = do_shortcode('[lifemetrics_questionnaire id="unknown_q"]');
+wp_assert($html_unknown === '', 'Unknown shortcode renders empty string');
+
 // 5. Test REST endpoint dispatch (Simulated generic client submission)
 $route_args = $GLOBALS['wp_rest_routes']['lifemetrics-questionnaires/v1/pss10/submit'];
 $callback = $route_args['callback'];

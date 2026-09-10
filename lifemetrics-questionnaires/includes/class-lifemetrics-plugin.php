@@ -48,8 +48,10 @@ final class LifeMetrics_Plugin
             self::$scoring_engine,
             self::$adapter
         );
+        $assets = new LifeMetrics_Questionnaire_Assets(LMQ_PLUGIN_URL, LMQ_PLUGIN_PATH, '1.0.0');
+        $renderer = new LifeMetrics_Questionnaire_Renderer($assets, LMQ_PLUGIN_PATH . 'templates/questionnaire.php');
         self::$legacy_pss10 = new LifeMetrics_Legacy_PSS10_Runtime(self::$submission_service);
-        self::$shortcodes = new LifeMetrics_Shortcodes(self::$legacy_pss10);
+        self::$shortcodes = new LifeMetrics_Shortcodes(self::$legacy_pss10, self::$registry, $renderer);
         self::$rest_controller = new LifeMetrics_REST_Controller(self::$submission_service);
 
         add_action('wp_enqueue_scripts', array(self::$legacy_pss10, 'register_assets'));

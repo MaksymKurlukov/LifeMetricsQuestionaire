@@ -15,6 +15,9 @@ final class LifeMetrics_Questionnaire_Renderer
 
     public function render(array $config, string $submit_url = ''): string
     {
+        if (method_exists($this->assets, 'register')) {
+            $this->assets->register();
+        }
         $this->assets->enqueue();
 
         $instance_id = wp_unique_id('lmq-' . $config['id'] . '-');

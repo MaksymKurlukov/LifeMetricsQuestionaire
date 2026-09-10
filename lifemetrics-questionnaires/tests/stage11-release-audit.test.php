@@ -6,6 +6,12 @@ set_error_handler(static function ($severity, $message, $file, $line) {
 });
 
 define('ABSPATH', __DIR__ . '/');
+if (!defined('LMQ_PLUGIN_PATH')) {
+    define('LMQ_PLUGIN_PATH', dirname(__DIR__) . '/');
+}
+if (!defined('LMQ_PLUGIN_URL')) {
+    define('LMQ_PLUGIN_URL', 'https://example.test/wp-content/plugins/lifemetrics-questionnaires/');
+}
 
 if (!class_exists('WP_Error')) {
     class WP_Error {
@@ -33,6 +39,9 @@ if (!function_exists('wp_json_encode')) {
 if (!function_exists('rest_ensure_response')) {
     function rest_ensure_response($res) { return $res; }
 }
+if (!function_exists('rest_url')) {
+    function rest_url($path = '') { return 'https://example.test/wp-json/' . ltrim($path, '/'); }
+}
 if (!function_exists('shortcode_atts')) {
     function shortcode_atts($pairs, $atts, $shortcode = '') {
         $out = array();
@@ -45,10 +54,36 @@ if (!function_exists('shortcode_atts')) {
 if (!function_exists('wp_generate_uuid4')) {
     function wp_generate_uuid4() { return '123e4567-e89b-42d3-a456-426614174000'; }
 }
+if (!function_exists('wp_unique_id')) {
+    function wp_unique_id($prefix = '') { static $c = 0; return $prefix . (++$c); }
+}
+if (!function_exists('esc_attr')) {
+    function esc_attr($str) { return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8'); }
+}
+if (!function_exists('esc_url')) {
+    function esc_url($str) { return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8'); }
+}
+if (!function_exists('esc_html')) {
+    function esc_html($str) { return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8'); }
+}
+if (!function_exists('wp_register_style')) {
+    function wp_register_style($handle, $src, $deps = array(), $ver = false) {}
+}
+if (!function_exists('wp_register_script')) {
+    function wp_register_script($handle, $src, $deps = array(), $ver = false, $in_footer = false) {}
+}
+if (!function_exists('wp_enqueue_style')) {
+    function wp_enqueue_style($handle) {}
+}
+if (!function_exists('wp_enqueue_script')) {
+    function wp_enqueue_script($handle) {}
+}
 
 require_once __DIR__ . '/../includes/class-questionnaire-schema-validator.php';
 require_once __DIR__ . '/../includes/class-questionnaire-scoring-engine.php';
 require_once __DIR__ . '/../includes/class-questionnaire-registry.php';
+require_once __DIR__ . '/../includes/class-assets.php';
+require_once __DIR__ . '/../includes/class-questionnaire-renderer.php';
 require_once __DIR__ . '/../includes/class-google-apps-script-adapter.php';
 require_once __DIR__ . '/../includes/class-submission-service.php';
 require_once __DIR__ . '/../includes/class-legacy-pss10-runtime.php';
@@ -187,8 +222,10 @@ foreach (array_keys($expected_questionnaires) as $id) {
 // ----------------------------------------------------
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
 $submission_service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
+$assets = new LifeMetrics_Questionnaire_Assets('https://example.test/wp-content/plugins/lifemetrics-questionnaires', dirname(__DIR__), '1.0.0');
+$renderer = new LifeMetrics_Questionnaire_Renderer($assets, dirname(__DIR__) . '/templates/questionnaire.php');
 $legacy_pss10 = new LifeMetrics_Legacy_PSS10_Runtime($submission_service);
-$shortcodes = new LifeMetrics_Shortcodes($legacy_pss10);
+$shortcodes = new LifeMetrics_Shortcodes($legacy_pss10, $registry, $renderer);
 
 // Unknown shortcode ID returns empty string safely (no fatal error, no leak)
 $unknown_res = $shortcodes->render(array('id' => 'unknown_questionnaire'));
@@ -198,11 +235,18 @@ audit_assert($unknown_res === '', 'Unknown shortcode ID returns empty string');
 $empty_res = $shortcodes->render(array());
 audit_assert($empty_res === '', 'Empty shortcode attribute returns empty string');
 
-// Proprietary unapproved review IDs return empty string in public (protected by gate)
+// PSS10 renders legacy template
+$pss10_res = $shortcodes->render(array('id' => 'pss10'));
+audit_assert(!empty($pss10_res), 'PSS10 shortcode renders legacy template');
+audit_assert(str_contains($pss10_res, 'id="lmq-pss10-'), 'PSS10 contains dynamic instance ID');
+
+// All 7 proprietary questionnaires render generic frontend via explicit shortcode
 foreach (array_keys($expected_questionnaires) as $id) {
     if ($id === 'pss10') continue;
     $res = $shortcodes->render(array('id' => $id));
-    audit_assert($res === '', "[$id] Unapproved proprietary questionnaire shortcode returns empty string in public");
+    audit_assert(!empty($res), "[$id] Proprietary questionnaire shortcode renders non-empty frontend HTML");
+    audit_assert(str_contains($res, 'class="lmq-questionnaire-root"'), "[$id] Contains root container");
+    audit_assert(str_contains($res, "data-lmq-questionnaire=\"$id\""), "[$id] Contains questionnaire data attribute");
 }
 
 // ----------------------------------------------------

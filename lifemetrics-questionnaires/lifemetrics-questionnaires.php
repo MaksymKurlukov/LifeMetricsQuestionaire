@@ -30,6 +30,8 @@ if (!defined('LMQ_GOOGLE_ENDPOINT')) {
 require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-schema-validator.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-scoring-engine.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-registry.php';
+require_once LMQ_PLUGIN_PATH . 'includes/class-assets.php';
+require_once LMQ_PLUGIN_PATH . 'includes/class-questionnaire-renderer.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-google-apps-script-adapter.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-submission-service.php';
 require_once LMQ_PLUGIN_PATH . 'includes/class-legacy-pss10-runtime.php';
