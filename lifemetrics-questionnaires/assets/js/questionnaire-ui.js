@@ -21,7 +21,20 @@
 
     const allQuestions = (config.questions || []).concat(config.safety_questions || []);
 
+    function generateSessionId() {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      var hex = '0123456789abcdef';
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (character) {
+        var random = Math.random() * 16 | 0;
+        var value = character === 'x' ? random : (random & 0x3 | 0x8);
+        return hex[value];
+      });
+    }
+
     const state = {
+      sessionId: generateSessionId(),
       answers: {},
       currentQuestionIndex: 0,
       isSubmitting: false,
@@ -305,27 +318,46 @@
       }
 
       if (submitUrl) {
+        if (state.isSubmitting) return;
         state.isSubmitting = true;
         const alertBox = rootEl.querySelector('[data-lmq-role="save-alert"]');
         if (alertBox) alertBox.hidden = true;
+        const retryBtn = rootEl.querySelector('[data-lmq-role="retry"]');
+        if (retryBtn) retryBtn.disabled = true;
 
         state.abortController = new AbortController();
         const timeoutId = setTimeout(() => {
           if (state.abortController) state.abortController.abort();
-        }, 10000);
+        }, 25000);
+
+        const payload = {
+          session_id: state.sessionId,
+          answers: state.answers,
+          client_version: '1.0.0',
+          completed_at: new Date().toISOString()
+        };
 
         fetch(submitUrl, {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: state.answers }),
+          body: JSON.stringify(payload),
           signal: state.abortController.signal
         }).then(res => {
-          if (!res.ok) throw new Error('Network error');
+          return res.json().catch(() => null).then(data => {
+            if (!res.ok || !data || data.success !== true) {
+              throw new Error('Save error');
+            }
+            return data;
+          });
+        }).then(() => {
+          if (alertBox) alertBox.hidden = true;
         }).catch(err => {
           if (alertBox) alertBox.hidden = false;
         }).finally(() => {
           clearTimeout(timeoutId);
           state.isSubmitting = false;
+          if (retryBtn) retryBtn.disabled = false;
         });
       }
     }
@@ -396,6 +428,7 @@
       if (state.isSubmitting) {
         if (state.abortController) state.abortController.abort();
       }
+      state.sessionId = generateSessionId();
       state.answers = {};
       state.currentQuestionIndex = 0;
       state.isSubmitting = false;
@@ -406,6 +439,9 @@
     const startBtn = rootEl.querySelector('[data-lmq-role="start"]');
     if (startBtn) {
       startBtn.onclick = () => {
+        if (!state.sessionId) {
+          state.sessionId = generateSessionId();
+        }
         state.currentQuestionIndex = 0;
         renderQuestion();
       };

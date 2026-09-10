@@ -63,7 +63,7 @@
       raw += answer.points;
       availableMin += minimum;
       availableMax += maximum;
-      if (question.dimension !== null) {
+      if (question.dimension != null && dimensionTotals[question.dimension]) {
         dimensionTotals[question.dimension].raw_score += answer.points;
         dimensionTotals[question.dimension].available_min += minimum;
         dimensionTotals[question.dimension].available_max += maximum;
