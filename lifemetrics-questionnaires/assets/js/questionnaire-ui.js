@@ -49,16 +49,24 @@
       const badgesContainer = rootEl.querySelector('[data-lmq-role="badges"]');
       if (badgesContainer) {
         badgesContainer.innerHTML = '';
-        const badges = [];
-        if (config.estimated_duration) badges.push(config.estimated_duration);
-        if (config.recall_period) badges.push(config.recall_period);
-        if (config.population) badges.push(config.population);
-        badges.forEach(bText => {
-          const badgeEl = document.createElement('span');
-          badgeEl.className = 'badge';
-          badgeEl.textContent = bText;
-          badgesContainer.appendChild(badgeEl);
+        const pill = document.createElement('div');
+        pill.className = 'badges-pill';
+
+        const badgeList = ['Anonyme', 'Sécurisé', config.estimated_duration || '2-3 min'];
+        badgeList.forEach((text, idx) => {
+          if (idx > 0) {
+            const div = document.createElement('div');
+            div.className = 'divider';
+            pill.appendChild(div);
+          }
+          const item = document.createElement('div');
+          item.className = 'badge-item';
+          const span = document.createElement('span');
+          span.textContent = text;
+          item.appendChild(span);
+          pill.appendChild(item);
         });
+        badgesContainer.appendChild(pill);
       }
 
       showSection('intro');
@@ -190,6 +198,14 @@
       const interpTitle = rootEl.querySelector('[data-lmq-role="interpretation-title"]');
       if (interpTitle && level) {
         interpTitle.textContent = level.title;
+      }
+
+      const scoreMeta = rootEl.querySelector('[data-lmq-role="score-meta"]');
+      if (scoreMeta && config.score && config.score.target_min !== undefined && config.score.target_max !== undefined) {
+        const directionNote = config.scoring_direction === 'higher_is_better'
+          ? `${config.score.target_max} est le meilleur score possible et ${config.score.target_min} le plus bas.`
+          : `${config.score.target_min} est le meilleur score possible et ${config.score.target_max} le plus mauvais.`;
+        scoreMeta.textContent = `Le score est compris entre ${config.score.target_min} et ${config.score.target_max}, sachant que ${directionNote}`;
       }
 
       const analysisText = rootEl.querySelector('[data-lmq-role="analysis-text"]');

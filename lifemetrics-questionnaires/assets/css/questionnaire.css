@@ -129,6 +129,7 @@
   max-width: min(100%, 32.5rem);
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.6;
 }
 
 .lmq-questionnaire .badges {
@@ -159,24 +160,11 @@
   color: #F26422;
 }
 
-.lmq-questionnaire .icon {
-  font-size: var(--text-base);
-}
-
-.lmq-questionnaire .icon-img {
-  width: clamp(1rem, 4vw, 1.25rem);
-  height: clamp(1rem, 4vw, 1.25rem);
-  flex-shrink: 0;
-  filter: invert(32%) sepia(88%) saturate(1121%) hue-rotate(5deg) brightness(104%);
-}
-
 .lmq-questionnaire .divider {
   width: 1px;
   height: clamp(1rem, 4vw, 1.25rem);
   background: linear-gradient(180deg, #FF5900 0%, #FFC5A5 100%);
 }
-
-
 
 .lmq-questionnaire .btn--cta {
   display: block;
@@ -269,6 +257,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
+  font-family: inherit;
 }
 
 .lmq-questionnaire .btn::before {
@@ -403,7 +392,8 @@
   gap: var(--space-sm);
 }
 
-.lmq-questionnaire .answer-card {
+.lmq-questionnaire .answer-card,
+.lmq-questionnaire .answer-btn {
   display: block;
   width: 100%;
   padding: var(--space-sm) var(--space-md);
@@ -414,22 +404,29 @@
   text-align: left;
   font-size: var(--text-base);
   color: var(--color-text);
-  transition: border-color 0.2s, background 0.2s;
+  line-height: 1.5;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s ease;
+  min-height: clamp(3rem, 7vw, 3.5rem);
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.lmq-questionnaire .answer-card:hover {
+.lmq-questionnaire .answer-card:hover,
+.lmq-questionnaire .answer-btn:hover {
   background: #ebe6df;
 }
 
-.lmq-questionnaire .answer-card--selected {
+.lmq-questionnaire .answer-card--selected,
+.lmq-questionnaire .answer-btn.selected,
+.lmq-questionnaire .answer-btn[aria-checked="true"] {
   border-color: var(--color-primary);
   background: rgba(232, 93, 44, 0.08);
 }
 
-.lmq-questionnaire .answer-card input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.lmq-questionnaire .answer-btn:focus-visible,
+.lmq-questionnaire .answer-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .lmq-questionnaire .test-actions {
@@ -439,8 +436,10 @@
 /* ---------- Résultat ---------- */
 .lmq-questionnaire .result-title {
   font-size: var(--text-xl);
+  font-weight: 700;
   margin: 0 0 var(--space-sm);
   text-align: center;
+  color: var(--color-text);
 }
 
 .lmq-questionnaire .result-badge {
@@ -454,17 +453,43 @@
   width: 100%;
 }
 
-.lmq-questionnaire .result-badge--low {
+/* Catégories Favorables (Vert) */
+.lmq-questionnaire .result-badge--low,
+.lmq-questionnaire .result-badge--optimal,
+.lmq-questionnaire .result-badge--favorable,
+.lmq-questionnaire .result-badge--tres-favorable,
+.lmq-questionnaire .result-badge--recuperation-optimale,
+.lmq-questionnaire .result-badge--confort-optimal,
+.lmq-questionnaire .result-badge--confort-satisfaisant,
+.lmq-questionnaire .result-badge--bon {
   background: rgba(74, 222, 128, 0.2);
   color: #166534;
 }
 
-.lmq-questionnaire .result-badge--medium {
+/* Catégories Modérées / Acceptables (Jaune/Orange) */
+.lmq-questionnaire .result-badge--medium,
+.lmq-questionnaire .result-badge--acceptable,
+.lmq-questionnaire .result-badge--modere,
+.lmq-questionnaire .result-badge--vigilance,
+.lmq-questionnaire .result-badge--recuperation-correcte,
+.lmq-questionnaire .result-badge--vigilance-posturale,
+.lmq-questionnaire .result-badge--vigilance-moderee,
+.lmq-questionnaire .result-badge--inconfort-modere,
+.lmq-questionnaire .result-badge--inconfort-leger {
   background: rgba(251, 191, 36, 0.25);
   color: #92400e;
 }
 
-.lmq-questionnaire .result-badge--high {
+/* Catégories Critiques / Vigilance élevée (Rouge) */
+.lmq-questionnaire .result-badge--high,
+.lmq-questionnaire .result-badge--attention,
+.lmq-questionnaire .result-badge--critique,
+.lmq-questionnaire .result-badge--recuperation-insuffisante,
+.lmq-questionnaire .result-badge--confort-critique,
+.lmq-questionnaire .result-badge--inconfort-severe,
+.lmq-questionnaire .result-badge--sedentarite-elevee,
+.lmq-questionnaire .result-badge--eleve,
+.lmq-questionnaire .result-badge--tres-insuffisant {
   background: rgba(239, 68, 68, 0.15);
   color: #b91c1c;
 }
@@ -533,6 +558,7 @@
   color: var(--color-text);
 }
 
+.lmq-questionnaire .score-meta,
 .lmq-questionnaire .analysis-meta {
   margin: 0 0 var(--space-sm);
   font-size: var(--text-sm);
@@ -552,6 +578,92 @@
   font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--color-text);
+}
+
+/* Dimensions / Axes d'amélioration */
+.lmq-questionnaire .dimensions-wrap {
+  background: var(--color-cream);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.lmq-questionnaire .dimensions-wrap h4 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+  color: var(--color-text);
+}
+
+.lmq-questionnaire .dimension-item {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  padding: var(--space-xs) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  line-height: 1.5;
+}
+
+.lmq-questionnaire .dimension-item::before {
+  content: "•";
+  color: var(--color-primary);
+  font-size: 1.25em;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* Alertes de sécurité & messages de classification */
+.lmq-questionnaire .safety-messages,
+.lmq-questionnaire .classification-messages {
+  margin-bottom: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.lmq-questionnaire .safety-message {
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 4px solid var(--color-high);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.lmq-questionnaire .safety-message strong {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 0.25rem;
+}
+
+.lmq-questionnaire .safety-message p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.lmq-questionnaire .classification-message {
+  background: rgba(251, 191, 36, 0.15);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.lmq-questionnaire .classification-message strong {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 0.25rem;
+}
+
+.lmq-questionnaire .classification-message p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
 }
 
 .lmq-questionnaire .result-save-alert {
@@ -710,3 +822,4 @@
   opacity: 1;
   visibility: visible;
 }
+
