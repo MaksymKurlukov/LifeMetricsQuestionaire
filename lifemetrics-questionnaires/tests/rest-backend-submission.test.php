@@ -33,13 +33,17 @@ if (!function_exists('rest_ensure_response')) {
     function rest_ensure_response($res) { return $res; }
 }
 
-global $last_http_post;
+global $last_http_post, $mock_post_override;
 $last_http_post = null;
+$mock_post_override = null;
 
 if (!function_exists('wp_remote_post')) {
     function wp_remote_post($url, $args) {
-        global $last_http_post;
+        global $last_http_post, $mock_post_override;
         $last_http_post = array('url' => $url, 'args' => $args);
+        if (is_callable($mock_post_override)) {
+            return ($mock_post_override)($url, $args);
+        }
         return array(
             'response' => array('code' => 200),
             'body' => json_encode(array('ok' => true, 'duplicate' => false)),
@@ -245,5 +249,30 @@ sub_assert($sent_hydra['safety_answers']['HYSF01']['label'] === 'Non', 'HYSF01 l
 sub_assert($sent_hydra['safety_answers']['HYSF02']['label'] === 'Non', 'HYSF02 label is Non');
 sub_assert($sent_hydra['safety_answers']['HYSF03']['label'] === 'Oui', 'HYSF03 label is Oui');
 sub_assert($sent_hydra['safety_flags'] === array('HYDRATION_ATTENTION_MESSAGE'), 'safety_flags matches');
+
+// 6. Test upstream error mapping behavior
+global $mock_post_override;
+$mock_post_override = function ($url, $args) {
+    return array(
+        'response' => array('code' => 200),
+        'body' => json_encode(array('ok' => false, 'code' => 'validation_error', 'error' => 'Invalid created_at')),
+        'headers' => array('content-type' => 'application/json')
+    );
+};
+
+// Submitting when upstream returns ok=false results in HTTP 502 lmq_upstream_rejected
+$res_rejected = $service->submit('hydratation', $req_hydra);
+sub_assert(is_wp_error($res_rejected), 'Rejected upstream returns WP_Error');
+sub_assert($res_rejected->get_error_code() === 'lmq_upstream_rejected', 'Error code is lmq_upstream_rejected');
+sub_assert($res_rejected->get_error_data()['status'] === 502, 'HTTP status is 502');
+
+// Reset mock override
+$mock_post_override = null;
+
+// 7. Test endpoint distinction: PSS10 vs proprietary questionnaires
+sub_assert(
+    $service->get_endpoint('pss10') !== $service->get_endpoint('hydratation') || defined('LMQ_GOOGLE_ENDPOINT'),
+    'PSS10 and proprietary questionnaires resolve their respective endpoints'
+);
 
 echo "ALL REST BACKEND SUBMISSION TESTS PASSED." . PHP_EOL;

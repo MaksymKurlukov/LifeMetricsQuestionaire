@@ -23,7 +23,7 @@ if (!defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
 if (!defined('LMQ_GOOGLE_ENDPOINT')) {
     define(
         'LMQ_GOOGLE_ENDPOINT',
-        LMQ_PSS10_GOOGLE_ENDPOINT
+        'https://script.google.com/macros/s/AKfycbzmkJ2X4Wu4AK0XDywnZw178rCEu1Fv1hgctOYlD46nblg-MJ78_vosYu_zzm6CyFaL/exec'
     );
 }
 

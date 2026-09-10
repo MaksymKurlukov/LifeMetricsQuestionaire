@@ -68,7 +68,19 @@ final class LifeMetrics_Submission_Service
             }
         }
 
-        // 6. Safeguard fallback to default PSS10 endpoint if defined
+        // 6. Safeguard fallback to generic or PSS10 endpoint if defined
+        if ($sanitized_id === 'pss10' && defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
+            $endpoint = constant('LMQ_PSS10_GOOGLE_ENDPOINT');
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
+            }
+        }
+        if (defined('LMQ_GOOGLE_ENDPOINT')) {
+            $endpoint = constant('LMQ_GOOGLE_ENDPOINT');
+            if (!empty($endpoint) && is_string($endpoint)) {
+                return $endpoint;
+            }
+        }
         if (defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
             $endpoint = constant('LMQ_PSS10_GOOGLE_ENDPOINT');
             if (!empty($endpoint) && is_string($endpoint)) {
