@@ -14,15 +14,11 @@ vm.runInNewContext(engineSource, globalObj);
 const engine = globalObj.LifeMetricsQuestionnaireEngine;
 
 function createMockElement(tag, customProps = {}) {
-  return {
+  const el = {
     tag,
     className: '',
     hidden: customProps.hidden !== undefined ? customProps.hidden : false,
-    classList: {
-      add: function(cls) { this.classes = this.classes || []; this.classes.push(cls); },
-      remove: function(cls) { if(this.classes) this.classes = this.classes.filter(c => c !== cls); },
-      contains: function(c) { return this.classes && this.classes.includes(c); }
-    },
+    classes: customProps.classes ? [...customProps.classes] : [],
     setAttribute: function(k, v) { this[k] = v; },
     getAttribute: function(k) { return this[k]; },
     appendChild: function(c) { this.children = this.children || []; this.children.push(c); },
@@ -31,11 +27,25 @@ function createMockElement(tag, customProps = {}) {
     children: [],
     ...customProps
   };
+  el.classList = {
+    add: function(cls) { if (!el.classes.includes(cls)) el.classes.push(cls); },
+    remove: function(cls) { el.classes = el.classes.filter(c => c !== cls); },
+    toggle: function(cls, force) {
+      const has = this.contains(cls);
+      const shouldAdd = force !== undefined ? force : !has;
+      if (shouldAdd) this.add(cls); else this.remove(cls);
+    },
+    contains: function(c) { return el.classes && el.classes.includes(c); }
+  };
+  return el;
 }
 
 function createMockRoot(id, config, submitUrl) {
   const root = {
     id,
+    _attributes: {},
+    getAttribute: function(k) { return this._attributes[k]; },
+    setAttribute: function(k, v) { this._attributes[k] = v; },
     classList: { add: () => {}, remove: () => {} },
     querySelector: function(sel) { return this._elements[sel] || null; },
     querySelectorAll: function(sel) {

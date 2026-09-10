@@ -2,6 +2,9 @@
 (function (engine) {
 
   function initQuestionnaire(rootEl) {
+    if (rootEl.getAttribute && rootEl.getAttribute('data-lmq-initialized') === 'true') return;
+    if (rootEl.setAttribute) rootEl.setAttribute('data-lmq-initialized', 'true');
+
     const configEl = rootEl.querySelector('[data-lmq-config]');
     if (!configEl) return;
 
@@ -29,7 +32,11 @@
 
     function showSection(name) {
       rootEl.querySelectorAll('[data-lmq-section]').forEach(el => {
-        el.hidden = el.getAttribute('data-lmq-section') !== name;
+        const active = el.getAttribute('data-lmq-section') === name;
+        if (el.classList && typeof el.classList.toggle === 'function') {
+          el.classList.toggle('section--active', active);
+        }
+        el.hidden = !active;
       });
     }
 
@@ -38,19 +45,49 @@
       const text = rootEl.querySelector('[data-lmq-role="intro-text"]');
       if (title) title.textContent = config.title;
       if (text) text.textContent = config.description;
+
+      const badgesContainer = rootEl.querySelector('[data-lmq-role="badges"]');
+      if (badgesContainer) {
+        badgesContainer.innerHTML = '';
+        const badges = [];
+        if (config.estimated_duration) badges.push(config.estimated_duration);
+        if (config.recall_period) badges.push(config.recall_period);
+        if (config.population) badges.push(config.population);
+        badges.forEach(bText => {
+          const badgeEl = document.createElement('span');
+          badgeEl.className = 'badge';
+          badgeEl.textContent = bText;
+          badgesContainer.appendChild(badgeEl);
+        });
+      }
+
       showSection('intro');
     }
 
     function renderQuestion() {
       const q = allQuestions[state.currentQuestionIndex];
+      if (!q) return;
+
+      const prefixEl = rootEl.querySelector('[data-lmq-role="test-prefix"]');
+      if (prefixEl) {
+        if (q.help) {
+          prefixEl.textContent = q.help;
+          prefixEl.hidden = false;
+        } else {
+          prefixEl.textContent = '';
+          prefixEl.hidden = true;
+        }
+      }
+
       const title = rootEl.querySelector('[data-lmq-role="test-question"]');
       if (title) title.textContent = q.text;
 
       const answersContainer = rootEl.querySelector('[data-lmq-role="answers"]');
-      if (answersContainer) {
+      if (answersContainer && q.answers) {
         answersContainer.innerHTML = '';
         q.answers.forEach(ans => {
           const btn = document.createElement('button');
+          btn.type = 'button';
           btn.className = 'answer-btn';
           if (state.answers[q.id] === ans.value) {
             btn.classList.add('selected');
@@ -85,7 +122,7 @@
 
       const progressBar = rootEl.querySelector('[data-lmq-role="progress-bar"]');
       if (progressBar) {
-        const percent = ((state.currentQuestionIndex) / allQuestions.length) * 100;
+        const percent = ((state.currentQuestionIndex + 1) / allQuestions.length) * 100;
         progressBar.style.width = percent + '%';
         progressBar.setAttribute('aria-valuenow', Math.round(percent));
       }
@@ -137,10 +174,38 @@
       const scoreVal = rootEl.querySelector('.result-score__value');
       if (scoreVal) scoreVal.textContent = scoreResult.final_score;
 
+      const scoreMax = rootEl.querySelector('.gauge-score__max');
+      if (scoreMax && config.score && config.score.target_max !== undefined) {
+        scoreMax.textContent = ` / ${config.score.target_max}`;
+      }
+
+      const level = config.result_levels ? config.result_levels.find(l => l.code === scoreResult.displayed_category) : null;
+
+      const resultBadge = rootEl.querySelector('[data-lmq-role="result-badge"]');
+      if (resultBadge && level) {
+        resultBadge.textContent = level.title;
+        resultBadge.className = `result-badge result-badge--${level.code}`;
+      }
+
+      const interpTitle = rootEl.querySelector('[data-lmq-role="interpretation-title"]');
+      if (interpTitle && level) {
+        interpTitle.textContent = level.title;
+      }
+
       const analysisText = rootEl.querySelector('[data-lmq-role="analysis-text"]');
-      if (analysisText) {
-        const level = config.result_levels.find(l => l.code === scoreResult.displayed_category);
-        if (level) analysisText.textContent = level.description;
+      if (analysisText && level) {
+        analysisText.textContent = level.description;
+      }
+
+      const gaugeFill = rootEl.querySelector('[data-lmq-role="gauge-fill"]');
+      const gaugeNeedle = rootEl.querySelector('[data-lmq-role="gauge-needle"]');
+      if (gaugeFill && gaugeNeedle && config.score && config.score.target_max > 0) {
+        const circumference = Math.PI * 80;
+        const min = config.score.target_min || 0;
+        const max = config.score.target_max;
+        const ratio = Math.max(0, Math.min(1, (scoreResult.final_score - min) / (max - min)));
+        gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
+        gaugeNeedle.setAttribute('transform', `rotate(${180 - ratio * 180}, 100, 100)`);
       }
 
       const safetyContainer = rootEl.querySelector('[data-lmq-role="safety-messages"]');
@@ -323,7 +388,12 @@
     }
 
     const startBtn = rootEl.querySelector('[data-lmq-role="start"]');
-    if (startBtn) startBtn.onclick = renderQuestion;
+    if (startBtn) {
+      startBtn.onclick = () => {
+        state.currentQuestionIndex = 0;
+        renderQuestion();
+      };
+    }
 
     const backBtn = rootEl.querySelector('[data-lmq-role="back"]');
     if (backBtn) backBtn.onclick = prevQuestion;
@@ -337,8 +407,14 @@
     renderIntro();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function runAutoInit() {
     document.querySelectorAll('.lmq-questionnaire-root').forEach(initQuestionnaire);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runAutoInit);
+  } else {
+    runAutoInit();
+  }
 
 })(typeof LifeMetricsQuestionnaireEngine !== 'undefined' ? LifeMetricsQuestionnaireEngine : require('./questionnaire-engine.js'));

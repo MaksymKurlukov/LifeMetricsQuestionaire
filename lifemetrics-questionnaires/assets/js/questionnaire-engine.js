@@ -31,7 +31,11 @@
   }
 
   function score(config, answers) {
-    var expected = config.questions.concat(config.safety_questions).map(function (question) { return question.id; }).sort();
+    var safetyQuestions = config.safety_questions || [];
+    var dimensionsList = config.dimensions || [];
+    var classificationRules = config.classification_rules || [];
+
+    var expected = config.questions.concat(safetyQuestions).map(function (question) { return question.id; }).sort();
     var actual = Object.keys(answers).sort();
     if (JSON.stringify(expected) !== JSON.stringify(actual)) throw new Error('invalid_submission');
 
@@ -43,7 +47,7 @@
     var fullMax = 0;
     var removedCapacity = false;
     var dimensionTotals = {};
-    config.dimensions.forEach(function (dimension) {
+    dimensionsList.forEach(function (dimension) {
       dimensionTotals[dimension.id] = { raw_score: 0, available_min: 0, available_max: 0 };
     });
 
@@ -78,7 +82,7 @@
       throw new Error('unscorable_answers');
     }
 
-    var dimensions = config.dimensions.map(function (definition, order) {
+    var dimensions = dimensionsList.map(function (definition, order) {
       var totals = dimensionTotals[definition.id];
       var capacity = totals.available_max - totals.available_min;
       var percentage = capacity === 0 ? null : (totals.raw_score - totals.available_min) / capacity * 100;
@@ -97,7 +101,7 @@
     var displayed = calculated;
     var appliedRules = [];
     var classificationMessages = [];
-    config.classification_rules.forEach(function (rule) {
+    classificationRules.forEach(function (rule) {
       var dimension = dimensions.find(function (item) { return item.id === rule.dimension; });
       var metric = rule.metric === 'dimension_score' ? dimension.raw_score : dimension.percentage;
       if (metric !== null && compare(metric, rule.operator, rule.value)) {
@@ -108,7 +112,7 @@
         if (!classificationMessages.includes(rule.message_code)) classificationMessages.push(rule.message_code);
       }
     });
-    config.dimensions.forEach(function (definition) {
+    dimensionsList.forEach(function (definition) {
       var dimension = dimensions.find(function (item) { return item.id === definition.id; });
       if (dimension.attention && definition.attention && !classificationMessages.includes(definition.attention.message_code)) {
         classificationMessages.push(definition.attention.message_code);
@@ -124,7 +128,7 @@
     var safetyAnswers = {};
     var triggered = {};
     var triggerOrder = 0;
-    config.safety_questions.forEach(function (question) {
+    safetyQuestions.forEach(function (question) {
       var answer = findAnswer(question.answers, answers[question.id]);
       safetyAnswers[question.id] = { value: answer.value, label: answer.label || '', triggers: answer.triggers };
       answer.triggers.forEach(function (code) {
