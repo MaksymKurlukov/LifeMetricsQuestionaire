@@ -42,14 +42,20 @@ final class LifeMetrics_Google_Apps_Script_Adapter
         }
 
         $status = wp_remote_retrieve_response_code($response);
-        if ($status === 302) {
+        if ($status >= 300 && $status < 400) {
             $location = wp_remote_retrieve_header($response, 'location');
             $redirect = is_string($location) ? parse_url($location) : false;
+            $host = (is_array($redirect) && isset($redirect['host'])) ? strtolower($redirect['host']) : '';
+            $is_google_host = ($host === 'script.googleusercontent.com' ||
+                               str_ends_with($host, '.googleusercontent.com') ||
+                               $host === 'script.google.com' ||
+                               str_ends_with($host, '.google.com'));
+
             if (
                 !is_array($redirect) ||
-                !isset($redirect['scheme'], $redirect['host']) ||
+                !isset($redirect['scheme']) ||
                 strtolower($redirect['scheme']) !== 'https' ||
-                strtolower($redirect['host']) !== 'script.googleusercontent.com' ||
+                !$is_google_host ||
                 isset($redirect['user']) ||
                 isset($redirect['pass']) ||
                 isset($redirect['port'])
@@ -76,7 +82,8 @@ final class LifeMetrics_Google_Apps_Script_Adapter
             $status = wp_remote_retrieve_response_code($response);
         }
 
-        $backend = json_decode(wp_remote_retrieve_body($response), true);
+        $body = wp_remote_retrieve_body($response);
+        $backend = is_string($body) ? json_decode(trim($body), true) : null;
         if ($status < 200 || $status >= 300) {
             return new WP_Error(
                 'lmq_upstream_http_error',

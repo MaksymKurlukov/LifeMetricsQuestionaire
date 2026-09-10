@@ -195,6 +195,19 @@ $GLOBALS['mock_remote_get_response'] = array(
 $adapter_res = $adapter->send('https://script.google.com/macros/s/test/exec', array('test' => 'data'));
 expect_true(is_array($adapter_res) && $adapter_res['ok'] === true && $adapter_res['duplicate'] === false, 'BACK-005: 302 redirect followed safely');
 
+// Test 307 Temporary Redirect with googleusercontent subdomain
+$GLOBALS['mock_remote_post_response'] = array(
+    'status' => 307,
+    'body' => '',
+    'headers' => array('location' => 'https://doc-0k-6s-docs.googleusercontent.com/macros/echo?user_content_key=valid_token')
+);
+$GLOBALS['mock_remote_get_response'] = array(
+    'status' => 200,
+    'body' => json_encode(array('ok' => true, 'duplicate' => false))
+);
+$adapter_res_307 = $adapter->send('https://script.google.com/macros/s/test/exec', array('test' => 'data'));
+expect_true(is_array($adapter_res_307) && $adapter_res_307['ok'] === true, 'BACK-005b: 307 redirect to googleusercontent subdomain followed safely');
+
 // ----------------------------------------------------
 // BACK-006: Malicious / Untrusted Redirect Rejection
 // ----------------------------------------------------
