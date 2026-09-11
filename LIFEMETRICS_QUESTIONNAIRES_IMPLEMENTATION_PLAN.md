@@ -9,7 +9,7 @@
 | 1 | Schema Validator V2 | TERMINÉ |
 | 2 | Scoring Engine V2 PHP / JavaScript | TERMINÉ |
 | 3 | Architecture CSS extensible | TERMINÉ |
-| 4 | Activité physique V2 | À FAIRE |
+| 4 | Activité physique V2 | TERMINÉ |
 | 5 | Sommeil V2 | À FAIRE |
 | 6 | Nutrition V2 | À FAIRE |
 | 7 | Pieds & confort postural V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 3 — Architecture CSS extensible
-- Prochaine phase à exécuter : PHASE 4 — Activité physique V2
+- Dernière phase terminée : PHASE 4 — Activité physique V2
+- Prochaine phase à exécuter : PHASE 5 — Sommeil V2
 - Blocages : Aucun
-- Nombre de phases terminées : 3 / 16
-- Nombre de phases restantes : 13
-- Dernier commit de phase : lifemetrics: phase 03 - extensible css architecture
+- Nombre de phases terminées : 4 / 16
+- Nombre de phases restantes : 12
+- Dernier commit de phase : lifemetrics: phase 04 - activite physique v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -289,7 +289,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 4 — Activité physique V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Rôle : Premier questionnaire étalon V2.
 - Objectif : Valider le moteur générique avec un questionnaire standard avant de migrer les autres, en implémentant exactement le PDF validé.
 - Règle frontend : Inclure l'adaptation frontend minimale si strictement nécessaire pour afficher et tester les axes d'amélioration de ce questionnaire.
@@ -304,12 +304,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - Questions exactes, réponses exactes, scoring exact, catégories exactes, dimensions exactes, axes exacts, textes résultat exacts ;
   - Tests PHP et JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
+- Résultat : Validation complète du questionnaire étalon Activité physique V2. 12 questions (AP01-AP12), AP04 duplicate max 4 pts (options 3 et 4), 5 dimensions, 4 catégories (0-15, 16-27, 28-39, 40-48), sélection des 2 dimensions les plus faibles et parité PHP/JS vérifiée.
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 04 - activite physique v2
+- Date : 2026-09-11
 
 ---
 
@@ -654,6 +654,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-assets.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-renderer.test.php (PASS), suite complète PHP/JS (PASS)
 - Résultat : Exposition de `data-lmq-questionnaire="<id>"` sur le wrapper DOM et enqueue conditionnel avec contrôle `file_exists()` d'un éventuel fichier `assets/css/questionnaires/<id>.css`. Zéro 404 émis et aucun fichier vide créé.
 - Notes : Prêt pour la Phase 4 (Activité physique V2).
+
+### 2026-09-11 — Phase 4 : Activité physique V2
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js (PASS), suite complète PHP/JS (PASS)
+- Résultat : Questionnaire étalon validé en parfaite conformité méthodologique : 12 questions (AP01-AP12), AP04 duplicate 4 pts (options 3 et 4), 5 dimensions, 4 catégories de résultat, sélection des 2 dimensions les plus faibles et parité arithmétique 100%.
+- Notes : Prêt pour la Phase 5 (Sommeil V2).
 
 ---
 
