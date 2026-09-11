@@ -53,7 +53,7 @@ final class LifeMetrics_Questionnaire_Schema_Validator
                 $errors[] = 'invalid_text:' . $field;
             }
         }
-        if (!in_array($config['scoring_direction'] ?? null, array('higher_is_better', 'higher_is_worse'), true)) {
+        if (!in_array($config['scoring_direction'] ?? null, array('lower_is_better', 'higher_is_better', 'higher_is_worse'), true)) {
             $errors[] = 'invalid_scoring_direction';
         }
 
@@ -123,13 +123,21 @@ final class LifeMetrics_Questionnaire_Schema_Validator
         $dimension_ids = array();
         $memberships = array_fill_keys(array_keys($question_ids), 0);
         foreach ($dimensions as $dimension) {
-            if ($status === 'ready' && is_array($dimension) && self::has_unknown($dimension, array('id', 'label', 'question_ids', 'weakest_eligible', 'attention'))) {
+            if ($status === 'ready' && is_array($dimension) && self::has_unknown($dimension, array('id', 'label', 'question_ids', 'weakest_eligible', 'attention', 'calculation_mode', 'improvement_messages'))) {
                 $errors[] = 'unknown_field:dimension';
             }
             $id = is_array($dimension) ? ($dimension['id'] ?? null) : null;
             if (!self::slug($id) || isset($dimension_ids[$id]) || !self::text($dimension['label'] ?? null)
                 || !is_bool($dimension['weakest_eligible'] ?? null) || !is_array($dimension['question_ids'] ?? null)
                 || !array_is_list($dimension['question_ids']) || !$dimension['question_ids']) {
+                $errors[] = 'invalid_dimension_definition';
+                continue;
+            }
+            if (array_key_exists('calculation_mode', $dimension) && !in_array($dimension['calculation_mode'], array('average', 'sum'), true)) {
+                $errors[] = 'invalid_dimension_definition';
+                continue;
+            }
+            if (array_key_exists('improvement_messages', $dimension) && (!is_array($dimension['improvement_messages']) || array_is_list($dimension['improvement_messages']))) {
                 $errors[] = 'invalid_dimension_definition';
                 continue;
             }

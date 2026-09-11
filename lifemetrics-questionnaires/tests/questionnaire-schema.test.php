@@ -31,12 +31,20 @@ $mutations = array(
     'safety points' => function (&$c) { $c['safety_questions'][0]['points'] = 1; },
     'invalid CTA' => function (&$c) { $c['result_ctas'][0]['url'] = 'javascript:alert(1)'; },
     'missing approval' => function (&$c) { $c['approvals']['publication'] = false; },
+    'bad scoring direction' => function (&$c) { $c['scoring_direction'] = 'invalid_direction'; },
+    'bad calculation mode' => function (&$c) { $c['dimensions'][0]['calculation_mode'] = 'median'; },
 );
 foreach ($mutations as $label => $mutate) {
     $invalid = $config;
     $mutate($invalid);
     schema_expect($validator->validate($invalid) !== array(), $label . ' rejected');
 }
+
+$v2_features = $config;
+$v2_features['scoring_direction'] = 'lower_is_better';
+$v2_features['dimensions'][0]['calculation_mode'] = 'average';
+$v2_features['dimensions'][0]['improvement_messages'] = array('low' => 'Improvement text');
+schema_expect($validator->validate($v2_features) === array(), 'lower_is_better, calculation_mode average and improvement_messages accepted');
 
 $review = $config;
 $review['status'] = 'review';

@@ -6,7 +6,7 @@
 
 | Phase | Description | Statut |
 |---|---|---|
-| 1 | Schema Validator V2 | À FAIRE |
+| 1 | Schema Validator V2 | TERMINÉ |
 | 2 | Scoring Engine V2 PHP / JavaScript | À FAIRE |
 | 3 | Architecture CSS extensible | À FAIRE |
 | 4 | Activité physique V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : Aucune
-- Prochaine phase à exécuter : PHASE 1 — Schema Validator V2
+- Dernière phase terminée : PHASE 1 — Schema Validator V2
+- Prochaine phase à exécuter : PHASE 2 — Scoring Engine V2 PHP / JavaScript
 - Blocages : Aucun
-- Nombre de phases terminées : 0 / 16
-- Nombre de phases restantes : 16
-- Dernier commit de phase : Aucun
+- Nombre de phases terminées : 1 / 16
+- Nombre de phases restantes : 15
+- Dernier commit de phase : lifemetrics: phase 01 - schema validator v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -187,7 +187,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 1 — Schema Validator V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Adapter uniquement ce qui manque réellement au validateur actuel pour accepter les configurations finales des questionnaires V2.
 - Justification : Permet au registry de valider les schémas V2 (scoring_direction: lower_is_better requis par les questionnaires propriétaires V2, champ dimensionnel calculation_mode: average, plages de scores configurables).
 - Règle scoring_direction : Les questionnaires propriétaires V2 utilisent lower_is_better. Supporter ce besoin réel. Si higher_is_better existe déjà et est réellement utilisé, le conserver. Ne pas ajouter de capacité générique sans besoin réel démontré.
@@ -205,12 +205,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - Configurations invalides rejetées ;
   - Tests schéma PASS sans régression existante.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/includes/class-questionnaire-schema-validator.php, lifemetrics-questionnaires/tests/questionnaire-schema.test.php
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-schema.test.php (PASS), suites de tests complètes PHP et JS (PASS).
+- Résultat : Validateur de schéma V2 opérationnel. Support de scoring_direction: lower_is_better, calculation_mode: average/sum, et improvement_messages.
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 01 - schema validator v2
+- Date : 2026-09-11
 
 ---
 
@@ -634,7 +634,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ## Journal d'implémentation
 
-(Ce journal est complété de manière factuelle et concise après l'exécution de chaque phase validée)
+### 2026-09-11 — Phase 1 : Schema Validator V2
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/includes/class-questionnaire-schema-validator.php, lifemetrics-questionnaires/tests/questionnaire-schema.test.php, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-schema.test.php (PASS), suite complète PHP (20 tests PASS), suite complète JS (11 tests PASS)
+- Résultat : Validateur de schéma étendu pour accepter `scoring_direction: lower_is_better`, `calculation_mode: average` (et sum), et `improvement_messages`. Les configurations invalides restent strictement rejetées. Aucune régression sur PSS-10 ni sur les schémas existants.
+- Notes : Prêt pour la Phase 2 (Scoring Engine V2).
 
 ---
 
