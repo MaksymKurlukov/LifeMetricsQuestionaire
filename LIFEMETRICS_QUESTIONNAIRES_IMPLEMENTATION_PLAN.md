@@ -15,7 +15,7 @@
 | 7 | Pieds & confort postural V2 | TERMINÉ |
 | 8 | Hydratation V2 | TERMINÉ |
 | 9 | Sédentarité V2 | TERMINÉ |
-| 10 | Fatigue & récupération V2 | À FAIRE |
+| 10 | Fatigue & récupération V2 | TERMINÉ |
 | 11 | Risque nutritionnel V1 | À FAIRE |
 | 12 | Bien-être V1 | À FAIRE |
 | 13 | Restitution frontend finale | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 9 — Sédentarité V2
-- Prochaine phase à exécuter : PHASE 10 — Fatigue & récupération V2
+- Dernière phase terminée : PHASE 10 — Fatigue & récupération V2
+- Prochaine phase à exécuter : PHASE 11 — Risque nutritionnel V1
 - Blocages : Aucun
-- Nombre de phases terminées : 9 / 16
-- Nombre de phases restantes : 7
-- Dernier commit de phase : lifemetrics: phase 09 - sedentarite v2
+- Nombre de phases terminées : 10 / 16
+- Nombre de phases restantes : 6
+- Dernier commit de phase : lifemetrics: phase 10 - fatigue recuperation v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -497,25 +497,34 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 10 — Fatigue & récupération V2
 
-- Statut : À FAIRE
-- Objectif : Implémenter fidèlement la configuration validée issue du PDF Fatigue & Récupération (12 questions, 3 Safety FRSF01–03, dimensions, seuils, textes).
+- Statut : TERMINÉ
+- Objectif : Implémenter fidèlement la configuration validée issue du PDF Fatigue & Récupération (12 questions, points 1 à 5, scoring_direction: lower_is_better, 6 dimensions en calculation_mode: average, 3 catégories 12–24 / 25–32 / 33–60, 3 questions Safety FRSF01–03 hors score, CTAs globaux, disclaimers).
 - Règle : Ne pas inventer de N/A, de guardrail ou de règle d'attention supplémentaire absents du PDF.
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/fatigue-recuperation/questionnaire.php
   - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php
   - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
 - Tests :
   - php lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js
 - Critères de validation :
   - Conformité stricte au PDF et tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés :
+  - lifemetrics-questionnaires/questionnaires/fatigue-recuperation/questionnaire.php
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js
+- Tests exécutés :
+  - php lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php (PASS)
+  - node lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js (PASS)
+  - Full suite PHP (20 tests PASS)
+  - Full suite JS (14 tests PASS)
+- Résultat : Migration V2 complète et rigoureuse du questionnaire Fatigue & Récupération d'après le PDF validé (`Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`). 12 questions scorées de 1 à 5 (lower_is_better), échelle 12 à 60, 3 catégories exactes (12–24: RECUPERATION_FAVORABLE, 25–32: RECUPERATION_FRAGILE, 33–60: FATIGUE_IMPORTANTE), 6 dimensions calculées par moyenne, 3 questions Safety hors score avec code message `FATIGUE_SAFETY_MESSAGE`, CTAs globaux conformes.
+- NON DÉTERMINÉ : URL de production du catalogue des questionnaires pour le CTA secondaire (placeholder technique `/tests-sante/`).
+- Commit : lifemetrics: phase 10 - fatigue recuperation v2
+- Date : 2026-09-11
 
 ---
 

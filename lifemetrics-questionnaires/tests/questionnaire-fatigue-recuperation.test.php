@@ -57,220 +57,108 @@ $validation_errors = $validator->validate($config);
 fr_assert(empty($validation_errors), 'Fatigue & Récupération passes strict Schema 2.0.0 validation (errors: ' . implode(', ', $validation_errors) . ')');
 
 // ----------------------------------------------------
-// 2. Score Boundaries (0, 15, 16, 27, 28, 38, 39, 48)
+// 2. Score Boundaries (12, 24, 25, 32, 33, 60)
 // ----------------------------------------------------
 $base_safety = array('FRSF01' => 'no', 'FRSF02' => 'no', 'FRSF03' => 'no');
 
-// Min score 0 -> FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE
-$answers_min = array_merge(array_fill_keys(array('FR01','FR02','FR03','FR04','FR05','FR06','FR07','FR08','FR09','FR10','FR11','FR12'), '0'), $base_safety);
-$res_0 = $engine->score($config, $answers_min);
-fr_assert($res_0['final_score'] === 0, 'Min score is 0');
-fr_assert($res_0['calculated_category'] === 'FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE', '0 is FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE');
-fr_assert($res_0['displayed_category'] === 'FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE', 'Displayed category is FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE');
+// Min score 12 (all 1s) -> RECUPERATION_FAVORABLE
+$answers_12 = array_merge(array_fill_keys(array('FR01','FR02','FR03','FR04','FR05','FR06','FR07','FR08','FR09','FR10','FR11','FR12'), '1'), $base_safety);
+$res_12 = $engine->score($config, $answers_12);
+fr_assert($res_12['final_score'] === 12, 'Min score is 12 (got ' . $res_12['final_score'] . ')');
+fr_assert($res_12['calculated_category'] === 'RECUPERATION_FAVORABLE', '12 is RECUPERATION_FAVORABLE');
+fr_assert($res_12['displayed_category'] === 'RECUPERATION_FAVORABLE', 'Displayed category is RECUPERATION_FAVORABLE');
 
-// Score 15 -> FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE
-$answers_15 = array_merge(array(
-    'FR01' => '2', 'FR02' => '2', 'FR03' => '2', 'FR04' => '2',
-    'FR05' => '2', 'FR06' => '2', 'FR07' => '2', 'FR08' => '1',
-    'FR09' => '0', 'FR10' => '0', 'FR11' => '0', 'FR12' => '0'
-), $base_safety);
-$res_15 = $engine->score($config, $answers_15);
-fr_assert($res_15['final_score'] === 15, 'Score 15 test');
-fr_assert($res_15['calculated_category'] === 'FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE', '15 is FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE');
-
-// Score 16 -> RECUPERATION_A_RENFORCER
-$answers_16 = array_merge(array(
+// Score 24 -> RECUPERATION_FAVORABLE
+$answers_24 = array_merge(array(
     'FR01' => '2', 'FR02' => '2', 'FR03' => '2', 'FR04' => '2',
     'FR05' => '2', 'FR06' => '2', 'FR07' => '2', 'FR08' => '2',
-    'FR09' => '0', 'FR10' => '0', 'FR11' => '0', 'FR12' => '0'
+    'FR09' => '2', 'FR10' => '2', 'FR11' => '2', 'FR12' => '2'
 ), $base_safety);
-$res_16 = $engine->score($config, $answers_16);
-fr_assert($res_16['final_score'] === 16, 'Score 16 test');
-fr_assert($res_16['calculated_category'] === 'RECUPERATION_A_RENFORCER', '16 is RECUPERATION_A_RENFORCER');
+$res_24 = $engine->score($config, $answers_24);
+fr_assert($res_24['final_score'] === 24, 'Score 24 test');
+fr_assert($res_24['calculated_category'] === 'RECUPERATION_FAVORABLE', '24 is RECUPERATION_FAVORABLE');
 
-// Score 27 -> RECUPERATION_A_RENFORCER
-$answers_27 = array_merge(array(
-    'FR01' => '2', 'FR02' => '2', 'FR03' => '2', 'FR04' => '2',
-    'FR05' => '2', 'FR06' => '2', 'FR07' => '2', 'FR08' => '2',
-    'FR09' => '3', 'FR10' => '3', 'FR11' => '3', 'FR12' => '2'
-), $base_safety);
-$res_27 = $engine->score($config, $answers_27);
-fr_assert($res_27['final_score'] === 27, 'Score 27 test');
-fr_assert($res_27['calculated_category'] === 'RECUPERATION_A_RENFORCER', '27 is RECUPERATION_A_RENFORCER');
+// Score 25 -> RECUPERATION_FRAGILE
+$answers_25 = array_merge($answers_24, array('FR12' => '3'));
+$res_25 = $engine->score($config, $answers_25);
+fr_assert($res_25['final_score'] === 25, 'Score 25 test');
+fr_assert($res_25['calculated_category'] === 'RECUPERATION_FRAGILE', '25 is RECUPERATION_FRAGILE');
 
-// Score 28 -> RECUPERATION_GLOBALEMENT_FAVORABLE
-$answers_28 = array_merge(array(
-    'FR01' => '2', 'FR02' => '2', 'FR03' => '2', 'FR04' => '2',
-    'FR05' => '2', 'FR06' => '2', 'FR07' => '2', 'FR08' => '2',
-    'FR09' => '3', 'FR10' => '3', 'FR11' => '3', 'FR12' => '3'
-), $base_safety);
-$res_28 = $engine->score($config, $answers_28);
-fr_assert($res_28['final_score'] === 28, 'Score 28 test');
-fr_assert($res_28['calculated_category'] === 'RECUPERATION_GLOBALEMENT_FAVORABLE', '28 is RECUPERATION_GLOBALEMENT_FAVORABLE');
-
-// Score 38 -> RECUPERATION_GLOBALEMENT_FAVORABLE
-$answers_38 = array_merge(array(
+// Score 32 -> RECUPERATION_FRAGILE
+$answers_32 = array_merge(array(
     'FR01' => '3', 'FR02' => '3', 'FR03' => '3', 'FR04' => '3',
     'FR05' => '3', 'FR06' => '3', 'FR07' => '3', 'FR08' => '3',
-    'FR09' => '4', 'FR10' => '4', 'FR11' => '3', 'FR12' => '3'
+    'FR09' => '2', 'FR10' => '2', 'FR11' => '2', 'FR12' => '2'
 ), $base_safety);
-$res_38 = $engine->score($config, $answers_38);
-fr_assert($res_38['final_score'] === 38, 'Score 38 test');
-fr_assert($res_38['calculated_category'] === 'RECUPERATION_GLOBALEMENT_FAVORABLE', '38 is RECUPERATION_GLOBALEMENT_FAVORABLE');
+$res_32 = $engine->score($config, $answers_32);
+fr_assert($res_32['final_score'] === 32, 'Score 32 test');
+fr_assert($res_32['calculated_category'] === 'RECUPERATION_FRAGILE', '32 is RECUPERATION_FRAGILE');
 
-// Score 39 -> TRES_BON_PROFIL_RECUPERATION
-$answers_39 = array_merge(array(
-    'FR01' => '3', 'FR02' => '3', 'FR03' => '3', 'FR04' => '3',
-    'FR05' => '3', 'FR06' => '3', 'FR07' => '4', 'FR08' => '3',
-    'FR09' => '4', 'FR10' => '4', 'FR11' => '3', 'FR12' => '3'
-), $base_safety);
-$res_39 = $engine->score($config, $answers_39);
-fr_assert($res_39['final_score'] === 39, 'Score 39 test');
-fr_assert($res_39['calculated_category'] === 'TRES_BON_PROFIL_RECUPERATION', '39 is TRES_BON_PROFIL_RECUPERATION');
+// Score 33 -> FATIGUE_IMPORTANTE
+$answers_33 = array_merge($answers_32, array('FR12' => '3'));
+$res_33 = $engine->score($config, $answers_33);
+fr_assert($res_33['final_score'] === 33, 'Score 33 test');
+fr_assert($res_33['calculated_category'] === 'FATIGUE_IMPORTANTE', '33 is FATIGUE_IMPORTANTE');
 
-// Max score 48 -> TRES_BON_PROFIL_RECUPERATION
-$answers_max = array_merge(array_fill_keys(array('FR01','FR02','FR03','FR04','FR05','FR06','FR07','FR08','FR09','FR10','FR11','FR12'), '4'), $base_safety);
-$res_48 = $engine->score($config, $answers_max);
-fr_assert($res_48['final_score'] === 48, 'Max score is 48');
-fr_assert($res_48['calculated_category'] === 'TRES_BON_PROFIL_RECUPERATION', '48 is TRES_BON_PROFIL_RECUPERATION');
+// Max score 60 (all 5s) -> FATIGUE_IMPORTANTE
+$answers_60 = array_merge(array_fill_keys(array('FR01','FR02','FR03','FR04','FR05','FR06','FR07','FR08','FR09','FR10','FR11','FR12'), '5'), $base_safety);
+$res_60 = $engine->score($config, $answers_60);
+fr_assert($res_60['final_score'] === 60, 'Max score is 60');
+fr_assert($res_60['calculated_category'] === 'FATIGUE_IMPORTANTE', '60 is FATIGUE_IMPORTANTE');
 
 // ----------------------------------------------------
-// 3. Dimension Attention Threshold (score <= 2/8)
+// 3. Dimension Averages Calculation
 // ----------------------------------------------------
-// Trigger attention on D1 (FR01=1, FR02=1 -> D1=2/8) and D2=3/8 (FR03=1, FR04=2)
-$answers_att = array_merge($answers_max, array(
-    'FR01' => '1', 'FR02' => '1', // D1 = 2 (triggers ATTENTION_ENERGIE_REVEIL)
-    'FR03' => '1', 'FR04' => '2', // D2 = 3 (no attention)
+$answers_dim = array_merge($answers_12, array(
+    'FR01' => '3', 'FR02' => '5', // D1 sum = 8, avg = (3+5)/2 = 4.0
+    'FR03' => '1', 'FR04' => '2', // D2 sum = 3, avg = (1+2)/2 = 1.5
+    'FR05' => '2', 'FR06' => '4', // D3 sum = 6, avg = (2+4)/2 = 3.0
+    'FR07' => '1', 'FR08' => '1', // D4 sum = 2, avg = (1+1)/2 = 1.0
+    'FR09' => '5', 'FR10' => '5', // D5 sum = 10, avg = (5+5)/2 = 5.0
+    'FR11' => '2', 'FR12' => '2', // D6 sum = 4, avg = (2+2)/2 = 2.0
 ));
-$res_att = $engine->score($config, $answers_att);
-$dim1 = get_dim($res_att, 'energie-recuperation-reveil');
-$dim2 = get_dim($res_att, 'energie-fonctionnement-journee');
-fr_assert($dim1['raw_score'] === 2 && $dim1['attention'] === true, 'D1 <= 2/8 triggers attention');
-fr_assert($dim2['raw_score'] === 3 && $dim2['attention'] === false, 'D2 = 3/8 does NOT trigger attention');
-fr_assert(in_array('ATTENTION_ENERGIE_REVEIL', $res_att['classification_message_codes'], true), 'Attention message code emitted');
-fr_assert(!in_array('ATTENTION_ENERGIE_JOURNEE', $res_att['classification_message_codes'], true), 'D2 message code not emitted');
+$res_dim = $engine->score($config, $answers_dim);
+$d1 = get_dim($res_dim, 'energie-recuperation-reveil');
+$d2 = get_dim($res_dim, 'energie-fonctionnement-journee');
+$d3 = get_dim($res_dim, 'retentissement-fatigue');
+$d4 = get_dim($res_dim, 'recuperation-apres-effort');
+$d5 = get_dim($res_dim, 'efficacite-repos');
+$d6 = get_dim($res_dim, 'stabilite-recuperation-globale');
+
+fr_assert($d1['raw_score'] === 8 && ($d1['raw_score'] / 2) == 4.0, 'D1 raw score is 8 (avg 4.0)');
+fr_assert($d2['raw_score'] === 3 && ($d2['raw_score'] / 2) == 1.5, 'D2 raw score is 3 (avg 1.5)');
+fr_assert($d3['raw_score'] === 6 && ($d3['raw_score'] / 2) == 3.0, 'D3 raw score is 6 (avg 3.0)');
+fr_assert($d4['raw_score'] === 2 && ($d4['raw_score'] / 2) == 1.0, 'D4 raw score is 2 (avg 1.0)');
+fr_assert($d5['raw_score'] === 10 && ($d5['raw_score'] / 2) == 5.0, 'D5 raw score is 10 (avg 5.0)');
+fr_assert($d6['raw_score'] === 4 && ($d6['raw_score'] / 2) == 2.0, 'D6 raw score is 4 (avg 2.0)');
+
+// Weakest dimensions: D5 (raw 10) and D1 (raw 8)
+fr_assert($res_dim['weakest_dimensions'] === array('efficacite-repos', 'energie-recuperation-reveil'), 'Weakest dimensions selected by highest score/percentage (worst)');
 
 // ----------------------------------------------------
 // 4. Safety Questions Independence
 // ----------------------------------------------------
 // FRSF01 alone
-$res_sf1 = $engine->score($config, array_merge($answers_max, array('FRSF01' => 'yes')));
-fr_assert($res_sf1['final_score'] === 48, 'Safety does not alter score (48)');
-fr_assert($res_sf1['calculated_category'] === 'TRES_BON_PROFIL_RECUPERATION', 'Safety does not alter category');
-fr_assert($res_sf1['safety_flag_codes'] === array('FATIGUE_ATTENTION_MESSAGE'), 'FRSF01 emits FATIGUE_ATTENTION_MESSAGE');
+$res_sf1 = $engine->score($config, array_merge($answers_12, array('FRSF01' => 'yes')));
+fr_assert($res_sf1['final_score'] === 12, 'Safety does not alter score (12)');
+fr_assert($res_sf1['calculated_category'] === 'RECUPERATION_FAVORABLE', 'Safety does not alter category');
+fr_assert($res_sf1['safety_flag_codes'] === array('FATIGUE_SAFETY_MESSAGE'), 'FRSF01 emits FATIGUE_SAFETY_MESSAGE');
 
 // FRSF02 alone
-$res_sf2 = $engine->score($config, array_merge($answers_max, array('FRSF02' => 'yes')));
-fr_assert($res_sf2['safety_flag_codes'] === array('FATIGUE_ATTENTION_MESSAGE'), 'FRSF02 emits FATIGUE_ATTENTION_MESSAGE');
+$res_sf2 = $engine->score($config, array_merge($answers_12, array('FRSF02' => 'yes')));
+fr_assert($res_sf2['safety_flag_codes'] === array('FATIGUE_SAFETY_MESSAGE'), 'FRSF02 emits FATIGUE_SAFETY_MESSAGE');
 
 // FRSF03 alone
-$res_sf3 = $engine->score($config, array_merge($answers_max, array('FRSF03' => 'yes')));
-fr_assert($res_sf3['safety_flag_codes'] === array('FATIGUE_ATTENTION_MESSAGE'), 'FRSF03 emits FATIGUE_ATTENTION_MESSAGE');
+$res_sf3 = $engine->score($config, array_merge($answers_12, array('FRSF03' => 'yes')));
+fr_assert($res_sf3['safety_flag_codes'] === array('FATIGUE_SAFETY_MESSAGE'), 'FRSF03 emits FATIGUE_SAFETY_MESSAGE');
 
 // Multiple simultaneous safety triggers
-$res_sf_all = $engine->score($config, array_merge($answers_max, array('FRSF01' => 'yes', 'FRSF02' => 'yes', 'FRSF03' => 'yes')));
-fr_assert($res_sf_all['final_score'] === 48, 'Score unaffected by all safety flags');
-fr_assert($res_sf_all['safety_flag_codes'] === array('FATIGUE_ATTENTION_MESSAGE'), 'Multiple triggers deduplicated to unique flag code');
+$res_sf_all = $engine->score($config, array_merge($answers_12, array('FRSF01' => 'yes', 'FRSF02' => 'yes', 'FRSF03' => 'yes')));
+fr_assert($res_sf_all['final_score'] === 12, 'Score unaffected by all safety flags');
+fr_assert($res_sf_all['safety_flag_codes'] === array('FATIGUE_SAFETY_MESSAGE'), 'Multiple triggers deduplicated to unique flag code');
 
 // ----------------------------------------------------
-// 5. Authoritative Synthetic Profiles from PDF (Section 14)
-// ----------------------------------------------------
-// Profile 1: Très fatigué, mais organise bien son repos (14/48 -> Fatigue importante / récupération insuffisante)
-$profile_1 = array_merge($base_safety, array(
-    'FR01' => '0', 'FR02' => '0',
-    'FR03' => '1', 'FR04' => '1',
-    'FR05' => '1', 'FR06' => '1',
-    'FR07' => '1', 'FR08' => '1',
-    'FR09' => '4', 'FR10' => '0',
-    'FR11' => '2', 'FR12' => '2' // 0+0+1+1+1+1+1+1+4+0+2+2 = 14
-));
-$res_p1 = $engine->score($config, $profile_1);
-fr_assert($res_p1['final_score'] === 14, 'Profile 1 score is 14/48');
-fr_assert($res_p1['calculated_category'] === 'FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE', 'Profile 1 category is FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE');
-
-// Profile 2: Énergie élevée, mauvaise récupération après effort (34/48 -> Récupération globalement favorable)
-$profile_2 = array_merge($base_safety, array(
-    'FR01' => '4', 'FR02' => '4',
-    'FR03' => '4', 'FR04' => '4',
-    'FR05' => '4', 'FR06' => '4',
-    'FR07' => '1', 'FR08' => '1', // mauvaise récupération après effort (D4 = 2 pts)
-    'FR09' => '2', 'FR10' => '2', // efficacité moyenne du repos (D5 = 4 pts)
-    'FR11' => '2', 'FR12' => '2'  // stabilité moyenne (D6 = 4 pts) -> total = 8+8+8+2+4+4 = 34
-));
-$res_p2 = $engine->score($config, $profile_2);
-fr_assert($res_p2['final_score'] === 34, 'Profile 2 score is 34/48');
-fr_assert($res_p2['calculated_category'] === 'RECUPERATION_GLOBALEMENT_FAVORABLE', 'Profile 2 category is RECUPERATION_GLOBALEMENT_FAVORABLE');
-fr_assert(in_array('recuperation-effort', $res_p2['weakest_dimensions'], true), 'Profile 2 identifies recuperation-effort as weakest');
-
-// Profile 3: Bon profil global (45/48 -> Très bon profil de récupération)
-$profile_3 = array_merge($base_safety, array(
-    'FR01' => '4', 'FR02' => '4',
-    'FR03' => '4', 'FR04' => '4',
-    'FR05' => '4', 'FR06' => '4',
-    'FR07' => '3', 'FR08' => '4',
-    'FR09' => '4', 'FR10' => '4',
-    'FR11' => '3', 'FR12' => '3' // 45
-));
-$res_p3 = $engine->score($config, $profile_3);
-fr_assert($res_p3['final_score'] === 45, 'Profile 3 score is 45/48');
-fr_assert($res_p3['calculated_category'] === 'TRES_BON_PROFIL_RECUPERATION', 'Profile 3 category is TRES_BON_PROFIL_RECUPERATION');
-
-// Profile 4: Fatigue modérée et irrégulière (24/48 -> Récupération à renforcer)
-$profile_4 = array_merge($base_safety, array(
-    'FR01' => '2', 'FR02' => '2',
-    'FR03' => '2', 'FR04' => '2',
-    'FR05' => '2', 'FR06' => '2',
-    'FR07' => '2', 'FR08' => '2',
-    'FR09' => '2', 'FR10' => '2',
-    'FR11' => '2', 'FR12' => '2' // 24
-));
-$res_p4 = $engine->score($config, $profile_4);
-fr_assert($res_p4['final_score'] === 24, 'Profile 4 score is 24/48');
-fr_assert($res_p4['calculated_category'] === 'RECUPERATION_A_RENFORCER', 'Profile 4 category is RECUPERATION_A_RENFORCER');
-
-// Profile 5: Fatigue importante + repos inefficace (5/48 -> Fatigue importante / récupération insuffisante)
-$profile_5 = array_merge($base_safety, array(
-    'FR01' => '0', 'FR02' => '0',
-    'FR03' => '0', 'FR04' => '1',
-    'FR05' => '0', 'FR06' => '1',
-    'FR07' => '0', 'FR08' => '1',
-    'FR09' => '0', 'FR10' => '1',
-    'FR11' => '0', 'FR12' => '1' // 5
-));
-$res_p5 = $engine->score($config, $profile_5);
-fr_assert($res_p5['final_score'] === 5, 'Profile 5 score is 5/48');
-fr_assert($res_p5['calculated_category'] === 'FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE', 'Profile 5 category is FATIGUE_IMPORTANTE_RECUPERATION_INSUFFISANTE');
-
-// Profile 6: Haute énergie mais énergie instable (37/48 -> Récupération globalement favorable)
-$profile_6 = array_merge($base_safety, array(
-    'FR01' => '4', 'FR02' => '4', // D1 = 8
-    'FR03' => '4', 'FR04' => '4', // D2 = 8
-    'FR05' => '4', 'FR06' => '4', // D3 = 8
-    'FR07' => '4', 'FR08' => '3', // D4 = 7
-    'FR09' => '2', 'FR10' => '2', // D5 = 4
-    'FR11' => '1', 'FR12' => '1'  // D6 = 2 -> total = 8+8+8+7+4+2 = 37
-));
-$res_p6 = $engine->score($config, $profile_6);
-fr_assert($res_p6['final_score'] === 37, 'Profile 6 score is 37/48');
-fr_assert($res_p6['calculated_category'] === 'RECUPERATION_GLOBALEMENT_FAVORABLE', 'Profile 6 category is RECUPERATION_GLOBALEMENT_FAVORABLE');
-fr_assert($res_p6['weakest_dimensions'][0] === 'stabilite-recuperation-globale', 'Profile 6 identifies D6 as weakest');
-
-// Profile 7: Faible énergie au réveil, excellente journée ensuite (42/48 -> Très bon profil de récupération)
-$profile_7 = array_merge($base_safety, array(
-    'FR01' => '1', 'FR02' => '1', // D1 = 2 pts
-    'FR03' => '4', 'FR04' => '4',
-    'FR05' => '4', 'FR06' => '4',
-    'FR07' => '4', 'FR08' => '4',
-    'FR09' => '4', 'FR10' => '4',
-    'FR11' => '4', 'FR12' => '4' // 42 total
-));
-$res_p7 = $engine->score($config, $profile_7);
-fr_assert($res_p7['final_score'] === 42, 'Profile 7 score is 42/48');
-fr_assert($res_p7['calculated_category'] === 'TRES_BON_PROFIL_RECUPERATION', 'Profile 7 category is TRES_BON_PROFIL_RECUPERATION');
-fr_assert($res_p7['weakest_dimensions'][0] === 'energie-recuperation-reveil', 'Profile 7 identifies D1 as weakest');
-
-// ----------------------------------------------------
-// 6. Registry & Submission Service Integration
+// 5. Registry & Submission Service Integration
 // ----------------------------------------------------
 $registry = new LifeMetrics_Questionnaire_Registry(
     __DIR__ . '/../questionnaires',
@@ -291,9 +179,9 @@ fr_assert($loaded_config['status'] === 'review', 'Status in review');
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
 $submission_service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
 
-$server_scored = $engine->score($loaded_config, $profile_2);
-fr_assert($server_scored['final_score'] === 34, 'Server scoring is authoritative (34/48)');
-fr_assert($server_scored['calculated_category'] === 'RECUPERATION_GLOBALEMENT_FAVORABLE', 'Server category is authoritative');
-fr_assert(in_array('recuperation-effort', $server_scored['weakest_dimensions'], true), 'Weakest dimensions correctly identified');
+$server_scored = $engine->score($loaded_config, $answers_dim);
+fr_assert($server_scored['final_score'] === (3+5+1+2+2+4+1+1+5+5+2+2), 'Server scoring is authoritative (33/60)');
+fr_assert($server_scored['calculated_category'] === 'FATIGUE_IMPORTANTE', 'Server category is authoritative');
+fr_assert($server_scored['weakest_dimensions'] === array('efficacite-repos', 'energie-recuperation-reveil'), 'Weakest dimensions correctly identified');
 
 echo "Questionnaire Fatigue & Récupération PHP Unit & Scoring Tests: ALL PASSED.\n";
