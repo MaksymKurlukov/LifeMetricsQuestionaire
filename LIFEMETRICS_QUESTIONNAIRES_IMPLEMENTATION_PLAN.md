@@ -10,7 +10,7 @@
 | 2 | Scoring Engine V2 PHP / JavaScript | TERMINÉ |
 | 3 | Architecture CSS extensible | TERMINÉ |
 | 4 | Activité physique V2 | TERMINÉ |
-| 5 | Sommeil V2 | À FAIRE |
+| 5 | Sommeil V2 | TERMINÉ |
 | 6 | Nutrition V2 | À FAIRE |
 | 7 | Pieds & confort postural V2 | À FAIRE |
 | 8 | Hydratation V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 4 — Activité physique V2
-- Prochaine phase à exécuter : PHASE 5 — Sommeil V2
+- Dernière phase terminée : PHASE 5 — Sommeil V2
+- Prochaine phase à exécuter : PHASE 6 — Nutrition V2
 - Blocages : Aucun
-- Nombre de phases terminées : 4 / 16
-- Nombre de phases restantes : 12
-- Dernier commit de phase : lifemetrics: phase 04 - activite physique v2
+- Nombre de phases terminées : 5 / 16
+- Nombre de phases restantes : 11
+- Dernier commit de phase : lifemetrics: phase 05 - sommeil v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -315,7 +315,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 5 — Sommeil V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Migration exacte depuis le PDF validé et validation du mécanisme Safety standard (3 questions hors score).
 - Inventaire méthodologique validé :
   - 12 questions scorées ;
@@ -332,12 +332,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - Safety hors score avec priorité visuelle claire sans impact sur le score brut ;
   - Tests PHP et JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
+- Résultat : Validation complète du questionnaire Sommeil V2. 12 questions scorées, question SL01 non-linéaire (7-9h = 4 pts, >9h = 3 pts), 3 questions Safety hors score (SLSF01-SLSF03) déclenchant le message d'alerte avec priorité sans altérer le score numérique (48/48 préservé), 5 dimensions et 4 catégories de résultat (0-15, 16-27, 28-38, 39-48).
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 05 - sommeil v2
+- Date : 2026-09-11
 
 ---
 
@@ -661,6 +661,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js (PASS), suite complète PHP/JS (PASS)
 - Résultat : Questionnaire étalon validé en parfaite conformité méthodologique : 12 questions (AP01-AP12), AP04 duplicate 4 pts (options 3 et 4), 5 dimensions, 4 catégories de résultat, sélection des 2 dimensions les plus faibles et parité arithmétique 100%.
 - Notes : Prêt pour la Phase 5 (Sommeil V2).
+
+### 2026-09-11 — Phase 5 : Sommeil V2
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js (PASS), suite complète PHP/JS (PASS)
+- Résultat : Questionnaire Sommeil V2 validé avec succès : 12 questions scorées, question SL01 non-linéaire (7-9h = 4 pts, >9h = 3 pts), 3 questions Safety hors score (SLSF01-SLSF03), 5 dimensions, 4 catégories (0-15, 16-27, 28-38, 39-48) et étanchéité Safety (score 48/48 non altéré).
+- Notes : Prêt pour la Phase 6 (Nutrition V2).
 
 ---
 
