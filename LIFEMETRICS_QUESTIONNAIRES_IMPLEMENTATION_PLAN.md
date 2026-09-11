@@ -14,7 +14,7 @@
 | 6 | Nutrition V2 | TERMINÉ |
 | 7 | Pieds & confort postural V2 | TERMINÉ |
 | 8 | Hydratation V2 | TERMINÉ |
-| 9 | Sédentarité V2 | À FAIRE |
+| 9 | Sédentarité V2 | TERMINÉ |
 | 10 | Fatigue & récupération V2 | À FAIRE |
 | 11 | Risque nutritionnel V1 | À FAIRE |
 | 12 | Bien-être V1 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 8 — Hydratation V2
-- Prochaine phase à exécuter : PHASE 9 — Sédentarité V2
+- Dernière phase terminée : PHASE 9 — Sédentarité V2
+- Prochaine phase à exécuter : PHASE 10 — Fatigue & récupération V2
 - Blocages : Aucun
-- Nombre de phases terminées : 8 / 16
-- Nombre de phases restantes : 8
-- Dernier commit de phase : lifemetrics: phase 08 - hydratation v2
+- Nombre de phases terminées : 9 / 16
+- Nombre de phases restantes : 7
+- Dernier commit de phase : lifemetrics: phase 09 - sedentarite v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -469,7 +469,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 9 — Sédentarité V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Migration exacte depuis le PDF validé pour le questionnaire Sédentarité.
 - Éléments à valider :
   - 12 questions ;
@@ -486,12 +486,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Critères de validation :
   - Guardrail exact et N/A validés ; tests PHP et JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/sedentarite/questionnaire.php`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, `lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.php`, `lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.js`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.js` (PASS), suites complètes PHP 20/20 (PASS) et JS 11/11 (PASS)
+- Résultat : Migration intégrale du questionnaire Sédentarité depuis le PDF final validé (`Score_LifeMetrics_Sedentarite_V1.pdf`). 12 questions scorées SD01–SD12 (points 1 à 5, lower_is_better), questions SD07 et SD08 avec option N/A (« Non concerné actuellement » / « Très peu de déplacements actuellement », `points: null`, `applicable: false`), formule de normalisation arithmétique `final_score = ROUND((raw_score / applicable_question_count) * 12)` strictement vérifiée (sur 12, 11 ou 10 questions applicables, normalisées sur l'échelle 12–60 avec `target_min: 12`, `target_max: 60`), exclusion propre de la dimension `travail-etudes-deplacements` lorsque SD07 et SD08 sont tous deux N/A, 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`HABITUDES_FAVORABLES` 12-24, `SEDENTARITE_A_REDUIRE` 25-32, `SEDENTARITE_ELEVEE` 33-60), guardrail D1 validé (D1 = SD01 + SD02 >= 8 plafonne `displayed_category` à `SEDENTARITE_A_REDUIRE` avec message associé `SEDENTARITE_VOLUME_CAP` tout en conservant `calculated_category` verte et en laissant `final_score` strictement inchangé ; ne force jamais le rouge), 2 CTAs globaux conformes (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (chemin planifié documenté : `/tests-sante/`, à confirmer lors du déploiement catalogue).
+- Commit : lifemetrics: phase 09 - sedentarite v2
+- Date : 2026-09-11
 
 ---
 
