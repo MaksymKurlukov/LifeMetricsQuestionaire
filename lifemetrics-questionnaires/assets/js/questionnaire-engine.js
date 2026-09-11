@@ -97,17 +97,29 @@
       });
     });
 
+    var isLowerBetter = config.scoring_direction === 'lower_is_better' || config.scoring_direction === 'higher_is_worse';
     var calculated = levelForScore(config.result_levels, finalScore);
     var displayed = calculated;
     var appliedRules = [];
     var classificationMessages = [];
     classificationRules.forEach(function (rule) {
-      var dimension = dimensions.find(function (item) { return item.id === rule.dimension; });
-      var metric = rule.metric === 'dimension_score' ? dimension.raw_score : dimension.percentage;
+      var metric = null;
+      if (rule.metric === 'dimension_score' || rule.metric === 'dimension_percentage') {
+        var dimension = dimensions.find(function (item) { return item.id === rule.dimension; });
+        if (dimension) {
+          metric = rule.metric === 'dimension_score' ? dimension.raw_score : dimension.percentage;
+        }
+      } else if (rule.metric === 'question_score') {
+        if (selected[rule.question_id] && typeof selected[rule.question_id].points === 'number') {
+          metric = selected[rule.question_id].points;
+        }
+      }
       if (metric !== null && compare(metric, rule.operator, rule.value)) {
         var cap = config.result_levels.find(function (level) { return level.code === rule.max_category; });
         var current = config.result_levels.find(function (level) { return level.code === displayed; });
-        if (current.rank > cap.rank) displayed = cap.code;
+        if (isLowerBetter ? (current.rank < cap.rank) : (current.rank > cap.rank)) {
+          displayed = cap.code;
+        }
         appliedRules.push(rule.id);
         if (!classificationMessages.includes(rule.message_code)) classificationMessages.push(rule.message_code);
       }
@@ -119,7 +131,6 @@
       }
     });
 
-    var isLowerBetter = config.scoring_direction === 'lower_is_better' || config.scoring_direction === 'higher_is_worse';
     var weakest = dimensions.filter(function (dimension) { return dimension._eligible && !dimension.unavailable; })
       .sort(function (left, right) {
         var diff = isLowerBetter ? right.percentage - left.percentage : left.percentage - right.percentage;

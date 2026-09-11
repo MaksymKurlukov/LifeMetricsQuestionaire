@@ -210,13 +210,15 @@ final class LifeMetrics_Questionnaire_Schema_Validator
         $rules = is_array($config['classification_rules'] ?? null) && array_is_list($config['classification_rules']) ? $config['classification_rules'] : array();
         $rule_ids = array();
         foreach ($rules as $rule) {
-            if ($status === 'ready' && is_array($rule) && self::has_unknown($rule, array('id', 'type', 'metric', 'dimension', 'operator', 'value', 'max_category', 'message_code'))) {
+            if ($status === 'ready' && is_array($rule) && self::has_unknown($rule, array('id', 'type', 'metric', 'dimension', 'question_id', 'operator', 'value', 'max_category', 'message_code'))) {
                 $errors[] = 'unknown_field:classification_rule';
             }
             $id = is_array($rule) ? ($rule['id'] ?? null) : null;
+            $metric_type = $rule['metric'] ?? null;
+            $valid_target = ($metric_type === 'question_score' && isset($question_ids[$rule['question_id'] ?? null]))
+                || (in_array($metric_type, array('dimension_score', 'dimension_percentage'), true) && isset($dimension_ids[$rule['dimension'] ?? null]));
             if (!self::code($id) || isset($rule_ids[$id]) || ($rule['type'] ?? null) !== 'category_cap'
-                || !in_array($rule['metric'] ?? null, array('dimension_score', 'dimension_percentage'), true)
-                || !isset($dimension_ids[$rule['dimension'] ?? null]) || !self::operator($rule['operator'] ?? null)
+                || !$valid_target || !self::operator($rule['operator'] ?? null)
                 || !self::number($rule['value'] ?? null) || !isset($level_codes[$rule['max_category'] ?? null])
                 || !isset($messages[$rule['message_code'] ?? null])) {
                 $errors[] = 'invalid_classification_rule';

@@ -93,17 +93,28 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
             );
         }
 
+        $is_lower_better = in_array($config['scoring_direction'] ?? '', array('lower_is_better', 'higher_is_worse'), true);
         $calculated = $this->level_for_score($config['result_levels'], $final);
         $displayed = $calculated;
         $applied_rules = array();
         $classification_messages = array();
         foreach ($config['classification_rules'] as $rule) {
-            $dimension = $this->find_by_id($dimensions, $rule['dimension']);
-            $metric = $rule['metric'] === 'dimension_score' ? $dimension['raw_score'] : $dimension['percentage'];
+            $metric = null;
+            if ($rule['metric'] === 'dimension_score' || $rule['metric'] === 'dimension_percentage') {
+                $dimension = $this->find_by_id($dimensions, $rule['dimension'] ?? '');
+                if ($dimension) {
+                    $metric = $rule['metric'] === 'dimension_score' ? $dimension['raw_score'] : $dimension['percentage'];
+                }
+            } elseif ($rule['metric'] === 'question_score') {
+                $q_id = $rule['question_id'] ?? '';
+                if (isset($selected[$q_id]['points'])) {
+                    $metric = $selected[$q_id]['points'];
+                }
+            }
             if ($metric !== null && self::compare($metric, $rule['operator'], $rule['value'])) {
                 $cap = $this->find_by_code($config['result_levels'], $rule['max_category']);
                 $current = $this->find_by_code($config['result_levels'], $displayed);
-                if ($current['rank'] > $cap['rank']) {
+                if ($is_lower_better ? ($current['rank'] < $cap['rank']) : ($current['rank'] > $cap['rank'])) {
                     $displayed = $cap['code'];
                 }
                 $applied_rules[] = $rule['id'];
@@ -120,7 +131,6 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
             }
         }
 
-        $is_lower_better = in_array($config['scoring_direction'] ?? '', array('lower_is_better', 'higher_is_worse'), true);
         $weakest = array_values(array_filter($dimensions, static fn($dimension) => $dimension['_eligible'] && !$dimension['unavailable']));
         usort($weakest, static fn($a, $b) => ($is_lower_better ? ($b['percentage'] <=> $a['percentage']) : ($a['percentage'] <=> $b['percentage'])) ?: ($a['_order'] <=> $b['_order']));
         $weakest = array_column(array_slice($weakest, 0, $config['weakest_dimensions']['count'] ?? 0), 'id');

@@ -12,7 +12,7 @@
 | 4 | Activité physique V2 | TERMINÉ |
 | 5 | Sommeil V2 | TERMINÉ |
 | 6 | Nutrition V2 | TERMINÉ |
-| 7 | Pieds & confort postural V2 | À FAIRE |
+| 7 | Pieds & confort postural V2 | TERMINÉ |
 | 8 | Hydratation V2 | À FAIRE |
 | 9 | Sédentarité V2 | À FAIRE |
 | 10 | Fatigue & récupération V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 6 — Nutrition V2
-- Prochaine phase à exécuter : PHASE 7 — Pieds & confort postural V2
+- Dernière phase terminée : PHASE 7 — Pieds & confort postural V2
+- Prochaine phase à exécuter : PHASE 8 — Hydratation V2
 - Blocages : Aucun
-- Nombre de phases terminées : 6 / 16
-- Nombre de phases restantes : 10
-- Dernier commit de phase : lifemetrics: phase 06 - nutrition v2
+- Nombre de phases terminées : 7 / 16
+- Nombre de phases restantes : 9
+- Dernier commit de phase : lifemetrics: phase 07 - pieds confort postural v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -418,7 +418,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 7 — Pieds & confort postural V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Migration exacte depuis le PDF validé pour Pieds & Confort Postural (score 12–60, 3 catégories, 12 questions PF01–12, 6 dimensions, 4 Safety PFSF01–04, guardrail validé PF09/PF10 >= 4, aucune URL non démontrée).
 - Règle URL : Intégrer une URL uniquement si elle est réellement connue et démontrée ; sinon indiquer NON DÉTERMINÉ (pas d'URL inventée type /podos360/).
 - Fichiers potentiellement concernés :
@@ -431,12 +431,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Critères de validation :
   - Safety et guardrail validés selon PDF ; tests PHP et JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/includes/class-questionnaire-schema-validator.php`, `lifemetrics-questionnaires/includes/class-questionnaire-scoring-engine.php`, `lifemetrics-questionnaires/assets/js/questionnaire-engine.js`, `lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php`, `lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js` (PASS), suites complètes PHP 20/20 (PASS) et JS 11/11 (PASS)
+- Résultat : Migration intégrale du questionnaire Pieds & confort postural depuis le PDF final validé (`Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf`). 12 questions scorées PF01–PF12 (points 1 à 5, lower_is_better), 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`CONFORT_FAVORABLE` 12-24, `CONFORT_A_AMELIORER` 25-32, `INCONFORT_IMPORTANT` 33-60), guardrail fonctionnel validé (PF09 >= 4 ou PF10 >= 4 plafonne la catégorie à `CONFORT_A_AMELIORER` avec message d'attention fonctionnel sans modifier le score numérique brut), 4 questions Safety hors score PFSF01–PFSF04 déclenchant l'alerte médicale `PIEDS_SAFETY_MESSAGE` (priorité 100) sans altérer le score numérique brut, sélection des 2 dimensions les plus défavorables, 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (chemin planifié documenté : `/tests-sante/`, à confirmer lors du déploiement catalogue).
+- Commit : lifemetrics: phase 07 - pieds confort postural v2
+- Date : 2026-09-11
 
 ---
 
