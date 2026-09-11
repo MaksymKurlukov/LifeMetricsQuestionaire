@@ -10,9 +10,9 @@
 | 2 | Scoring Engine V2 PHP / JavaScript | TERMINÉ |
 | 3 | Architecture CSS extensible | TERMINÉ |
 | 4 | Activité physique V2 | TERMINÉ |
-| 5 | Sommeil V2 | TERMINÉ |
-| 6 | Nutrition V2 | TERMINÉ |
-| 7 | Pieds & confort postural V2 | TERMINÉ |
+| 5 | Sommeil V2 | À FAIRE |
+| 6 | Nutrition V2 | À FAIRE |
+| 7 | Pieds & confort postural V2 | À FAIRE |
 | 8 | Hydratation V2 | À FAIRE |
 | 9 | Sédentarité V2 | À FAIRE |
 | 10 | Fatigue & récupération V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 7 — Pieds & confort postural V2
-- Prochaine phase à exécuter : PHASE 8 — Hydratation V2
+- Dernière phase terminée : PHASE 4 — Activité physique V2
+- Prochaine phase à exécuter : PHASE 5 — Sommeil V2
 - Blocages : Aucun
-- Nombre de phases terminées : 7 / 16
-- Nombre de phases restantes : 9
-- Dernier commit de phase : lifemetrics: phase 07 - pieds confort postural v2
+- Nombre de phases terminées : 4 / 16
+- Nombre de phases restantes : 12
+- Dernier commit de phase : lifemetrics: phase 04 - activite physique v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -97,6 +97,41 @@ Le projet s'appuie sur le plugin WordPress existant lifemetrics-questionnaires, 
 ### 6. Transport & Persistance
 - Conserver le flux : WordPress REST -> Submission Service -> Google Apps Script -> Google Sheets.
 - Ne modifier cette couche que si une nécessité réelle liée aux données V2 est démontrée.
+
+### 7. Règle obligatoire de migration des questionnaires (Phases 4 à 12)
+Le but des phases questionnaires n'est PAS simplement de vérifier que l'ancien code fonctionne, mais de MIGRER les fichiers questionnaire.php vers le contenu des PDF finaux validés :
+1. Le PDF final validé est la source de vérité absolue.
+2. Pour chaque questionnaire, Antigravity doit comparer directement le fichier questionnaire.php existant au PDF final validé.
+3. Il doit vérifier au minimum :
+   - toutes les questions ;
+   - les textes exacts ;
+   - toutes les réponses ;
+   - tous les points ;
+   - les identifiants ;
+   - les dimensions ;
+   - les calculs des dimensions ;
+   - les catégories ;
+   - les seuils ;
+   - les textes de résultat ;
+   - les Safety ;
+   - les N/A ;
+   - les guardrails ;
+   - les axes d'amélioration ;
+   - le funnel ;
+   - le CTA ;
+   - le disclaimer.
+4. Si le fichier questionnaire.php contient une ancienne version, il doit être réellement MODIFIÉ pour correspondre au PDF final.
+5. Les anciens tests ne sont PAS une preuve que le questionnaire est conforme (ils peuvent eux-mêmes décrire une ancienne version).
+6. Après la migration du questionnaire.php, les tests PHP/JS du questionnaire doivent être mis à jour ou complétés pour vérifier la NOUVELLE version issue du PDF.
+7. Une phase questionnaire ne peut pas être marquée TERMINÉ uniquement parce que les anciens tests passent.
+8. Une phase questionnaire ne peut être terminée avec uniquement une modification du fichier MD, sauf si une comparaison explicite et complète démontre que le questionnaire.php correspond déjà exactement au PDF final.
+9. Dans le rapport de chaque phase questionnaire, indiquer clairement :
+   - ancien état trouvé ;
+   - différences avec le PDF ;
+   - contenu réellement remplacé ;
+   - fichier questionnaire.php réellement vérifié/modifié ;
+   - tests adaptés à la nouvelle version.
+10. Règle de non-présomption : Une ancienne phase marquée TERMINÉ ne constitue jamais une preuve de conformité si son contenu contredit le PDF final.
 
 ---
 
@@ -291,7 +326,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 - Statut : TERMINÉ
 - Rôle : Premier questionnaire étalon V2.
-- Objectif : Valider le moteur générique avec un questionnaire standard avant de migrer les autres, en implémentant exactement le PDF validé.
+- Objectif : Valider le moteur générique avec un questionnaire standard avant de migrer les autres, en implémentant exactement le PDF validé (échelle 12–60, 3 catégories de résultat, dimensions et questions issues du PDF final).
 - Règle frontend : Inclure l'adaptation frontend minimale si strictement nécessaire pour afficher et tester les axes d'amélioration de ce questionnaire.
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php
@@ -301,12 +336,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js
 - Critères de validation :
-  - Questions exactes, réponses exactes, scoring exact, catégories exactes, dimensions exactes, axes exacts, textes résultat exacts ;
-  - Tests PHP et JS PASS.
+  - Questions exactes, réponses exactes, scoring exact, catégories exactes (3 catégories issues du PDF), dimensions exactes, axes exacts, textes résultat exacts conformes au PDF final validé ;
+  - Tests PHP et JS PASS adaptés à la nouvelle version issue du PDF.
 
-- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
-- Résultat : Validation complète du questionnaire étalon Activité physique V2. 12 questions (AP01-AP12), AP04 duplicate max 4 pts (options 3 et 4), 5 dimensions, 4 catégories (0-15, 16-27, 28-39, 40-48), sélection des 2 dimensions les plus faibles et parité PHP/JS vérifiée.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
+- Résultat : Migration intégrale du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables (plus fort pourcentage d'impact), CTA `/vitascan/`, disclaimers et textes exacts.
 - NON DÉTERMINÉ : Aucun.
 - Commit : lifemetrics: phase 04 - activite physique v2
 - Date : 2026-09-11
@@ -315,12 +350,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 5 — Sommeil V2
 
-- Statut : TERMINÉ
-- Objectif : Migration exacte depuis le PDF validé et validation du mécanisme Safety standard (3 questions hors score).
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé (score 12–60, 3 catégories, scoring Q1: 7-9h = 1 pt, >9h = 2 pts) et validation du mécanisme Safety standard (3 questions hors score).
 - Inventaire méthodologique validé :
   - 12 questions scorées ;
   - 3 questions Safety hors score ;
-  - 5 dimensions (aucune mention de 4 dimensions).
+  - 5 dimensions (issues du PDF validé).
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php
   - lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php
@@ -330,21 +365,21 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js
 - Critères de validation :
   - Safety hors score avec priorité visuelle claire sans impact sur le score brut ;
-  - Tests PHP et JS PASS.
+  - Conformité stricte au PDF (12-60, 3 catégories) et tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
-- Résultat : Validation complète du questionnaire Sommeil V2. 12 questions scorées, question SL01 non-linéaire (7-9h = 4 pts, >9h = 3 pts), 3 questions Safety hors score (SLSF01-SLSF03) déclenchant le message d'alerte avec priorité sans altérer le score numérique (48/48 préservé), 5 dimensions et 4 catégories de résultat (0-15, 16-27, 28-38, 39-48).
-- NON DÉTERMINÉ : Aucun.
-- Commit : lifemetrics: phase 05 - sommeil v2
-- Date : 2026-09-11
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
 
 ---
 
 ### PHASE 6 — Nutrition V2
 
-- Statut : TERMINÉ
-- Objectif : Transcription exacte du PDF validé pour le questionnaire Nutrition (12 questions scorées, 3 questions Safety, dimensions, textes).
+- Statut : À FAIRE
+- Objectif : Transcription exacte du PDF validé pour le questionnaire Nutrition (score 12–60, 3 catégories, 12 questions scorées, 3 questions Safety, dimensions, textes).
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php
   - lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php
@@ -353,22 +388,22 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js
 - Critères de validation :
-  - Conformité stricte au PDF et tests PHP/JS PASS.
+  - Conformité stricte au PDF (12-60, 3 catégories, textes et paliers exacts) et tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
-- Résultat : Validation complète du questionnaire Nutrition V2. 12 questions scorées, paliers max 4 pts sur NT03 (options 3-4 = 4 pts) et NT06 (options 3-4 = 4 pts), 3 questions Safety hors score (NTSF01-NTSF03) avec priorité visuelle sans impact sur le score brut (48/48 préservé), 6 dimensions et 4 niveaux de résultats (0-15, 16-27, 28-38, 39-48).
-- NON DÉTERMINÉ : Aucun.
-- Commit : lifemetrics: phase 06 - nutrition v2
-- Date : 2026-09-11
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
 
 ---
 
 ### PHASE 7 — Pieds & confort postural V2
 
-- Statut : TERMINÉ
-- Objectif : Migration exacte depuis le PDF validé pour Pieds & Confort Postural (12 questions PF01–12, 6 dimensions, 4 Safety PFSF01–04, guardrail validé, funnel Podos360 validé).
-- Règle URL : Intégrer une URL uniquement si elle est réellement connue et démontrée ; sinon indiquer NON DÉTERMINÉ.
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé pour Pieds & Confort Postural (score 12–60, 3 catégories, 12 questions PF01–12, 6 dimensions, 4 Safety PFSF01–04, guardrail validé PF09/PF10 >= 4, aucune URL non démontrée).
+- Règle URL : Intégrer une URL uniquement si elle est réellement connue et démontrée ; sinon indiquer NON DÉTERMINÉ (pas d'URL inventée type /podos360/).
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php
   - lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php
@@ -377,14 +412,14 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - php lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js
 - Critères de validation :
-  - Safety et guardrail validés ; tests PHP et JS PASS.
+  - Safety et guardrail validés selon PDF ; tests PHP et JS PASS.
 
-- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php, lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
-- Résultat : Validation complète du questionnaire Pieds & Confort Postural V2. 12 questions scorées (PF01-PF12) avec items inversés conformes (PF06, PF08, PF09, PF10), 4 questions Safety hors score (PFSF01-PFSF04) déclenchant le message d'alerte sans altérer le score numérique brut (48/48 préservé), 6 dimensions avec règle d'attention (score dimension <= 2), 4 niveaux de résultat (0-15, 16-27, 28-38, 39-48), CTA Podos360 (/podos360/) et parité PHP/JS vérifiée à 100%.
-- NON DÉTERMINÉ : Aucun.
-- Commit : lifemetrics: phase 07 - pieds confort postural v2
-- Date : 2026-09-11
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
 
 ---
 
@@ -655,33 +690,17 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Résultat : Exposition de `data-lmq-questionnaire="<id>"` sur le wrapper DOM et enqueue conditionnel avec contrôle `file_exists()` d'un éventuel fichier `assets/css/questionnaires/<id>.css`. Zéro 404 émis et aucun fichier vide créé.
 - Notes : Prêt pour la Phase 4 (Activité physique V2).
 
-### 2026-09-11 — Phase 4 : Activité physique V2
+### 2026-09-11 — Note d'invalidation : PHASES 4 à 7 remises À FAIRE
+- Statut : INVALIDÉ / REMIS À FAIRE
+- Motif : Suite à la comparaison détaillée avec les PDF finaux validés, les anciens enregistrements de validation des Phases 4, 5, 6 et 7 ont été invalidés car ils contredisaient les spécifications méthodologiques des PDF (échelle 12–60 et 3 catégories au lieu de 0–48 et 4 catégories, points Q1 Sommeil 1 et 2 au lieu de 4 et 3, guardrail PF09/PF10 >= 4, absence d'URL /podos360/ validée).
+- Action : Les Phases 4, 5, 6 et 7 sont remises au statut À FAIRE pour une migration réelle ligne par ligne depuis les PDF finaux validés.
+
+### 2026-09-11 — PHASE 4 — Activité physique V2
 - Statut : TERMINÉ
-- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php, lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js (PASS), suite complète PHP/JS (PASS)
-- Résultat : Questionnaire étalon validé en parfaite conformité méthodologique : 12 questions (AP01-AP12), AP04 duplicate 4 pts (options 3 et 4), 5 dimensions, 4 catégories de résultat, sélection des 2 dimensions les plus faibles et parité arithmétique 100%.
+- Fichiers modifiés : `lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
+- Résultat : Migration rigoureuse du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables, CTA `/vitascan/`, disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
 - Notes : Prêt pour la Phase 5 (Sommeil V2).
-
-### 2026-09-11 — Phase 5 : Sommeil V2
-- Statut : TERMINÉ
-- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php, lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js (PASS), suite complète PHP/JS (PASS)
-- Résultat : Questionnaire Sommeil V2 validé avec succès : 12 questions scorées, question SL01 non-linéaire (7-9h = 4 pts, >9h = 3 pts), 3 questions Safety hors score (SLSF01-SLSF03), 5 dimensions, 4 catégories (0-15, 16-27, 28-38, 39-48) et étanchéité Safety (score 48/48 non altéré).
-- Notes : Prêt pour la Phase 6 (Nutrition V2).
-
-### 2026-09-11 — Phase 6 : Nutrition V2
-- Statut : TERMINÉ
-- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
-- Résultat : Validation du questionnaire Nutrition V2 conforme au PDF validé : 12 questions scorées, paliers max 4 pts sur NT03 et NT06, 3 questions Safety hors score (NTSF01-NTSF03), 6 dimensions et 4 catégories de résultat (0-15, 16-27, 28-38, 39-48).
-- Notes : Prêt pour la Phase 7 (Pieds & confort postural V2).
-
-### 2026-09-11 — Phase 7 : Pieds & confort postural V2
-- Statut : TERMINÉ
-- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php, lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
-- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
-- Résultat : Validation du questionnaire Pieds & Confort Postural V2 conforme au PDF validé : 12 questions (PF01-PF12), 4 questions Safety hors score (PFSF01-PFSF04), 6 dimensions avec seuils d'attention <= 2/8, 4 catégories de résultat (0-15, 16-27, 28-38, 39-48), CTA /podos360/ et parité arithmétique 100%.
-- Notes : Prêt pour la Phase 8 (Hydratation V2).
 
 ---
 
@@ -715,6 +734,7 @@ Règles absolues :
 - pas de nouvelle méthodologie ;
 - pas d'URL inventée ;
 - pas de refactoring inutile ;
+- pour les phases 4 à 12, ne valide jamais le questionnaire à partir des tests existants seulement. Compare obligatoirement le questionnaire.php au PDF final validé et migre réellement son contenu si une différence existe ;
 - pas de modification du PSS-10 sauf nécessité de non-régression ;
 - pas de modification d'une phase future sauf moteur partagé strictement nécessaire ;
 - ne jamais écraser les modifications utilisateur existantes ;
@@ -722,7 +742,7 @@ Règles absolues :
 - si une donnée est inconnue : NON DÉTERMINÉ.
 
 Si la phase est déjà entièrement satisfaite par le code existant :
-- le démontrer par inspection et tests ;
+- le démontrer par inspection et tests (pour les phases 4 à 12 : comparaison ligne par ligne avec le PDF final démontrant une conformité stricte à 100%) ;
 - mettre le plan à jour ;
 - la marquer terminée si tous ses critères sont réellement remplis ;
 - faire le commit du plan/tests nécessaires uniquement ;
@@ -733,10 +753,11 @@ Si la phase est déjà entièrement satisfaite par le code existant :
 # PHASE EXECUTION REPORT
 - Phase exécutée :
 - Statut final :
-- État initial :
-- Modifications nécessaires identifiées :
-- Fichiers modifiés :
-- Tests exécutés :
+- État initial (ancien état trouvé) :
+- Différences avec le PDF (pour phases 4 à 12) :
+- Modifications nécessaires identifiées (contenu réellement remplacé) :
+- Fichiers modifiés (questionnaire.php réellement vérifié/modifié) :
+- Tests exécutés / adaptés à la nouvelle version :
 - Résultats :
 - NON DÉTERMINÉ :
 - Commit :

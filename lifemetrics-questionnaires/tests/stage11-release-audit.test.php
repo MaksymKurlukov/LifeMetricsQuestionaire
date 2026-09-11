@@ -168,9 +168,9 @@ $expected_questionnaires = array(
         'schema_version' => '2.0.0',
         'version' => '1.0.0',
         'status' => 'review',
-        'target_min' => 0,
-        'target_max' => 48,
-        'direction' => 'higher_is_better',
+        'target_min' => 12,
+        'target_max' => 60,
+        'direction' => 'lower_is_better',
         'storage_worksheet' => 'Activite_Physique',
     ),
     'pieds-confort-postural' => array(

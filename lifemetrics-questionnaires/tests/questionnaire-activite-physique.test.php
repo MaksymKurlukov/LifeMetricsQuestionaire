@@ -60,30 +60,29 @@ $validation_errors = $validator->validate($config);
 ap_assert(empty($validation_errors), 'Activité Physique config must satisfy Schema 2.0.0: ' . implode(', ', $validation_errors));
 ap_assert($config['id'] === 'activite-physique', 'ID is activite-physique');
 ap_assert($config['version'] === '1.0.0', 'Version is 1.0.0');
-ap_assert($config['status'] === 'review', 'Status is review');
 ap_assert($config['locale'] === 'fr-FR', 'Locale is fr-FR');
-ap_assert($config['scoring_direction'] === 'higher_is_better', 'Direction is higher_is_better');
-ap_assert($config['score']['target_min'] === 0, 'Target min is 0');
-ap_assert($config['score']['target_max'] === 48, 'Target max is 48');
+ap_assert($config['scoring_direction'] === 'lower_is_better', 'Direction is lower_is_better');
+ap_assert($config['score']['target_min'] === 12, 'Target min is 12');
+ap_assert($config['score']['target_max'] === 60, 'Target max is 60');
 
 // ----------------------------------------------------
-// 2. Question Counts & AP04 Duplicate 4-Point Verification
+// 2. Question Counts & AP04 Duplicate 1-Point Verification
 // ----------------------------------------------------
 ap_assert(count($config['questions']) === 12, 'Must have exactly 12 scored questions');
 
 $q_ids = array_map(function ($q) { return $q['id']; }, $config['questions']);
 ap_assert($q_ids === array('AP01', 'AP02', 'AP03', 'AP04', 'AP05', 'AP06', 'AP07', 'AP08', 'AP09', 'AP10', 'AP11', 'AP12'), 'Exact AP01-AP12 sequence');
 
-// AP04 (Renforcement musculaire) duplicate 4 pts verification
+// AP04 (Renforcement musculaire) duplicate 1 pt verification
 $q4 = $config['questions'][3];
 ap_assert($q4['id'] === 'AP04', 'Q4 is AP04');
-ap_assert($q4['answers'][0]['value'] === '0' && $q4['answers'][0]['points'] === 0, 'AP04 opt 0 (Jamais) = 0 pts');
-ap_assert($q4['answers'][1]['value'] === '1' && $q4['answers'][1]['points'] === 1, 'AP04 opt 1 (Moins d\'une fois/sem) = 1 pt');
-ap_assert($q4['answers'][2]['value'] === '2' && $q4['answers'][2]['points'] === 2, 'AP04 opt 2 (1 jour/sem) = 2 pts');
-ap_assert($q4['answers'][3]['value'] === '3' && $q4['answers'][3]['points'] === 4, 'AP04 opt 3 (2 jours/sem) = 4 pts [DUPLICATE MAX]');
-ap_assert($q4['answers'][4]['value'] === '4' && $q4['answers'][4]['points'] === 4, 'AP04 opt 4 (3 jours ou plus/sem) = 4 pts [DUPLICATE MAX]');
+ap_assert($q4['answers'][0]['value'] === '3_plus' && $q4['answers'][0]['points'] === 1, 'AP04 3+ jours = 1 pt');
+ap_assert($q4['answers'][1]['value'] === '2_days' && $q4['answers'][1]['points'] === 1, 'AP04 2 jours = 1 pt [DUPLICATE 1 PT]');
+ap_assert($q4['answers'][2]['value'] === '1_day' && $q4['answers'][2]['points'] === 3, 'AP04 1 jour = 3 pts');
+ap_assert($q4['answers'][3]['value'] === 'less_1' && $q4['answers'][3]['points'] === 4, 'AP04 <1 fois = 4 pts');
+ap_assert($q4['answers'][4]['value'] === 'never' && $q4['answers'][4]['points'] === 5, 'AP04 Jamais = 5 pts');
 
-// Verify no N/A, no safety questions, no guardrails
+// Verify no N/A, no safety questions, no classification rules
 ap_assert(empty($config['safety_questions']), 'Safety questions must be empty');
 ap_assert(empty($config['classification_rules']), 'Classification rules must be empty');
 foreach ($config['questions'] as $q) {
@@ -106,109 +105,98 @@ ap_assert($dim_ids === array(
     'regularite'
 ), 'Exact 5 dimension IDs');
 
-ap_assert($config['dimensions'][0]['question_ids'] === array('AP01', 'AP02', 'AP03'), 'D1 has AP01, AP02, AP03 (capacity 12)');
-ap_assert($config['dimensions'][1]['question_ids'] === array('AP04', 'AP05'), 'D2 has AP04, AP05 (capacity 8)');
-ap_assert($config['dimensions'][2]['question_ids'] === array('AP06', 'AP07'), 'D3 has AP06, AP07 (capacity 8)');
-ap_assert($config['dimensions'][3]['question_ids'] === array('AP08', 'AP09'), 'D4 has AP08, AP09 (capacity 8)');
-ap_assert($config['dimensions'][4]['question_ids'] === array('AP10', 'AP11', 'AP12'), 'D5 has AP10, AP11, AP12 (capacity 12)');
+ap_assert($config['dimensions'][0]['question_ids'] === array('AP01', 'AP02', 'AP03'), 'D1 has AP01, AP02, AP03');
+ap_assert($config['dimensions'][1]['question_ids'] === array('AP04', 'AP05'), 'D2 has AP04, AP05');
+ap_assert($config['dimensions'][2]['question_ids'] === array('AP06', 'AP07'), 'D3 has AP06, AP07');
+ap_assert($config['dimensions'][3]['question_ids'] === array('AP08', 'AP09'), 'D4 has AP08, AP09');
+ap_assert($config['dimensions'][4]['question_ids'] === array('AP10', 'AP11', 'AP12'), 'D5 has AP10, AP11, AP12');
 
 // ----------------------------------------------------
-// 4. Scoring Engine Boundaries (0, 15, 16, 27, 28, 39, 40, 48)
+// 4. Scoring Engine Boundaries (12, 24, 25, 32, 33, 60)
 // ----------------------------------------------------
-// Min score (all 0s) -> 0/48 -> ACTIVITE_INSUFFISANTE
+// Min score (all best answers = 1) -> 12/60 -> SATISFAISANTE
 $answers_min = array(
-    'AP01' => '0', 'AP02' => '0', 'AP03' => '0', 'AP04' => '0',
-    'AP05' => '0', 'AP06' => '0', 'AP07' => '0', 'AP08' => '0',
-    'AP09' => '0', 'AP10' => '0', 'AP11' => '0', 'AP12' => '0',
+    'AP01' => '5_plus', 'AP02' => '300_plus', 'AP03' => 'almost_always',
+    'AP04' => '3_plus', 'AP05' => 'whole_body',
+    'AP06' => '6_7_days', 'AP07' => 'very_regularly',
+    'AP08' => 'less_3h', 'AP09' => 'every_30min',
+    'AP10' => '5_plus_days', 'AP11' => '4_weeks', 'AP12' => '0_days',
 );
-$res_0 = $engine->score($config, $answers_min);
-ap_assert($res_0['final_score'] === 0, 'Min score is 0');
-ap_assert($res_0['calculated_category'] === 'ACTIVITE_INSUFFISANTE', 'Score 0 category is ACTIVITE_INSUFFISANTE');
-ap_assert($res_0['displayed_category'] === 'ACTIVITE_INSUFFISANTE', 'Score 0 displayed category is ACTIVITE_INSUFFISANTE');
+$res_12 = $engine->score($config, $answers_min);
+ap_assert($res_12['final_score'] === 12, 'Min score is 12');
+ap_assert($res_12['calculated_category'] === 'SATISFAISANTE', 'Score 12 category is SATISFAISANTE');
+ap_assert($res_12['displayed_category'] === 'SATISFAISANTE', 'Score 12 displayed category is SATISFAISANTE');
 
-// Max score (AP01-AP12 max answers) -> 48/48 -> TRES_BON_NIVEAU
+// Max score (all worst answers = 5) -> 60/60 -> INSUFFISANTE
 $answers_max = array(
-    'AP01' => '4', 'AP02' => '4', 'AP03' => '4', 'AP04' => '3', // AP04 '3' is 4 pts
-    'AP05' => '4', 'AP06' => '4', 'AP07' => '4', 'AP08' => '4',
-    'AP09' => '4', 'AP10' => '4', 'AP11' => '4', 'AP12' => '4',
+    'AP01' => '0_days', 'AP02' => 'less_30', 'AP03' => 'never',
+    'AP04' => 'never', 'AP05' => 'almost_none',
+    'AP06' => '0_days', 'AP07' => 'almost_never',
+    'AP08' => 'more_9h', 'AP09' => 'after_2h',
+    'AP10' => 'rarely_active', 'AP11' => 'none', 'AP12' => '6_7_days',
 );
-$res_48 = $engine->score($config, $answers_max);
-ap_assert($res_48['final_score'] === 48, 'Max score is 48');
-ap_assert($res_48['calculated_category'] === 'TRES_BON_NIVEAU', 'Score 48 category is TRES_BON_NIVEAU');
-ap_assert($res_48['displayed_category'] === 'TRES_BON_NIVEAU', 'Score 48 displayed category is TRES_BON_NIVEAU');
+$res_60 = $engine->score($config, $answers_max);
+ap_assert($res_60['final_score'] === 60, 'Max score is 60');
+ap_assert($res_60['calculated_category'] === 'INSUFFISANTE', 'Score 60 category is INSUFFISANTE');
+ap_assert($res_60['displayed_category'] === 'INSUFFISANTE', 'Score 60 displayed category is INSUFFISANTE');
 
-// Max score using alternative duplicate-max answer for AP04 (AP04=4 [4pts])
-$answers_max_alt = array_merge($answers_max, array('AP04' => '4'));
-$res_48_alt = $engine->score($config, $answers_max_alt);
-ap_assert($res_48_alt['final_score'] === 48, 'Max score with AP04=4 is also 48');
-ap_assert($res_48_alt['calculated_category'] === 'TRES_BON_NIVEAU', 'Alt max category is TRES_BON_NIVEAU');
-
-// Boundary 15 -> ACTIVITE_INSUFFISANTE
-$answers_15 = array(
-    'AP01' => '1', 'AP02' => '1', 'AP03' => '1', // D1: 1+1+1=3
-    'AP04' => '1', 'AP05' => '1',                // D2: 1+1=2
-    'AP06' => '1', 'AP07' => '1',                // D3: 1+1=2
-    'AP08' => '1', 'AP09' => '1',                // D4: 1+1=2
-    'AP10' => '2', 'AP11' => '2', 'AP12' => '2', // D5: 2+2+2=6 -> Total = 3+2+2+2+6 = 15
+// Boundary 24 -> SATISFAISANTE (12 + 12 = 24, e.g. 12 questions with 2 pts each)
+$answers_24 = array(
+    'AP01' => '4_days', 'AP02' => '150_299', 'AP03' => 'often',
+    'AP04' => '1_day',  'AP05' => 'majority',
+    'AP06' => '4_5_days', 'AP07' => 'multiple_times',
+    'AP08' => '3_to_5h', 'AP09' => 'every_30_60min',
+    'AP10' => '3_4_days', 'AP11' => '3_weeks', 'AP12' => '1_2_days',
 );
-$res_15 = $engine->score($config, $answers_15);
-ap_assert($res_15['final_score'] === 15, 'Score is 15');
-ap_assert($res_15['calculated_category'] === 'ACTIVITE_INSUFFISANTE', 'Score 15 category is ACTIVITE_INSUFFISANTE');
+// In answers_24: AP01=2, AP02=2, AP03=2, AP04=3, AP05=2, AP06=2, AP07=2, AP08=2, AP09=2, AP10=2, AP11=2, AP12=2 -> Total = 25.
+// Let's make exact 24: set AP04 to 2_days (1 pt) -> 23 + 1 = 24
+$answers_24['AP04'] = '2_days'; // 1 pt -> Total = 2 + 2 + 2 + 1 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 = 23.
+$answers_24['AP05'] = 'some_groups'; // 3 pts -> Total = 24.
+$res_24 = $engine->score($config, $answers_24);
+ap_assert($res_24['final_score'] === 24, 'Score is 24');
+ap_assert($res_24['calculated_category'] === 'SATISFAISANTE', 'Score 24 category is SATISFAISANTE');
 
-// Boundary 16 -> ACTIVITE_A_RENFORCER
-$answers_16 = array_merge($answers_15, array('AP09' => '2')); // +1 pt -> 16
-$res_16 = $engine->score($config, $answers_16);
-ap_assert($res_16['final_score'] === 16, 'Score is 16');
-ap_assert($res_16['calculated_category'] === 'ACTIVITE_A_RENFORCER', 'Score 16 category is ACTIVITE_A_RENFORCER');
+// Boundary 25 -> A_RENFORCER (+1 pt)
+$answers_25 = $answers_24;
+$answers_25['AP01'] = '2_3_days'; // 3 pts (+1)
+$res_25 = $engine->score($config, $answers_25);
+ap_assert($res_25['final_score'] === 25, 'Score is 25');
+ap_assert($res_25['calculated_category'] === 'A_RENFORCER', 'Score 25 category is A_RENFORCER');
 
-// Boundary 27 -> ACTIVITE_A_RENFORCER
-$answers_27 = array(
-    'AP01' => '3', 'AP02' => '2', 'AP03' => '2', // D1: 3+2+2=7
-    'AP04' => '2', 'AP05' => '2',                // D2: 2+2=4
-    'AP06' => '2', 'AP07' => '2',                // D3: 2+2=4
-    'AP08' => '2', 'AP09' => '2',                // D4: 2+2=4
-    'AP10' => '3', 'AP11' => '3', 'AP12' => '2', // D5: 3+3+2=8 -> Total = 7+4+4+4+8 = 27
+// Boundary 32 -> A_RENFORCER
+// 8 questions with 3 pts, 4 questions with 2 pts -> 24 + 8 = 32
+$answers_32 = array(
+    'AP01' => '2_3_days', 'AP02' => '60_149', 'AP03' => 'sometimes', // 3, 3, 3
+    'AP04' => '1_day',    'AP05' => 'some_groups',                   // 3, 3
+    'AP06' => '2_3_days', 'AP07' => 'from_time_to_time',             // 3, 3
+    'AP08' => '5_to_7h',  'AP09' => 'every_30_60min',                // 3, 2
+    'AP10' => '3_4_days', 'AP11' => '3_weeks', 'AP12' => '1_2_days', // 2, 2, 2 -> sum = 32
 );
-$res_27 = $engine->score($config, $answers_27);
-ap_assert($res_27['final_score'] === 27, 'Score is 27');
-ap_assert($res_27['calculated_category'] === 'ACTIVITE_A_RENFORCER', 'Score 27 category is ACTIVITE_A_RENFORCER');
+$res_32 = $engine->score($config, $answers_32);
+ap_assert($res_32['final_score'] === 32, 'Score is 32');
+ap_assert($res_32['calculated_category'] === 'A_RENFORCER', 'Score 32 category is A_RENFORCER');
 
-// Boundary 28 -> NIVEAU_FAVORABLE
-$answers_28 = array_merge($answers_27, array('AP07' => '3')); // +1 pt -> 28
-$res_28 = $engine->score($config, $answers_28);
-ap_assert($res_28['final_score'] === 28, 'Score is 28');
-ap_assert($res_28['calculated_category'] === 'NIVEAU_FAVORABLE', 'Score 28 category is NIVEAU_FAVORABLE');
-
-// Boundary 39 -> NIVEAU_FAVORABLE
-$answers_39 = array(
-    'AP01' => '4', 'AP02' => '3', 'AP03' => '3', // D1: 4+3+3=10
-    'AP04' => '3', 'AP05' => '2',                // D2: 4+2=6 (AP04 '3' is 4 pts)
-    'AP06' => '4', 'AP07' => '3',                // D3: 4+3=7
-    'AP08' => '3', 'AP09' => '3',                // D4: 3+3=6
-    'AP10' => '4', 'AP11' => '3', 'AP12' => '3', // D5: 4+3+3=10 -> Total = 10+6+7+6+10 = 39
-);
-$res_39 = $engine->score($config, $answers_39);
-ap_assert($res_39['final_score'] === 39, 'Score is 39');
-ap_assert($res_39['calculated_category'] === 'NIVEAU_FAVORABLE', 'Score 39 category is NIVEAU_FAVORABLE');
-
-// Boundary 40 -> TRES_BON_NIVEAU
-$answers_40 = array_merge($answers_39, array('AP05' => '3')); // +1 pt -> 40
-$res_40 = $engine->score($config, $answers_40);
-ap_assert($res_40['final_score'] === 40, 'Score is 40');
-ap_assert($res_40['calculated_category'] === 'TRES_BON_NIVEAU', 'Score 40 category is TRES_BON_NIVEAU');
+// Boundary 33 -> INSUFFISANTE (+1 pt)
+$answers_33 = $answers_32;
+$answers_33['AP12'] = '3_days'; // 3 pts (+1) -> sum = 33
+$res_33 = $engine->score($config, $answers_33);
+ap_assert($res_33['final_score'] === 33, 'Score is 33');
+ap_assert($res_33['calculated_category'] === 'INSUFFISANTE', 'Score 33 category is INSUFFISANTE');
 
 // ----------------------------------------------------
 // 5. Weakest Dimensions & Deterministic Ties
 // ----------------------------------------------------
-// In $res_15:
-// D1: 3/12 = 25%
-// D2: 2/8 = 25%
-// D3: 2/8 = 25%
-// D4: 2/8 = 25%
-// D5: 6/12 = 50%
-// Tied lowest at 25% among D1, D2, D3, D4.
-// Configuration order tie-break picks first 2: D1 (activite-endurance) and D2 (renforcement-mobilite).
-ap_assert($res_15['weakest_dimensions'] === array('activite-endurance', 'renforcement-mobilite'), 'Deterministic tie-breaking in weakest dimensions');
+// Under lower_is_better, higher score/percentage = worse dimension.
+// Let's set D1 (AP01..03) all worst (5,5,5 -> 100%), D2 (AP04..05) (4,4 -> 75%), D3 (3,3), D4 (2,2), D5 (1,1,1)
+$answers_weakest = array(
+    'AP01' => '0_days', 'AP02' => 'less_30', 'AP03' => 'never', // D1: 5+5+5 = 15/15 (100%)
+    'AP04' => 'less_1', 'AP05' => 'single_zone',                // D2: 4+4 = 8/10 (75%)
+    'AP06' => '2_3_days', 'AP07' => 'from_time_to_time',        // D3: 3+3 = 6/10 (50%)
+    'AP08' => '3_to_5h', 'AP09' => 'every_30_60min',            // D4: 2+2 = 4/10 (25%)
+    'AP10' => '5_plus_days', 'AP11' => '4_weeks', 'AP12' => '0_days', // D5: 1+1+1 = 3/15 (0%)
+);
+$res_weak = $engine->score($config, $answers_weakest);
+ap_assert($res_weak['weakest_dimensions'] === array('activite-endurance', 'renforcement-mobilite'), 'Weakest dimensions select highest percentage under lower_is_better');
 
 if (!class_exists('WP_REST_Request')) {
     class WP_REST_Request {
@@ -248,15 +236,12 @@ $registry = new LifeMetrics_Questionnaire_Registry(
 $loaded_config = $registry->get_internal('activite-physique');
 ap_assert($loaded_config !== null, 'Registry resolves activite-physique questionnaire');
 ap_assert($loaded_config['id'] === 'activite-physique', 'Loaded config id is activite-physique');
-ap_assert($loaded_config['status'] === 'review', 'Status in review');
 
-// Server scoring authority: client sends claims for final_score=48 and category=TRES_BON_NIVEAU,
-// but server evaluates actual answers (answers_15) and computes authoritative final_score=15
-$tampered_client_answers = $answers_15; // Actual answers evaluate to 15
-$server_scored = $engine->score($loaded_config, $tampered_client_answers);
-ap_assert($server_scored['final_score'] === 15, 'Server computes authoritative score (15, ignoring client claim of 48)');
-ap_assert($server_scored['calculated_category'] === 'ACTIVITE_INSUFFISANTE', 'Server computes authoritative category ACTIVITE_INSUFFISANTE');
-ap_assert($server_scored['displayed_category'] === 'ACTIVITE_INSUFFISANTE', 'Server computes authoritative displayed category');
+// Server scoring authority: client sends answers_33, server evaluates to 33 and INSUFFISANTE
+$server_scored = $engine->score($loaded_config, $answers_33);
+ap_assert($server_scored['final_score'] === 33, 'Server computes authoritative score (33)');
+ap_assert($server_scored['calculated_category'] === 'INSUFFISANTE', 'Server computes authoritative category INSUFFISANTE');
+ap_assert($server_scored['displayed_category'] === 'INSUFFISANTE', 'Server computes authoritative displayed category');
 
 // Submission Service flow
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
