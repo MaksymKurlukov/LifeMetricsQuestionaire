@@ -16,7 +16,7 @@
 | 8 | Hydratation V2 | TERMINÉ |
 | 9 | Sédentarité V2 | TERMINÉ |
 | 10 | Fatigue & récupération V2 | TERMINÉ |
-| 11 | Risque nutritionnel V1 | À FAIRE |
+| 11 | Risque nutritionnel V1 | TERMINÉ |
 | 12 | Bien-être V1 | À FAIRE |
 | 13 | Restitution frontend finale | À FAIRE |
 | 14 | Vérification transport et Google Sheets | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 10 — Fatigue & récupération V2
-- Prochaine phase à exécuter : PHASE 11 — Risque nutritionnel V1
+- Dernière phase terminée : PHASE 11 — Risque nutritionnel V1
+- Prochaine phase à exécuter : PHASE 12 — Bien-être V1
 - Blocages : Aucun
-- Nombre de phases terminées : 10 / 16
-- Nombre de phases restantes : 6
-- Dernier commit de phase : lifemetrics: phase 10 - fatigue recuperation v2
+- Nombre de phases terminées : 11 / 16
+- Nombre de phases restantes : 5
+- Dernier commit de phase : lifemetrics: phase 11 - risque nutritionnel v1
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -530,29 +530,43 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 11 — Risque nutritionnel V1
 
-- Statut : À FAIRE
-- Objectif : Nouveau questionnaire : créer sa configuration à partir du PDF final validé.
+- Statut : TERMINÉ
+- Objectif : Nouveau questionnaire : créer sa configuration à partir du PDF final validé (`Score_LifeMetrics_Risque_Nutritionnel_V1.pdf`).
 - Contenu requis :
-  - 12 questions ;
-  - 6 dimensions ;
-  - Scoring, catégories, guardrail validé sur questions critiques, Safety validé, axes, textes résultat, funnel validé.
+  - 12 questions (RN01 à RN12 scorées de 1 à 5, points 1=favorable, 5=défavorable, lower_is_better, aucun N/A, score 12–60) ;
+  - 6 dimensions en `calculation_mode: average` (Appétit et satiété, Réduction des apports, Évolution pondérale, Difficultés à s'alimenter, Symptômes limitants, Accès/autonomie/continuité) ;
+  - Guardrail validé sur questions critiques : Si RN03 >= 4 ou RN04 >= 4 ou RN05 >= 4 ou RN08 >= 4, la catégorie verte est plafonnée à `Risque nutritionnel à surveiller` (sans modifier final_score, et sans forcer rouge) ;
+  - 4 questions Safety hors score (RNSF01 perte de poids rapide, RNSF02 apports très réduits, RNSF03 déglutition/fausses routes, RNSF04 symptômes empêchant de manger) avec message prioritaire `RN_SAFETY_MESSAGE` ;
+  - Axes d'amélioration : 2 dimensions les plus défavorables (orange/rouge), en vert uniquement si moyenne >= 2.50 ;
+  - CTAs globaux standardisés (« Je veux faire un bilan » et « Découvrir les autres questionnaires ») ;
+  - Textes résultat, funnel VitaScan mesuré et disclaimers complets.
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/risque-nutritionnel/questionnaire.php
   - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
   - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php
   - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
 - Tests :
   - php lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js
 - Critères de validation :
   - Configuration valide, scoring conforme, tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés :
+  - lifemetrics-questionnaires/questionnaires/risque-nutritionnel/questionnaire.php (nouveau fichier créé)
+  - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php (nouveau fichier créé)
+  - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js (nouveau fichier créé)
+- Tests exécutés :
+  - php lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php (PASS)
+  - node lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js (PASS)
+  - Full suite PHP (21 tests PASS)
+  - Full suite JS (15 tests PASS)
+- Résultat : Questionnaire Risque nutritionnel V1 entièrement implémenté et validé conformément au PDF. 12 questions scorées (1..5, échelle 12–60), 6 dimensions calculées par moyenne, 3 catégories (12–24: RISQUE_FAIBLE, 25–32: RISQUE_A_SURVEILLER, 33–60: RISQUE_IMPORTANT), guardrail sur RN03/RN04/RN05/RN08 >= 4 plafonnant le vert à orange sans altérer le score numérique, 4 questions Safety hors score avec message prioritaire, CTAs globaux conformes.
+- NON DÉTERMINÉ : URL de production du catalogue des questionnaires pour le CTA secondaire (placeholder technique `/tests-sante/`).
+- Commit : lifemetrics: phase 11 - risque nutritionnel v1
+- Date : 2026-09-11
 
 ---
 

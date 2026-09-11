@@ -38,6 +38,7 @@ final class LifeMetrics_Plugin
                 'nutrition' => 'nutrition/questionnaire.php',
                 'activite-physique' => 'activite-physique/questionnaire.php',
                 'pieds-confort-postural' => 'pieds-confort-postural/questionnaire.php',
+                'risque-nutritionnel' => 'risque-nutritionnel/questionnaire.php',
             ),
             new LifeMetrics_Questionnaire_Schema_Validator()
         );
