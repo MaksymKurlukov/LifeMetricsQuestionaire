@@ -143,9 +143,9 @@ Sur la page de résultat de TOUS les questionnaires LifeMetrics, il doit y avoir
 
 2. CTA secondaire :
    - Texte : « Découvrir les autres questionnaires » (ou « Découvrir les autres tests »)
-   - Retour vers la page LifeMetrics qui présente la liste des autres questionnaires
-   - Configuration : `variant: 'secondary'`, `enabled: true`
-   - URL : Retrouver l'URL réelle dans le projet si elle existe (`/tests-sante/` documentée comme chemin catalogue planifié dans `QUESTIONNAIRE_INVENTORY.md`) ; ne jamais inventer d'URL ; si l'URL finale de production n'est pas encore formellement déterminable, inscrire NON DÉTERMINÉ dans le plan jusqu'à confirmation.
+   - Rôle : Retour vers la page LifeMetrics qui présente la liste des autres questionnaires
+   - Configuration technique : `variant: 'secondary'`, `enabled: true`
+   - Statut URL de production : NON DÉTERMINÉ. L'URL finale de production n'est pas encore confirmée sur `lifemetrics.fr`. Le chemin `/tests-sante/` documenté dans `QUESTIONNAIRE_INVENTORY.md` est un chemin planifié / placeholder technique interne et ne doit pas être présenté comme une URL de production validée tant qu'elle n'est pas formellement déployée ou confirmée.
 
 Cette règle est commune à tous les questionnaires des phases 4 à 12. Elle remplace les anciens CTA spécifiques ou destinations inventées dans les configurations (ex. `/vitascan/`, `/podos360/`).
 Les PDF restent la source de vérité pour les questions, réponses, points, dimensions, catégories, textes de résultat, Safety, guardrails et disclaimers, mais cette règle globale est prioritaire pour les deux CTA de la page de résultat.
