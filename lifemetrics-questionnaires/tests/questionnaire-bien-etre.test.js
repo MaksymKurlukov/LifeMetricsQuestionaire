@@ -199,20 +199,186 @@ assert.ok(res_gr_6.applied_classification_rules.includes("BE_GUARDRAIL_CONNEXION
 assert.equal(res_gr_6.weakest_dimensions[0], "connexion-sociale-ressentie");
 
 // ----------------------------------------------------
-// 5. Dimension Averages & Selection
+// 6. Point 1 — Axes d'amélioration pour une catégorie verte (Cas A, Cas B, Cas C)
 // ----------------------------------------------------
-const answers_dim = {
-  ...answers_12,
-  BE01: "3", BE02: "5", // D1 avg = 4.0
-  BE03: "1", BE04: "2", // D2 avg = 1.5
-  BE05: "2", BE06: "4", // D3 avg = 3.0
-  BE07: "1", BE08: "1", // D4 avg = 1.0
-  BE09: "5", BE10: "5", // D5 avg = 5.0
-  BE11: "2", BE12: "2"  // D6 avg = 2.0
+// CAS A — Vert réellement favorable : final_score 12-24, toutes dimensions < 2.50
+const res_cas_a_12 = engine.score(config, answers_12); // score 12, all dim_mean = 1.00 < 2.50
+assert.equal(res_cas_a_12.calculated_category, "BIEN_ETRE_FAVORABLE", "Cas A (12): calculated is BIEN_ETRE_FAVORABLE");
+assert.equal(res_cas_a_12.displayed_category, "BIEN_ETRE_FAVORABLE", "Cas A (12): displayed is BIEN_ETRE_FAVORABLE");
+const cas_a_eligible_axes_12 = res_cas_a_12.dimensions.filter(d => (d.raw_score / 2) >= 2.50);
+assert.equal(cas_a_eligible_axes_12.length, 0, "Cas A (12): exactly 0 axes eligible (all dim_mean < 2.50)");
+
+const res_cas_a_24 = engine.score(config, answers_24); // score 24, all dim_mean = 2.00 < 2.50
+assert.equal(res_cas_a_24.calculated_category, "BIEN_ETRE_FAVORABLE", "Cas A (24): calculated is BIEN_ETRE_FAVORABLE");
+assert.equal(res_cas_a_24.displayed_category, "BIEN_ETRE_FAVORABLE", "Cas A (24): displayed is BIEN_ETRE_FAVORABLE");
+const cas_a_eligible_axes_24 = res_cas_a_24.dimensions.filter(d => (d.raw_score / 2) >= 2.50);
+assert.equal(cas_a_eligible_axes_24.length, 0, "Cas A (24): exactly 0 axes eligible (all dim_mean < 2.50)");
+
+// CAS B — Vert avec faiblesse modérée : final_score 12-24, au moins une dimension avec 2.50 <= mean < 4.00, les autres < 2.50
+// Satisfaction = 3 + 3 = 6 (mean 3.00), others = 1 + 1 = 2 (mean 1.00). Total = 6 + 10 = 16
+const answers_cas_b = { ...answers_12, BE01: "3", BE02: "3" };
+const res_cas_b = engine.score(config, answers_cas_b);
+assert.equal(res_cas_b.final_score, 16, "Cas B: final_score is 16");
+assert.equal(res_cas_b.calculated_category, "BIEN_ETRE_FAVORABLE", "Cas B: calculated is BIEN_ETRE_FAVORABLE");
+assert.equal(res_cas_b.displayed_category, "BIEN_ETRE_FAVORABLE", "Cas B: displayed is BIEN_ETRE_FAVORABLE (no guardrail)");
+assert.equal(res_cas_b.applied_classification_rules.length, 0, "Cas B: no guardrail classification rules triggered");
+const cas_b_eligible_axes = res_cas_b.dimensions.filter(d => (d.raw_score / 2) >= 2.50);
+assert.equal(cas_b_eligible_axes.length, 1, "Cas B: exactly 1 axis eligible with mean >= 2.50");
+assert.equal(cas_b_eligible_axes[0].id, "satisfaction-globale-quotidien", "Cas B: eligible axis is satisfaction");
+const cas_b_non_eligible = res_cas_b.dimensions.filter(d => (d.raw_score / 2) < 2.50);
+assert.equal(cas_b_non_eligible.length, 5, "Cas B: 5 dimensions with mean < 2.50 not selected as weaknesses");
+
+// CAS C — Vert avec garde-fou : dimension_mean >= 4.00 avec score global vert (18)
+// Satisfaction = 4 + 4 = 8 (mean 4.00), others = 1 + 1 = 2 (mean 1.00). Total = 8 + 10 = 18 <= 24
+const answers_cas_c = { ...answers_12, BE01: "4", BE02: "4" };
+const res_cas_c = engine.score(config, answers_cas_c);
+assert.equal(res_cas_c.final_score, 18, "Cas C: final_score is 18 (unchanged)");
+assert.equal(res_cas_c.calculated_category, "BIEN_ETRE_FAVORABLE", "Cas C: calculated is BIEN_ETRE_FAVORABLE");
+assert.equal(res_cas_c.displayed_category, "BIEN_ETRE_A_RENFORCER", "Cas C: displayed capped to BIEN_ETRE_A_RENFORCER (orange)");
+assert.ok(res_cas_c.applied_classification_rules.includes("BE_GUARDRAIL_SATISFACTION"), "Cas C: BE_GUARDRAIL_SATISFACTION triggered");
+assert.equal(res_cas_c.weakest_dimensions[0], "satisfaction-globale-quotidien", "Cas C: responsible dimension is in weakest_dimensions");
+
+// ----------------------------------------------------
+// 7. Point 2 — CTAs Verification & Frontend Rendering
+// ----------------------------------------------------
+assert.ok(Array.isArray(config.result_ctas), "result_ctas must be an array");
+assert.equal(config.result_ctas.length, 2, "Must have exactly 2 result CTAs");
+assert.equal(config.result_ctas[0].label, "Je veux faire un bilan", "Primary CTA label is 'Je veux faire un bilan'");
+assert.equal(config.result_ctas[0].url, "https://lifemetrics.fr/formulaire-bilan/", "Primary CTA URL is 'https://lifemetrics.fr/formulaire-bilan/'");
+assert.equal(config.result_ctas[0].variant, "primary", "Primary CTA variant is primary");
+assert.equal(config.result_ctas[0].enabled, true, "Primary CTA is enabled");
+assert.equal(config.result_ctas[1].label, "Découvrir les autres questionnaires", "Secondary CTA label is 'Découvrir les autres questionnaires'");
+assert.equal(config.result_ctas[1].url, "/tests-sante/", "Secondary CTA URL is '/tests-sante/'");
+assert.equal(config.result_ctas[1].variant, "secondary", "Secondary CTA variant is secondary");
+assert.equal(config.result_ctas[1].enabled, true, "Secondary CTA is enabled");
+
+// Funnel metadata check
+assert.equal(config.funnel.partner_cta_label, "Suivre l'évolution de mon bien-être", "Funnel partner_cta_label is descriptive metadata");
+
+// Mock DOM rendering test with questionnaire-ui.js
+const fs = require("node:fs");
+const vm = require("node:vm");
+const uiSource = fs.readFileSync(path.resolve(__dirname, "..", "assets", "js", "questionnaire-ui.js"), "utf8");
+
+function createMockElement(tag, customProps = {}) {
+  const el = {
+    tag,
+    className: "",
+    hidden: customProps.hidden !== undefined ? customProps.hidden : false,
+    classes: customProps.classes ? [...customProps.classes] : [],
+    setAttribute: function(k, v) { this[k] = v; },
+    getAttribute: function(k) { return this[k]; },
+    appendChild: function(c) { this.children = this.children || []; this.children.push(c); },
+    set innerHTML(v) { this.children = []; },
+    focus: function() {}, addEventListener: function() {},
+    children: [],
+    ...customProps
+  };
+  el.classList = {
+    add: function(cls) { if (!el.classes.includes(cls)) el.classes.push(cls); },
+    remove: function(cls) { el.classes = el.classes.filter(c => c !== cls); },
+    toggle: function(cls, force) {
+      const has = this.contains(cls);
+      const shouldAdd = force !== undefined ? force : !has;
+      if (shouldAdd) this.add(cls); else this.remove(cls);
+    },
+    contains: function(c) { return el.classes && el.classes.includes(c); }
+  };
+  return el;
+}
+
+function createMockRoot(id, qConfig) {
+  const elements = {
+    "[data-lmq-config]": { textContent: JSON.stringify(qConfig) },
+    "[data-lmq-submit-url]": null,
+    '[data-lmq-section="intro"]': createMockElement("section", { getAttribute: () => "intro" }),
+    '[data-lmq-section="test"]': createMockElement("section", { getAttribute: () => "test" }),
+    '[data-lmq-section="result"]': createMockElement("section", { getAttribute: () => "result" }),
+    '[data-lmq-role="intro-title"]': createMockElement("h1"),
+    '[data-lmq-role="intro-text"]': createMockElement("div"),
+    '[data-lmq-role="start"]': createMockElement("button"),
+    '[data-lmq-role="test-question"]': createMockElement("h2"),
+    '[data-lmq-role="answers"]': createMockElement("div"),
+    '[data-lmq-role="progress-label"]': createMockElement("p"),
+    '[data-lmq-role="progress-bar"]': createMockElement("div", { style: {} }),
+    '[data-lmq-role="back"]': createMockElement("button"),
+    ".result-score__value": createMockElement("span"),
+    '[data-lmq-role="analysis-text"]': createMockElement("p"),
+    '[data-lmq-role="safety-messages"]': createMockElement("div"),
+    '[data-lmq-role="classification-messages"]': createMockElement("div"),
+    '[data-lmq-role="dimensions"]': createMockElement("div"),
+    '[data-lmq-role="save-alert"]': createMockElement("div"),
+    '[data-lmq-role="ctas"]': createMockElement("div"),
+    '[data-lmq-role="modal-overlay"]': createMockElement("div"),
+    '[data-lmq-role="learn-more"]': createMockElement("a"),
+    '[data-lmq-role="modal-close"]': createMockElement("button"),
+    '[data-lmq-role="modal-title"]': createMockElement("h3"),
+    '[data-lmq-role="modal-content"]': createMockElement("div"),
+    '[data-lmq-role="retry"]': createMockElement("button")
+  };
+  return {
+    id,
+    _attributes: {},
+    getAttribute: function(k) { return this._attributes[k]; },
+    setAttribute: function(k, v) { this._attributes[k] = v; },
+    classList: { add: () => {}, remove: () => {} },
+    querySelector: function(sel) { return elements[sel] || null; },
+    querySelectorAll: function(sel) {
+      if (sel === "[data-lmq-section]") return [elements['[data-lmq-section="intro"]'], elements['[data-lmq-section="test"]'], elements['[data-lmq-section="result"]']];
+      return [];
+    },
+    _elements: elements
+  };
+}
+
+const mockRoot = createMockRoot("lmq-bien-etre", config);
+const domContext = {
+  document: {
+    readyState: "complete",
+    addEventListener: function() {},
+    removeEventListener: function() {},
+    querySelectorAll: function(sel) {
+      if (sel === ".lmq-questionnaire-root") return [mockRoot];
+      return [];
+    },
+    createElement: function(tag) { return createMockElement(tag); }
+  },
+  LifeMetricsQuestionnaireEngine: engine,
+  window: {},
+  console: console,
+  setTimeout: function(cb) { cb(); return 1; },
+  clearTimeout: function() {}
 };
-const res_dim = engine.score(config, answers_dim);
-assert.equal(res_dim.final_score, 33);
-assert.equal(res_dim.calculated_category, "BIEN_ETRE_FRAGILISE");
-assert.deepEqual(res_dim.weakest_dimensions, ["sens-accomplissement-personnel", "satisfaction-globale-quotidien"]);
+domContext.window = domContext;
+vm.createContext(domContext);
+vm.runInContext(uiSource, domContext);
+
+// Simulate full answer sequence to reach result screen
+const startBtn = mockRoot.querySelector('[data-lmq-role="start"]');
+startBtn.onclick();
+
+for (let i = 0; i < 12; i++) {
+  const answersContainer = mockRoot.querySelector('[data-lmq-role="answers"]');
+  assert.ok(answersContainer.children.length > 0, `Question ${i + 1} has answers`);
+  const btn = answersContainer.children[0];
+  assert.equal(btn.tag, "button", `Answer element is button`);
+  btn.onclick();
+}
+
+// Result screen should now be rendered
+const ctasContainer = mockRoot.querySelector('[data-lmq-role="ctas"]');
+assert.ok(ctasContainer, "CTAs container exists");
+const links = ctasContainer.children.filter(c => c.tag === "a");
+assert.equal(links.length, 2, "Result screen renders exactly 2 main action links");
+assert.equal(links[0].textContent, "Je veux faire un bilan");
+assert.equal(links[0].href, "https://lifemetrics.fr/formulaire-bilan/");
+assert.equal(links[1].textContent, "Découvrir les autres questionnaires");
+assert.equal(links[1].href, "/tests-sante/");
+
+// Confirm no 3rd link from funnel
+const allLinkTexts = links.map(l => l.textContent);
+assert.ok(!allLinkTexts.includes("Suivre l'évolution de mon bien-être"), "Funnel partner_cta_label is NOT rendered as a 3rd link");
 
 console.log("Questionnaire Bien-être JS Unit & Scoring Tests: ALL PASSED.");
+
+

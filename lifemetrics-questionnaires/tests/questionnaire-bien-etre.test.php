@@ -177,7 +177,63 @@ be_assert($d6["raw_score"] === 4 && ($d6["raw_score"] / 2) == 2.0, "D6 avg is 2.
 be_assert($res_dim["weakest_dimensions"] === array("sens-accomplissement-personnel", "satisfaction-globale-quotidien"), "Top 2 weakest dimensions selected");
 
 // ----------------------------------------------------
-// 5. Registry & Submission Service Integration
+// 5. Point 1 — Axes d'amélioration pour une catégorie verte (Cas A, Cas B, Cas C)
+// ----------------------------------------------------
+// CAS A — Vert réellement favorable : final_score 12-24, toutes dimensions < 2.50
+$res_cas_a_12 = $engine->score($config, $answers_12); // score 12, all dim_mean = 1.00 < 2.50
+be_assert($res_cas_a_12["calculated_category"] === "BIEN_ETRE_FAVORABLE", "Cas A (12): calculated is BIEN_ETRE_FAVORABLE");
+be_assert($res_cas_a_12["displayed_category"] === "BIEN_ETRE_FAVORABLE", "Cas A (12): displayed is BIEN_ETRE_FAVORABLE");
+$cas_a_eligible_axes_12 = array_filter($res_cas_a_12["dimensions"], static fn($d) => ($d["raw_score"] / 2) >= 2.50);
+be_assert(count($cas_a_eligible_axes_12) === 0, "Cas A (12): exactly 0 axes eligible (all dim_mean < 2.50)");
+
+$res_cas_a_24 = $engine->score($config, $answers_24); // score 24, all dim_mean = 2.00 < 2.50
+be_assert($res_cas_a_24["calculated_category"] === "BIEN_ETRE_FAVORABLE", "Cas A (24): calculated is BIEN_ETRE_FAVORABLE");
+be_assert($res_cas_a_24["displayed_category"] === "BIEN_ETRE_FAVORABLE", "Cas A (24): displayed is BIEN_ETRE_FAVORABLE");
+$cas_a_eligible_axes_24 = array_filter($res_cas_a_24["dimensions"], static fn($d) => ($d["raw_score"] / 2) >= 2.50);
+be_assert(count($cas_a_eligible_axes_24) === 0, "Cas A (24): exactly 0 axes eligible (all dim_mean < 2.50)");
+
+// CAS B — Vert avec faiblesse modérée : final_score 12-24, au moins une dimension avec 2.50 <= mean < 4.00, les autres < 2.50
+// Satisfaction = 3 + 3 = 6 (mean 3.00), others = 1 + 1 = 2 (mean 1.00). Total = 6 + 10 = 16
+$answers_cas_b = array_merge($answers_12, array("BE01" => "3", "BE02" => "3"));
+$res_cas_b = $engine->score($config, $answers_cas_b);
+be_assert($res_cas_b["final_score"] === 16, "Cas B: final_score is 16");
+be_assert($res_cas_b["calculated_category"] === "BIEN_ETRE_FAVORABLE", "Cas B: calculated is BIEN_ETRE_FAVORABLE");
+be_assert($res_cas_b["displayed_category"] === "BIEN_ETRE_FAVORABLE", "Cas B: displayed is BIEN_ETRE_FAVORABLE (no guardrail)");
+be_assert(empty($res_cas_b["applied_classification_rules"]), "Cas B: no guardrail classification rules triggered");
+$cas_b_eligible_axes = array_values(array_filter($res_cas_b["dimensions"], static fn($d) => ($d["raw_score"] / 2) >= 2.50));
+be_assert(count($cas_b_eligible_axes) === 1, "Cas B: exactly 1 axis eligible with mean >= 2.50");
+be_assert($cas_b_eligible_axes[0]["id"] === "satisfaction-globale-quotidien", "Cas B: eligible axis is satisfaction");
+$cas_b_non_eligible = array_filter($res_cas_b["dimensions"], static fn($d) => ($d["raw_score"] / 2) < 2.50);
+be_assert(count($cas_b_non_eligible) === 5, "Cas B: 5 dimensions with mean < 2.50 not selected as weaknesses");
+
+// CAS C — Vert avec garde-fou : dimension_mean >= 4.00 avec score global vert (18)
+// Satisfaction = 4 + 4 = 8 (mean 4.00), others = 1 + 1 = 2 (mean 1.00). Total = 8 + 10 = 18 <= 24
+$answers_cas_c = array_merge($answers_12, array("BE01" => "4", "BE02" => "4"));
+$res_cas_c = $engine->score($config, $answers_cas_c);
+be_assert($res_cas_c["final_score"] === 18, "Cas C: final_score is 18 (unchanged)");
+be_assert($res_cas_c["calculated_category"] === "BIEN_ETRE_FAVORABLE", "Cas C: calculated is BIEN_ETRE_FAVORABLE");
+be_assert($res_cas_c["displayed_category"] === "BIEN_ETRE_A_RENFORCER", "Cas C: displayed capped to BIEN_ETRE_A_RENFORCER (orange)");
+be_assert(in_array("BE_GUARDRAIL_SATISFACTION", $res_cas_c["applied_classification_rules"], true), "Cas C: BE_GUARDRAIL_SATISFACTION triggered");
+be_assert($res_cas_c["weakest_dimensions"][0] === "satisfaction-globale-quotidien", "Cas C: responsible dimension is in weakest_dimensions");
+
+// ----------------------------------------------------
+// 6. Point 2 — CTAs Verification
+// ----------------------------------------------------
+be_assert(isset($config["result_ctas"]) && is_array($config["result_ctas"]), "result_ctas exists");
+be_assert(count($config["result_ctas"]) === 2, "Must have exactly 2 result CTAs");
+be_assert($config["result_ctas"][0]["label"] === "Je veux faire un bilan", "Primary CTA label is 'Je veux faire un bilan'");
+be_assert($config["result_ctas"][0]["url"] === "https://lifemetrics.fr/formulaire-bilan/", "Primary CTA URL is 'https://lifemetrics.fr/formulaire-bilan/'");
+be_assert($config["result_ctas"][0]["variant"] === "primary", "Primary CTA variant is primary");
+be_assert($config["result_ctas"][0]["enabled"] === true, "Primary CTA is enabled");
+be_assert($config["result_ctas"][1]["label"] === "Découvrir les autres questionnaires", "Secondary CTA label is 'Découvrir les autres questionnaires'");
+be_assert($config["result_ctas"][1]["url"] === "/tests-sante/", "Secondary CTA URL is '/tests-sante/'");
+be_assert($config["result_ctas"][1]["variant"] === "secondary", "Secondary CTA variant is secondary");
+be_assert($config["result_ctas"][1]["enabled"] === true, "Secondary CTA is enabled");
+be_assert(isset($config["funnel"]["partner_cta_label"]), "funnel partner_cta_label exists as descriptive metadata");
+be_assert($config["funnel"]["partner_cta_label"] === "Suivre l'évolution de mon bien-être", "Funnel partner_cta_label is descriptive");
+
+// ----------------------------------------------------
+// 7. Registry & Submission Service Integration
 // ----------------------------------------------------
 $registry = new LifeMetrics_Questionnaire_Registry(
     __DIR__ . "/../questionnaires",
@@ -210,3 +266,4 @@ be_assert($server_scored["calculated_category"] === "BIEN_ETRE_FRAGILISE", "Serv
 be_assert($server_scored["weakest_dimensions"] === array("sens-accomplissement-personnel", "satisfaction-globale-quotidien"), "Weakest dimensions correctly identified");
 
 echo "Questionnaire Bien-être PHP Unit & Scoring Tests: ALL PASSED.\n";
+
