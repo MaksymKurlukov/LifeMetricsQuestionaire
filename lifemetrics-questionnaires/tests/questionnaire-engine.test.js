@@ -24,6 +24,8 @@ const multipleNa = score(config, cases.multipleNa[0]);
 assert.equal(multipleNa.dimensions[0].unavailable, true);
 assert.deepEqual(multipleNa.weakest_dimensions, ['energie']);
 assert.deepEqual(score(config, cases.ordinary[0]).weakest_dimensions, ['habitudes', 'energie']);
+const lowerConfig = Object.assign({}, config, { scoring_direction: 'lower_is_better' });
+assert.deepEqual(score(lowerConfig, cases.guardrailSafety[0]).weakest_dimensions, ['energie', 'habitudes']);
 assert.throws(() => score(config, { Q1: 'na', Q2: 'na', Q3: 'na', SF1: 'no', SF2: 'no' }), /unscorable_answers/);
 assert.throws(() => score(config, { Q1: '4', Q2: 0, Q3: 'high', SF1: 'no', SF2: 'no' }), /invalid_submission/);
 assert.ok(!fs.readFileSync(require.resolve('../assets/js/questionnaire-engine.js'), 'utf8').match(/pss10|Q1|document|fetch|eval\s*\(/i));

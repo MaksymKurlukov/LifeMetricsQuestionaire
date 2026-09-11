@@ -7,7 +7,7 @@
 | Phase | Description | Statut |
 |---|---|---|
 | 1 | Schema Validator V2 | TERMINÉ |
-| 2 | Scoring Engine V2 PHP / JavaScript | À FAIRE |
+| 2 | Scoring Engine V2 PHP / JavaScript | TERMINÉ |
 | 3 | Architecture CSS extensible | À FAIRE |
 | 4 | Activité physique V2 | À FAIRE |
 | 5 | Sommeil V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 1 — Schema Validator V2
-- Prochaine phase à exécuter : PHASE 2 — Scoring Engine V2 PHP / JavaScript
+- Dernière phase terminée : PHASE 2 — Scoring Engine V2 PHP / JavaScript
+- Prochaine phase à exécuter : PHASE 3 — Architecture CSS extensible
 - Blocages : Aucun
-- Nombre de phases terminées : 1 / 16
-- Nombre de phases restantes : 15
-- Dernier commit de phase : lifemetrics: phase 01 - schema validator v2
+- Nombre de phases terminées : 2 / 16
+- Nombre de phases restantes : 14
+- Dernier commit de phase : lifemetrics: phase 02 - scoring engine v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -216,7 +216,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 2 — Scoring Engine V2 PHP / JavaScript
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Adapter les moteurs de scoring existants uniquement aux règles nécessaires aux questionnaires validés.
 - Justification : Assurer une parité arithmétique rigoureuse entre le calcul immédiat navigateur (questionnaire-engine.js) et le calcul faisant autorité sur le serveur WordPress (class-questionnaire-scoring-engine.php).
 - Règles N/A et Normalisation :
@@ -245,12 +245,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - Guardrails et Safety n'altèrent pas le score brut ;
   - Tests PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/includes/class-questionnaire-scoring-engine.php, lifemetrics-questionnaires/assets/js/questionnaire-engine.js, lifemetrics-questionnaires/tests/questionnaire-scoring.test.php, lifemetrics-questionnaires/tests/questionnaire-parity.test.php, lifemetrics-questionnaires/tests/questionnaire-engine.test.js
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-scoring.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-parity.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-engine.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
+- Résultat : Support complet de lower_is_better pour le tri des dimensions défavorables (weakest_dimensions). Parité PHP/JS à 100%. Étanchéité validée pour les guardrails et questions Safety.
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 02 - scoring engine v2
+- Date : 2026-09-11
 
 ---
 
@@ -640,6 +640,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-schema.test.php (PASS), suite complète PHP (20 tests PASS), suite complète JS (11 tests PASS)
 - Résultat : Validateur de schéma étendu pour accepter `scoring_direction: lower_is_better`, `calculation_mode: average` (et sum), et `improvement_messages`. Les configurations invalides restent strictement rejetées. Aucune régression sur PSS-10 ni sur les schémas existants.
 - Notes : Prêt pour la Phase 2 (Scoring Engine V2).
+
+### 2026-09-11 — Phase 2 : Scoring Engine V2 PHP / JavaScript
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/includes/class-questionnaire-scoring-engine.php, lifemetrics-questionnaires/assets/js/questionnaire-engine.js, lifemetrics-questionnaires/tests/questionnaire-scoring.test.php, lifemetrics-questionnaires/tests/questionnaire-parity.test.php, lifemetrics-questionnaires/tests/questionnaire-engine.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-scoring.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-parity.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-engine.test.js (PASS), suite complète PHP/JS (PASS)
+- Résultat : Prise en charge de `scoring_direction: lower_is_better` dans le tri des dimensions les plus défavorables (weakest_dimensions). Parité PHP/JavaScript validée à 100%. Étanchéité préservée sur guardrails et questions Safety.
+- Notes : Prêt pour la Phase 3 (Architecture CSS extensible).
 
 ---
 

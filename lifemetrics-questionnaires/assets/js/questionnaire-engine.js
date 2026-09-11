@@ -119,8 +119,12 @@
       }
     });
 
+    var isLowerBetter = config.scoring_direction === 'lower_is_better' || config.scoring_direction === 'higher_is_worse';
     var weakest = dimensions.filter(function (dimension) { return dimension._eligible && !dimension.unavailable; })
-      .sort(function (left, right) { return left.percentage - right.percentage || left._order - right._order; })
+      .sort(function (left, right) {
+        var diff = isLowerBetter ? right.percentage - left.percentage : left.percentage - right.percentage;
+        return diff || left._order - right._order;
+      })
       .slice(0, config.weakest_dimensions ? config.weakest_dimensions.count : 0)
       .map(function (dimension) { return dimension.id; });
     dimensions.forEach(function (dimension) { delete dimension._order; delete dimension._eligible; });

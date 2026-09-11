@@ -120,8 +120,9 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
             }
         }
 
+        $is_lower_better = in_array($config['scoring_direction'] ?? '', array('lower_is_better', 'higher_is_worse'), true);
         $weakest = array_values(array_filter($dimensions, static fn($dimension) => $dimension['_eligible'] && !$dimension['unavailable']));
-        usort($weakest, static fn($a, $b) => ($a['percentage'] <=> $b['percentage']) ?: ($a['_order'] <=> $b['_order']));
+        usort($weakest, static fn($a, $b) => ($is_lower_better ? ($b['percentage'] <=> $a['percentage']) : ($a['percentage'] <=> $b['percentage'])) ?: ($a['_order'] <=> $b['_order']));
         $weakest = array_column(array_slice($weakest, 0, $config['weakest_dimensions']['count'] ?? 0), 'id');
         foreach ($dimensions as &$dimension) {
             unset($dimension['_order'], $dimension['_eligible']);

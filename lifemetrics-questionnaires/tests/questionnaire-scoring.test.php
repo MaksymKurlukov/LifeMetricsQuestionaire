@@ -32,6 +32,13 @@ scoring_expect(array('energie'), $multiple_na['weakest_dimensions'], 'unavailabl
 $ordinary = $engine->score($config, $cases['ordinary']['answers']);
 scoring_expect(array('habitudes', 'energie'), $ordinary['weakest_dimensions'], 'weakest tie uses configuration order');
 
+$lower_is_better_config = $config;
+$lower_is_better_config['scoring_direction'] = 'lower_is_better';
+// In cases['guardrail-safety']: habitudes has Q1=1, Q2=3 -> 4/8 (50%), energie has Q3='high' -> 10/12 (83.33%)
+// For lower_is_better, 83.33% (higher) is worse, so energie is the weakest dimension
+$lower_result = $engine->score($lower_is_better_config, $cases['guardrail-safety']['answers']);
+scoring_expect(array('energie', 'habitudes'), $lower_result['weakest_dimensions'], 'lower_is_better selects highest percentage as weakest');
+
 try {
     $engine->score($config, array('Q1' => 'na', 'Q2' => 'na', 'Q3' => 'na', 'SF1' => 'no', 'SF2' => 'no'));
     scoring_expect(true, false, 'zero capacity rejected');
