@@ -17,7 +17,7 @@
 | 9 | Sédentarité V2 | TERMINÉ |
 | 10 | Fatigue & récupération V2 | TERMINÉ |
 | 11 | Risque nutritionnel V1 | TERMINÉ |
-| 12 | Bien-être V1 | À FAIRE |
+| 12 | Bien-être V1 | TERMINÉ |
 | 13 | Restitution frontend finale | À FAIRE |
 | 14 | Vérification transport et Google Sheets | À FAIRE |
 | 15 | Full Regression Test | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 11 — Risque nutritionnel V1
-- Prochaine phase à exécuter : PHASE 12 — Bien-être V1
+- Dernière phase terminée : PHASE 12 — Bien-être V1
+- Prochaine phase à exécuter : PHASE 13 — Restitution frontend finale
 - Blocages : Aucun
-- Nombre de phases terminées : 11 / 16
-- Nombre de phases restantes : 5
-- Dernier commit de phase : lifemetrics: phase 11 - risque nutritionnel v1
+- Nombre de phases terminées : 12 / 16
+- Nombre de phases restantes : 4
+- Dernier commit de phase : lifemetrics: phase 12 - bien-etre v1
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -572,26 +572,44 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 12 — Bien-être V1
 
-- Statut : À FAIRE
-- Objectif : Nouveau questionnaire : implémenter la version finale validée issue du PDF (12 questions, 6 dimensions, scoring, catégories, guardrail dimensionnel, axes, textes résultat, funnel de suivi).
-- Règle de persistance : Le suivi longitudinal métier est une orientation fonctionnelle. Aucune nouvelle architecture de persistance complexe n'est créée dans ce MVP.
+- Statut : TERMINÉ
+- Objectif : Nouveau questionnaire : implémenter la version finale validée issue du PDF (`Score_LifeMetrics_Bien_etre_V1.pdf`).
+- Contenu requis :
+  - 12 questions (BE01 à BE12 scorées de 1 à 5, points 1=favorable, 5=défavorable, lower_is_better, aucun N/A, aucun bloc Safety, échelle 12–60) ;
+  - 6 dimensions en `calculation_mode: average` (Satisfaction globale, Équilibre émotionnel, Engagement/intérêt, Maîtrise/capacité à faire face, Sens/accomplissement, Connexion sociale) ;
+  - Guardrail dimensionnel validé : Si au moins une dimension a une moyenne >= 4.00 (raw_score >= 8/10), la catégorie verte (`BIEN_ETRE_FAVORABLE`) est plafonnée à `BIEN_ETRE_A_RENFORCER` (*Bien-être à renforcer*), sans modifier `final_score` et sans forcer le rouge. La dimension responsable apparaît obligatoirement dans les axes d'amélioration ;
+  - Axes d'amélioration : 2 dimensions les plus défavorables (orange/rouge), en vert uniquement si moyenne >= 2.50 (aucun axe artificiel si tout est < 2.50) ;
+  - Absence stricte de bloc Safety (pas de questions psychiatriques/suicide, rôle d'auto-évaluation du bien-être subjectif préservé) ;
+  - Parcours d'engagement / suivi validé dans le funnel, CTAs globaux standardisés (« Je veux faire un bilan » et « Découvrir les autres questionnaires ») ;
+  - Disclaimers complets issus du PDF.
+- Règle de persistance : Le suivi longitudinal métier est une orientation fonctionnelle. Aucune nouvelle architecture de persistance complexe (localStorage, table SQL) n'est créée dans ce MVP.
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/bien-etre/questionnaire.php
   - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
   - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php
   - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
 - Tests :
   - php lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php
   - node lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js
 - Critères de validation :
   - Configuration valide, scoring conforme, tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés :
+  - lifemetrics-questionnaires/questionnaires/bien-etre/questionnaire.php (nouveau fichier créé)
+  - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php (nouveau fichier créé)
+  - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js (nouveau fichier créé)
+- Tests exécutés :
+  - php lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php (PASS)
+  - node lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js (PASS)
+  - Full suite PHP (22 tests PASS)
+  - Full suite JS (16 tests PASS)
+- Résultat : Questionnaire Bien-être V1 entièrement implémenté et validé conformément au PDF. 12 questions scorées (1..5, échelle 12–60), 6 dimensions calculées par moyenne, 3 catégories (12–24: BIEN_ETRE_FAVORABLE, 25–32: BIEN_ETRE_A_RENFORCER, 33–60: BIEN_ETRE_FRAGILISE), guardrail dimensionnel sur moyenne >= 4.00 plafonnant le vert à orange sans altérer le score numérique, aucun bloc Safety, CTAs globaux conformes.
+- NON DÉTERMINÉ : URL de production du catalogue des questionnaires pour le CTA secondaire (placeholder technique `/tests-sante/`), ainsi que l'infrastructure de suivi longitudinal futur pour le parcours (« Suivre l'évolution de mon bien-être »).
+- Commit : lifemetrics: phase 12 - bien-etre v1
+- Date : 2026-09-11
 
 ---
 

@@ -193,6 +193,16 @@ $expected_questionnaires = array(
         'direction' => 'lower_is_better',
         'storage_worksheet' => 'Risque_Nutritionnel',
     ),
+    'bien-etre' => array(
+        'path' => 'bien-etre/questionnaire.php',
+        'schema_version' => '2.0.0',
+        'version' => '1.0.0',
+        'status' => 'review',
+        'target_min' => 12,
+        'target_max' => 60,
+        'direction' => 'lower_is_better',
+        'storage_worksheet' => 'Bien_Etre',
+    ),
 );
 
 $registry_map = array();
