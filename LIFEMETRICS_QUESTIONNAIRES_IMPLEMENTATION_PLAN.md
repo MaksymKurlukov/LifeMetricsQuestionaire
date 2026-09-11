@@ -11,7 +11,7 @@
 | 3 | Architecture CSS extensible | TERMINÉ |
 | 4 | Activité physique V2 | TERMINÉ |
 | 5 | Sommeil V2 | TERMINÉ |
-| 6 | Nutrition V2 | À FAIRE |
+| 6 | Nutrition V2 | TERMINÉ |
 | 7 | Pieds & confort postural V2 | À FAIRE |
 | 8 | Hydratation V2 | À FAIRE |
 | 9 | Sédentarité V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 5 — Sommeil V2
-- Prochaine phase à exécuter : PHASE 6 — Nutrition V2
+- Dernière phase terminée : PHASE 6 — Nutrition V2
+- Prochaine phase à exécuter : PHASE 7 — Pieds & confort postural V2
 - Blocages : Aucun
-- Nombre de phases terminées : 5 / 16
-- Nombre de phases restantes : 11
-- Dernier commit de phase : lifemetrics: phase 05 - sommeil v2
+- Nombre de phases terminées : 6 / 16
+- Nombre de phases restantes : 10
+- Dernier commit de phase : lifemetrics: phase 06 - nutrition v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -343,7 +343,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 6 — Nutrition V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Transcription exacte du PDF validé pour le questionnaire Nutrition (12 questions scorées, 3 questions Safety, dimensions, textes).
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php
@@ -355,12 +355,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Critères de validation :
   - Conformité stricte au PDF et tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
+- Résultat : Validation complète du questionnaire Nutrition V2. 12 questions scorées, paliers max 4 pts sur NT03 (options 3-4 = 4 pts) et NT06 (options 3-4 = 4 pts), 3 questions Safety hors score (NTSF01-NTSF03) avec priorité visuelle sans impact sur le score brut (48/48 préservé), 6 dimensions et 4 niveaux de résultats (0-15, 16-27, 28-38, 39-48).
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 06 - nutrition v2
+- Date : 2026-09-11
 
 ---
 
@@ -668,6 +668,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js (PASS), suite complète PHP/JS (PASS)
 - Résultat : Questionnaire Sommeil V2 validé avec succès : 12 questions scorées, question SL01 non-linéaire (7-9h = 4 pts, >9h = 3 pts), 3 questions Safety hors score (SLSF01-SLSF03), 5 dimensions, 4 catégories (0-15, 16-27, 28-38, 39-48) et étanchéité Safety (score 48/48 non altéré).
 - Notes : Prêt pour la Phase 6 (Nutrition V2).
+
+### 2026-09-11 — Phase 6 : Nutrition V2
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php, lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js (PASS), suites complètes PHP (20 tests PASS) et JS (16 tests PASS)
+- Résultat : Validation du questionnaire Nutrition V2 conforme au PDF validé : 12 questions scorées, paliers max 4 pts sur NT03 et NT06, 3 questions Safety hors score (NTSF01-NTSF03), 6 dimensions et 4 catégories de résultat (0-15, 16-27, 28-38, 39-48).
+- Notes : Prêt pour la Phase 7 (Pieds & confort postural V2).
 
 ---
 
