@@ -118,7 +118,7 @@ Le but des phases questionnaires n'est PAS simplement de vérifier que l'ancien 
    - les guardrails ;
    - les axes d'amélioration ;
    - le funnel ;
-   - le CTA ;
+   - le CTA (selon la règle globale ci-dessous) ;
    - le disclaimer.
 4. Si le fichier questionnaire.php contient une ancienne version, il doit être réellement MODIFIÉ pour correspondre au PDF final.
 5. Les anciens tests ne sont PAS une preuve que le questionnaire est conforme (ils peuvent eux-mêmes décrire une ancienne version).
@@ -132,6 +132,23 @@ Le but des phases questionnaires n'est PAS simplement de vérifier que l'ancien 
    - fichier questionnaire.php réellement vérifié/modifié ;
    - tests adaptés à la nouvelle version.
 10. Règle de non-présomption : Une ancienne phase marquée TERMINÉ ne constitue jamais une preuve de conformité si son contenu contredit le PDF final.
+
+### 8. Règle CTA globale pour tous les questionnaires (Phases 4 à 12)
+Sur la page de résultat de TOUS les questionnaires LifeMetrics, il doit y avoir exactement deux CTA principaux :
+
+1. CTA principal :
+   - Texte : « Je veux faire un bilan »
+   - URL exacte : `https://lifemetrics.fr/formulaire-bilan/`
+   - Configuration : `variant: 'primary'`, `enabled: true`
+
+2. CTA secondaire :
+   - Texte : « Découvrir les autres questionnaires » (ou « Découvrir les autres tests »)
+   - Retour vers la page LifeMetrics qui présente la liste des autres questionnaires
+   - Configuration : `variant: 'secondary'`, `enabled: true`
+   - URL : Retrouver l'URL réelle dans le projet si elle existe (`/tests-sante/` documentée comme chemin catalogue planifié dans `QUESTIONNAIRE_INVENTORY.md`) ; ne jamais inventer d'URL ; si l'URL finale de production n'est pas encore formellement déterminable, inscrire NON DÉTERMINÉ dans le plan jusqu'à confirmation.
+
+Cette règle est commune à tous les questionnaires des phases 4 à 12. Elle remplace les anciens CTA spécifiques ou destinations inventées dans les configurations (ex. `/vitascan/`, `/podos360/`).
+Les PDF restent la source de vérité pour les questions, réponses, points, dimensions, catégories, textes de résultat, Safety, guardrails et disclaimers, mais cette règle globale est prioritaire pour les deux CTA de la page de résultat.
 
 ---
 
@@ -341,8 +358,8 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 - Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
 - Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
-- Résultat : Migration intégrale du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables (plus fort pourcentage d'impact), CTA `/vitascan/`, disclaimers et textes exacts.
-- NON DÉTERMINÉ : Aucun.
+- Résultat : Migration intégrale du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables (plus fort pourcentage d'impact), 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers et textes exacts.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (chemin planifié documenté : `/tests-sante/`, à confirmer lors du déploiement catalogue).
 - Commit : lifemetrics: phase 04 - activite physique v2
 - Date : 2026-09-11
 
@@ -699,7 +716,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Statut : TERMINÉ
 - Fichiers modifiés : `lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php`, `lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
 - Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
-- Résultat : Migration rigoureuse du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables, CTA `/vitascan/`, disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
+- Résultat : Migration rigoureuse du questionnaire Activité physique depuis le PDF final validé (`Score_LifeMetrics_Activite_Physique_V1.pdf`). 12 questions AP01–AP12 (points 1 à 5, lower_is_better), duplication 1 pt sur AP04 (3+ jours = 1 pt, 2 jours = 1 pt), 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANTE` 12-24, `A_RENFORCER` 25-32, `INSUFFISANTE` 33-60), sélection des 2 dimensions les plus défavorables, intégration des 2 CTAs globaux (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
 - Notes : Prêt pour la Phase 5 (Sommeil V2).
 
 ---

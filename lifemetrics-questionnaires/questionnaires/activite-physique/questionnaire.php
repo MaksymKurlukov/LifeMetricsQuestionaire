@@ -256,9 +256,15 @@ return array(
     'safety_messages' => array(),
     'result_ctas' => array(
         array(
-            'label' => 'Découvrir mon bilan VitaScan',
-            'url' => '/vitascan/',
+            'label' => 'Je veux faire un bilan',
+            'url' => 'https://lifemetrics.fr/formulaire-bilan/',
             'variant' => 'primary',
+            'enabled' => true,
+        ),
+        array(
+            'label' => 'Découvrir les autres questionnaires',
+            'url' => '/tests-sante/',
+            'variant' => 'secondary',
             'enabled' => true,
         ),
     ),

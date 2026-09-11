@@ -73,6 +73,15 @@ assert.deepEqual(
   ]
 );
 
+// Global Result CTAs verification
+assert.equal(config.result_ctas.length, 2, 'Must have exactly 2 result CTAs');
+assert.equal(config.result_ctas[0].label, 'Je veux faire un bilan');
+assert.equal(config.result_ctas[0].url, 'https://lifemetrics.fr/formulaire-bilan/');
+assert.equal(config.result_ctas[0].variant, 'primary');
+assert.equal(config.result_ctas[0].enabled, true);
+assert.equal(config.result_ctas[1].variant, 'secondary');
+assert.equal(config.result_ctas[1].url, '/tests-sante/');
+
 // Weakest dimensions config
 assert.equal(config.weakest_dimensions.count, 2);
 assert.equal(config.weakest_dimensions.tie_break, 'configuration_order');

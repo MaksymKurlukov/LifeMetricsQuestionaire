@@ -111,6 +111,15 @@ ap_assert($config['dimensions'][2]['question_ids'] === array('AP06', 'AP07'), 'D
 ap_assert($config['dimensions'][3]['question_ids'] === array('AP08', 'AP09'), 'D4 has AP08, AP09');
 ap_assert($config['dimensions'][4]['question_ids'] === array('AP10', 'AP11', 'AP12'), 'D5 has AP10, AP11, AP12');
 
+// Global Result CTAs verification
+ap_assert(count($config['result_ctas']) === 2, 'Must have exactly 2 result CTAs');
+ap_assert($config['result_ctas'][0]['label'] === 'Je veux faire un bilan', 'Primary CTA label is Je veux faire un bilan');
+ap_assert($config['result_ctas'][0]['url'] === 'https://lifemetrics.fr/formulaire-bilan/', 'Primary CTA url is https://lifemetrics.fr/formulaire-bilan/');
+ap_assert($config['result_ctas'][0]['variant'] === 'primary', 'Primary CTA variant is primary');
+ap_assert($config['result_ctas'][0]['enabled'] === true, 'Primary CTA is enabled');
+ap_assert($config['result_ctas'][1]['variant'] === 'secondary', 'Secondary CTA variant is secondary');
+ap_assert($config['result_ctas'][1]['url'] === '/tests-sante/', 'Secondary CTA url points to questionnaire catalogue');
+
 // ----------------------------------------------------
 // 4. Scoring Engine Boundaries (12, 24, 25, 32, 33, 60)
 // ----------------------------------------------------
