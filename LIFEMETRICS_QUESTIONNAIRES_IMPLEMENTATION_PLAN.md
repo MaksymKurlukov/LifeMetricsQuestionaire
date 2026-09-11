@@ -11,7 +11,7 @@
 | 3 | Architecture CSS extensible | TERMINÉ |
 | 4 | Activité physique V2 | TERMINÉ |
 | 5 | Sommeil V2 | TERMINÉ |
-| 6 | Nutrition V2 | À FAIRE |
+| 6 | Nutrition V2 | TERMINÉ |
 | 7 | Pieds & confort postural V2 | À FAIRE |
 | 8 | Hydratation V2 | À FAIRE |
 | 9 | Sédentarité V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 5 — Sommeil V2
-- Prochaine phase à exécuter : PHASE 6 — Nutrition V2
+- Dernière phase terminée : PHASE 6 — Nutrition V2
+- Prochaine phase à exécuter : PHASE 7 — Pieds & confort postural V2
 - Blocages : Aucun
-- Nombre de phases terminées : 5 / 16
-- Nombre de phases restantes : 11
-- Dernier commit de phase : lifemetrics: phase 05 - sommeil v2
+- Nombre de phases terminées : 6 / 16
+- Nombre de phases restantes : 10
+- Dernier commit de phase : lifemetrics: phase 06 - nutrition v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -395,7 +395,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 6 — Nutrition V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Transcription exacte du PDF validé pour le questionnaire Nutrition (score 12–60, 3 catégories, 12 questions scorées, 3 questions Safety, dimensions, textes).
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php
@@ -407,12 +407,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Critères de validation :
   - Conformité stricte au PDF (12-60, 3 catégories, textes et paliers exacts) et tests PHP/JS PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
+- Résultat : Migration intégrale du questionnaire Nutrition depuis le PDF final validé (`Score_LifeMetrics_Nutrition_V1 09.33.50.pdf`). 12 questions scorées NT01–NT12 (points 1 à 5, lower_is_better), barèmes spécifiques avec plateau validé sur Q3/NT03 (3+ fois/sem = 1 pt, 2 fois/sem = 1 pt [plateau], ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais/presque jamais = 5 pts) et Q6/NT06 (>2 fois/sem = 1 pt, ~2 fois/sem = 1 pt [plateau], ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais = 5 pts), 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`HABITUDES_FAVORABLES` 12-24, `EQUILIBRE_FRAGILE` 25-32, `HABITUDES_INSUFFISANTES` 33-60), 3 questions Safety hors score NTSF01–NTSF03 déclenchant l'alerte médicale `NUTRITION_SAFETY_MESSAGE` (priorité 100) sans altérer le score numérique brut, sélection des 2 dimensions les plus défavorables, 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (chemin planifié documenté : `/tests-sante/`, à confirmer lors du déploiement catalogue).
+- Commit : lifemetrics: phase 06 - nutrition v2
+- Date : 2026-09-11
 
 ---
 
@@ -723,6 +723,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
 - Résultat : Migration rigoureuse du questionnaire Sommeil depuis le PDF final validé (`Score_LifeMetrics_Sommeil_V1.pdf`). 12 questions scorées SL01–SL12 (points 1 à 5, lower_is_better), barème exact SL01 (7-9h = 1 pt, >9h = 2 pts, 6-7h = 3 pts, 5-6h = 4 pts, <5h = 5 pts), 3 questions Safety hors score SLSF01–SLSF03 déclenchant l'alerte médicale `SOMMEIL_SAFETY_MESSAGE` sans altération du score brut, 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANT` 12-24, `ENCORE_FRAGILE` 25-32, `PERTURBE` 33-60), sélection des 2 dimensions les plus défavorables, intégration des 2 CTAs globaux (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
 - Notes : Prêt pour la Phase 6 (Nutrition V2).
+
+### 2026-09-11 — PHASE 6 — Nutrition V2
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
+- Résultat : Migration rigoureuse du questionnaire Nutrition depuis le PDF final validé (`Score_LifeMetrics_Nutrition_V1 09.33.50.pdf`). 12 questions scorées NT01–NT12 (points 1 à 5, lower_is_better), barèmes spécifiques avec plateau validé sur Q3/NT03 (3+ ou 2 fois/sem = 1 pt, ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais/presque jamais = 5 pts) et Q6/NT06 (>2 ou ~2 fois/sem = 1 pt, ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais = 5 pts), 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`HABITUDES_FAVORABLES` 12-24, `EQUILIBRE_FRAGILE` 25-32, `HABITUDES_INSUFFISANTES` 33-60), 3 questions Safety hors score NTSF01–NTSF03 déclenchant l'alerte médicale `NUTRITION_SAFETY_MESSAGE` (priorité 100) sans altérer le score numérique brut, sélection des 2 dimensions les plus défavorables, 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
+- Notes : Prêt pour la Phase 7 (Pieds & confort postural V2).
 
 ---
 
