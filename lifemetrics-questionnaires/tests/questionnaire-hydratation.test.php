@@ -57,219 +57,151 @@ $validation_errors = $validator->validate($config);
 hy_assert(empty($validation_errors), 'Hydratation passes strict Schema 2.0.0 validation (errors: ' . implode(', ', $validation_errors) . ')');
 
 // ----------------------------------------------------
-// 2. Score Boundaries (0, 15, 16, 27, 28, 38, 39, 48)
+// 2. Score Boundaries (12, 24, 25, 32, 33, 60) - 3 Categories
 // ----------------------------------------------------
 $base_safety = array('HYSF01' => 'no', 'HYSF02' => 'no', 'HYSF03' => 'no');
 
-// Min score 0 -> HABITUDES_HYDRATATION_INSUFFISANTES
-$answers_min = array_merge(array_fill_keys(array('HY01','HY02','HY03','HY04','HY05','HY06','HY07','HY08','HY09','HY10','HY11','HY12'), '0'), $base_safety);
-$res_0 = $engine->score($config, $answers_min);
-hy_assert($res_0['final_score'] === 0, 'Min score is 0');
-hy_assert($res_0['calculated_category'] === 'HABITUDES_HYDRATATION_INSUFFISANTES', '0 is HABITUDES_HYDRATATION_INSUFFISANTES');
-hy_assert($res_0['displayed_category'] === 'HABITUDES_HYDRATATION_INSUFFISANTES', 'Displayed category is HABITUDES_HYDRATATION_INSUFFISANTES');
+// Min score 12 (all 1s) -> HABITUDES_FAVORABLES
+$answers_12 = array_merge(array_fill_keys(array('HY01','HY02','HY03','HY04','HY05','HY06','HY07','HY08','HY09','HY10','HY11','HY12'), '1'), $base_safety);
+$res_12 = $engine->score($config, $answers_12);
+hy_assert($res_12['final_score'] === 12, 'Min score is 12');
+hy_assert($res_12['calculated_category'] === 'HABITUDES_FAVORABLES', '12 is HABITUDES_FAVORABLES');
+hy_assert($res_12['displayed_category'] === 'HABITUDES_FAVORABLES', 'Displayed category is HABITUDES_FAVORABLES');
 
-// Score 15 -> HABITUDES_HYDRATATION_INSUFFISANTES
-$answers_15 = array_merge(array(
-    'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
-    'HY05' => '2', 'HY06' => '2', 'HY07' => '2', 'HY08' => '1',
-    'HY09' => '0', 'HY10' => '0', 'HY11' => '0', 'HY12' => '0'
-), $base_safety);
-$res_15 = $engine->score($config, $answers_15);
-hy_assert($res_15['final_score'] === 15, 'Score 15 test');
-hy_assert($res_15['calculated_category'] === 'HABITUDES_HYDRATATION_INSUFFISANTES', '15 is HABITUDES_HYDRATATION_INSUFFISANTES');
-
-// Score 16 -> HYDRATATION_A_RENFORCER
-$answers_16 = array_merge(array(
+// Boundary 24 -> HABITUDES_FAVORABLES
+$answers_24 = array_merge(array(
     'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
     'HY05' => '2', 'HY06' => '2', 'HY07' => '2', 'HY08' => '2',
-    'HY09' => '0', 'HY10' => '0', 'HY11' => '0', 'HY12' => '0'
+    'HY09' => '2', 'HY10' => '2', 'HY11' => '2', 'HY12' => '2'
 ), $base_safety);
-$res_16 = $engine->score($config, $answers_16);
-hy_assert($res_16['final_score'] === 16, 'Score 16 test');
-hy_assert($res_16['calculated_category'] === 'HYDRATATION_A_RENFORCER', '16 is HYDRATATION_A_RENFORCER');
+$res_24 = $engine->score($config, $answers_24);
+hy_assert($res_24['final_score'] === 24, 'Score 24 test');
+hy_assert($res_24['calculated_category'] === 'HABITUDES_FAVORABLES', '24 is HABITUDES_FAVORABLES');
 
-// Score 27 -> HYDRATATION_A_RENFORCER
-$answers_27 = array_merge(array(
-    'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
+// Boundary 25 -> HYDRATATION_FRAGILE
+$answers_25 = array_merge(array(
+    'HY01' => '3', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
     'HY05' => '2', 'HY06' => '2', 'HY07' => '2', 'HY08' => '2',
-    'HY09' => '3', 'HY10' => '3', 'HY11' => '3', 'HY12' => '2'
+    'HY09' => '2', 'HY10' => '2', 'HY11' => '2', 'HY12' => '2'
 ), $base_safety);
-$res_27 = $engine->score($config, $answers_27);
-hy_assert($res_27['final_score'] === 27, 'Score 27 test');
-hy_assert($res_27['calculated_category'] === 'HYDRATATION_A_RENFORCER', '27 is HYDRATATION_A_RENFORCER');
+$res_25 = $engine->score($config, $answers_25);
+hy_assert($res_25['final_score'] === 25, 'Score 25 test');
+hy_assert($res_25['calculated_category'] === 'HYDRATATION_FRAGILE', '25 is HYDRATATION_FRAGILE');
 
-// Score 28 -> HABITUDES_HYDRATATION_FAVORABLES
-$answers_28 = array_merge(array(
-    'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
-    'HY05' => '2', 'HY06' => '2', 'HY07' => '2', 'HY08' => '2',
-    'HY09' => '3', 'HY10' => '3', 'HY11' => '3', 'HY12' => '3'
-), $base_safety);
-$res_28 = $engine->score($config, $answers_28);
-hy_assert($res_28['final_score'] === 28, 'Score 28 test');
-hy_assert($res_28['calculated_category'] === 'HABITUDES_HYDRATATION_FAVORABLES', '28 is HABITUDES_HYDRATATION_FAVORABLES');
-
-// Score 38 -> HABITUDES_HYDRATATION_FAVORABLES
-$answers_38 = array_merge(array(
+// Boundary 32 -> HYDRATATION_FRAGILE
+$answers_32 = array_merge(array(
     'HY01' => '3', 'HY02' => '3', 'HY03' => '3', 'HY04' => '3',
     'HY05' => '3', 'HY06' => '3', 'HY07' => '3', 'HY08' => '3',
-    'HY09' => '4', 'HY10' => '4', 'HY11' => '3', 'HY12' => '3'
+    'HY09' => '2', 'HY10' => '2', 'HY11' => '2', 'HY12' => '2'
 ), $base_safety);
-$res_38 = $engine->score($config, $answers_38);
-hy_assert($res_38['final_score'] === 38, 'Score 38 test');
-hy_assert($res_38['calculated_category'] === 'HABITUDES_HYDRATATION_FAVORABLES', '38 is HABITUDES_HYDRATATION_FAVORABLES');
+$res_32 = $engine->score($config, $answers_32);
+hy_assert($res_32['final_score'] === 32, 'Score 32 test');
+hy_assert($res_32['calculated_category'] === 'HYDRATATION_FRAGILE', '32 is HYDRATATION_FRAGILE');
 
-// Score 39 -> TRES_BONNES_HABITUDES_HYDRATATION
-$answers_39 = array_merge(array(
+// Boundary 33 -> HABITUDES_INSUFFISANTES
+$answers_33 = array_merge(array(
     'HY01' => '3', 'HY02' => '3', 'HY03' => '3', 'HY04' => '3',
-    'HY05' => '3', 'HY06' => '3', 'HY07' => '4', 'HY08' => '3',
-    'HY09' => '4', 'HY10' => '4', 'HY11' => '3', 'HY12' => '3'
+    'HY05' => '3', 'HY06' => '3', 'HY07' => '3', 'HY08' => '3',
+    'HY09' => '3', 'HY10' => '2', 'HY11' => '2', 'HY12' => '2'
 ), $base_safety);
-$res_39 = $engine->score($config, $answers_39);
-hy_assert($res_39['final_score'] === 39, 'Score 39 test');
-hy_assert($res_39['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', '39 is TRES_BONNES_HABITUDES_HYDRATATION');
+$res_33 = $engine->score($config, $answers_33);
+hy_assert($res_33['final_score'] === 33, 'Score 33 test');
+hy_assert($res_33['calculated_category'] === 'HABITUDES_INSUFFISANTES', '33 is HABITUDES_INSUFFISANTES');
 
-// Max score 48 -> TRES_BONNES_HABITUDES_HYDRATATION
-$answers_max = array_merge(array_fill_keys(array('HY01','HY02','HY03','HY04','HY05','HY06','HY07','HY08','HY09','HY10','HY11','HY12'), '4'), $base_safety);
-$res_48 = $engine->score($config, $answers_max);
-hy_assert($res_48['final_score'] === 48, 'Max score is 48');
-hy_assert($res_48['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', '48 is TRES_BONNES_HABITUDES_HYDRATATION');
+// Max score 60 (all 5s) -> HABITUDES_INSUFFISANTES
+$answers_60 = array_merge(array_fill_keys(array('HY01','HY02','HY03','HY04','HY05','HY06','HY07','HY08','HY09','HY10','HY11','HY12'), '5'), $base_safety);
+$res_60 = $engine->score($config, $answers_60);
+hy_assert($res_60['final_score'] === 60, 'Max score is 60');
+hy_assert($res_60['calculated_category'] === 'HABITUDES_INSUFFISANTES', '60 is HABITUDES_INSUFFISANTES');
 
 // ----------------------------------------------------
-// 3. N/A Normalization on HY05
+// 3. N/A Normalization on HY05 (11 questions answered)
+// Formula: ROUND((raw_score / 11) * 12)
 // ----------------------------------------------------
-// HY05 = 'na', all other 11 questions = '4' -> Raw: 44/44 -> Normalized: 48/48
-$answers_na_max = array_merge($answers_max, array('HY05' => 'na'));
+// HY05 = 'na', all other 11 = '1' -> raw: 11/55 -> normalized: 12
+$answers_na_min = array_merge($answers_12, array('HY05' => 'na'));
+$res_na_min = $engine->score($config, $answers_na_min);
+hy_assert($res_na_min['raw_score'] === 11, 'N/A min raw score is 11');
+hy_assert($res_na_min['available_min'] === 11, 'N/A available min is 11');
+hy_assert($res_na_min['available_max'] === 55, 'N/A available max is 55');
+hy_assert($res_na_min['final_score'] === 12, '11/55 normalizes to 12/60');
+hy_assert($res_na_min['calculated_category'] === 'HABITUDES_FAVORABLES', '12 is HABITUDES_FAVORABLES');
+
+// HY05 = 'na', all other 11 = '5' -> raw: 55/55 -> normalized: 60
+$answers_na_max = array_merge($answers_60, array('HY05' => 'na'));
 $res_na_max = $engine->score($config, $answers_na_max);
-hy_assert($res_na_max['raw_score'] === 44, 'N/A max raw score is 44');
-hy_assert($res_na_max['available_max'] === 44, 'N/A available max is 44');
-hy_assert($res_na_max['final_score'] === 48, '44/44 normalizes to 48/48');
-hy_assert($res_na_max['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', '48/48 is TRES_BONNES_HABITUDES_HYDRATATION');
+hy_assert($res_na_max['raw_score'] === 55, 'N/A max raw score is 55');
+hy_assert($res_na_max['available_max'] === 55, 'N/A available max is 55');
+hy_assert($res_na_max['final_score'] === 60, '55/55 normalizes to 60/60');
+hy_assert($res_na_max['calculated_category'] === 'HABITUDES_INSUFFISANTES', '60 is HABITUDES_INSUFFISANTES');
 
 // Dimension adaptation-activite-chaleur with HY05='na'
 $dim_adapt = get_dim($res_na_max, 'adaptation-activite-chaleur');
 hy_assert($dim_adapt !== null, 'adaptation dimension present');
-hy_assert($dim_adapt['raw_score'] === 4, 'dimension raw score is 4');
-hy_assert($dim_adapt['available_max'] === 4, 'dimension available max is 4 (HY05 excluded)');
+hy_assert($dim_adapt['raw_score'] === 5, 'dimension raw score is 5 (from HY06)');
+hy_assert($dim_adapt['available_min'] === 1, 'dimension available min is 1');
+hy_assert($dim_adapt['available_max'] === 5, 'dimension available max is 5 (HY05 excluded)');
 hy_assert((float)$dim_adapt['percentage'] === 100.0, 'dimension percentage is 100%');
 
-// Partial N/A normalization test (non-integer with half_up rounding)
-// Raw 25 / 44 -> 25 / 44 * 48 = 27.2727... -> round half_up -> 27
-$answers_na_partial_25 = array_merge($answers_na_max, array(
-    'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
-    'HY06' => '2', 'HY07' => '2', 'HY08' => '2', 'HY09' => '3',
-    'HY10' => '3', 'HY11' => '3', 'HY12' => '2' // sum = 25
-));
-$res_na_partial_25 = $engine->score($config, $answers_na_partial_25);
-hy_assert($res_na_partial_25['raw_score'] === 25, 'Raw score is 25');
-hy_assert($res_na_partial_25['available_max'] === 44, 'Available max is 44');
-hy_assert($res_na_partial_25['final_score'] === 27, '25/44 normalizes and rounds half_up to 27');
-hy_assert($res_na_partial_25['calculated_category'] === 'HYDRATATION_A_RENFORCER', '27 is HYDRATATION_A_RENFORCER');
+// Intermediate N/A normalization: raw = 22 (all other 11 = 2) -> (22/11)*12 = 24 -> HABITUDES_FAVORABLES
+$answers_na_22 = array_merge($answers_24, array('HY05' => 'na'));
+$res_na_22 = $engine->score($config, $answers_na_22);
+hy_assert($res_na_22['raw_score'] === 22, 'Raw score is 22');
+hy_assert($res_na_22['final_score'] === 24, '22/11*12 normalizes to 24');
+hy_assert($res_na_22['calculated_category'] === 'HABITUDES_FAVORABLES', '24 is HABITUDES_FAVORABLES');
 
-// Raw 26 / 44 -> 26 / 44 * 48 = 28.3636... -> round half_up -> 28
-$answers_na_partial_26 = array_merge($answers_na_max, array(
-    'HY01' => '2', 'HY02' => '2', 'HY03' => '2', 'HY04' => '2',
-    'HY06' => '2', 'HY07' => '2', 'HY08' => '2', 'HY09' => '3',
-    'HY10' => '3', 'HY11' => '3', 'HY12' => '3' // sum = 26
-));
-$res_na_partial_26 = $engine->score($config, $answers_na_partial_26);
-hy_assert($res_na_partial_26['raw_score'] === 26, 'Raw score is 26');
-hy_assert($res_na_partial_26['available_max'] === 44, 'Available max is 44');
-hy_assert($res_na_partial_26['final_score'] === 28, '26/44 normalizes and rounds half_up to 28');
-hy_assert($res_na_partial_26['calculated_category'] === 'HABITUDES_HYDRATATION_FAVORABLES', '28 is HABITUDES_HYDRATATION_FAVORABLES');
+// Intermediate N/A normalization: raw = 23 -> ROUND((23/11)*12) = ROUND(25.0909) = 25 -> HYDRATATION_FRAGILE
+$answers_na_23 = array_merge($answers_24, array('HY01' => '3', 'HY05' => 'na'));
+$res_na_23 = $engine->score($config, $answers_na_23);
+hy_assert($res_na_23['raw_score'] === 23, 'Raw score is 23');
+hy_assert($res_na_23['final_score'] === 25, '23/11*12 normalizes to 25');
+hy_assert($res_na_23['calculated_category'] === 'HYDRATATION_FRAGILE', '25 is HYDRATATION_FRAGILE');
+
+// Intermediate N/A normalization: raw = 30 -> ROUND((30/11)*12) = ROUND(32.7272) = 33 -> HABITUDES_INSUFFISANTES
+$answers_na_30 = array_merge($answers_32, array('HY01' => '4', 'HY05' => 'na'));
+$res_na_30 = $engine->score($config, $answers_na_30);
+hy_assert($res_na_30['raw_score'] === 30, 'Raw score is 30');
+hy_assert($res_na_30['final_score'] === 33, '30/11*12 normalizes to 33');
+hy_assert($res_na_30['calculated_category'] === 'HABITUDES_INSUFFISANTES', '33 is HABITUDES_INSUFFISANTES');
 
 // ----------------------------------------------------
 // 4. Safety Questions Independence
 // ----------------------------------------------------
 // HYSF01 alone
-$res_sf1 = $engine->score($config, array_merge($answers_max, array('HYSF01' => 'yes')));
-hy_assert($res_sf1['final_score'] === 48, 'Safety does not alter score (48)');
-hy_assert($res_sf1['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', 'Safety does not alter category');
-hy_assert($res_sf1['safety_flag_codes'] === array('HYDRATION_ATTENTION_MESSAGE'), 'HYSF01 emits HYDRATION_ATTENTION_MESSAGE');
+$res_sf1 = $engine->score($config, array_merge($answers_12, array('HYSF01' => 'yes')));
+hy_assert($res_sf1['final_score'] === 12, 'Safety does not alter score (12)');
+hy_assert($res_sf1['calculated_category'] === 'HABITUDES_FAVORABLES', 'Safety does not alter category');
+hy_assert($res_sf1['safety_flag_codes'] === array('HYDRATATION_SAFETY_MESSAGE'), 'HYSF01 emits HYDRATATION_SAFETY_MESSAGE');
 
 // HYSF02 alone
-$res_sf2 = $engine->score($config, array_merge($answers_max, array('HYSF02' => 'yes')));
-hy_assert($res_sf2['safety_flag_codes'] === array('HYDRATION_ATTENTION_MESSAGE'), 'HYSF02 emits HYDRATION_ATTENTION_MESSAGE');
+$res_sf2 = $engine->score($config, array_merge($answers_12, array('HYSF02' => 'yes')));
+hy_assert($res_sf2['safety_flag_codes'] === array('HYDRATATION_SAFETY_MESSAGE'), 'HYSF02 emits HYDRATATION_SAFETY_MESSAGE');
 
 // HYSF03 alone
-$res_sf3 = $engine->score($config, array_merge($answers_max, array('HYSF03' => 'yes')));
-hy_assert($res_sf3['safety_flag_codes'] === array('HYDRATION_ATTENTION_MESSAGE'), 'HYSF03 emits HYDRATION_ATTENTION_MESSAGE');
+$res_sf3 = $engine->score($config, array_merge($answers_12, array('HYSF03' => 'yes')));
+hy_assert($res_sf3['safety_flag_codes'] === array('HYDRATATION_SAFETY_MESSAGE'), 'HYSF03 emits HYDRATATION_SAFETY_MESSAGE');
 
 // Multiple simultaneous safety triggers
-$res_sf_all = $engine->score($config, array_merge($answers_max, array('HYSF01' => 'yes', 'HYSF02' => 'yes', 'HYSF03' => 'yes')));
-hy_assert($res_sf_all['final_score'] === 48, 'Score unaffected by all safety flags');
-hy_assert($res_sf_all['safety_flag_codes'] === array('HYDRATION_ATTENTION_MESSAGE'), 'Multiple triggers deduplicated to unique flag code');
+$res_sf_all = $engine->score($config, array_merge($answers_12, array('HYSF01' => 'yes', 'HYSF02' => 'yes', 'HYSF03' => 'yes')));
+hy_assert($res_sf_all['final_score'] === 12, 'Score unaffected by all safety flags');
+hy_assert($res_sf_all['safety_flag_codes'] === array('HYDRATATION_SAFETY_MESSAGE'), 'Multiple triggers deduplicated to unique flag code');
 
 // ----------------------------------------------------
-// 5. Authoritative Synthetic Profiles from PDF (Section 13)
+// 5. Dimension Averages & Weakest Dimensions Selection
 // ----------------------------------------------------
-// Profile 1: Bon quotidien, faible adaptation chaleur (43/48 -> Très bonnes habitudes)
-$profile_1 = array_merge($base_safety, array(
-    'HY01' => '4', 'HY02' => '4',
-    'HY03' => '4', 'HY04' => '4',
-    'HY05' => '4', 'HY06' => '1', // faible adaptation chaleur (1 pt)
-    'HY07' => '4', 'HY08' => '4',
-    'HY09' => '3', 'HY10' => '4',
-    'HY11' => '4', 'HY12' => '3'  // total = 4 + 4 + 4 + 4 + 4 + 1 + 4 + 4 + 3 + 4 + 4 + 3 = 43
+// Profile with poor choix-boissons (HY07=5, HY08=5) and others favorable (1s)
+$profile_sweet = array_merge($answers_12, array(
+    'HY07' => '5',
+    'HY08' => '5'
 ));
-$res_p1 = $engine->score($config, $profile_1);
-hy_assert($res_p1['final_score'] === 43, 'Profile 1 score is 43/48');
-hy_assert($res_p1['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', 'Profile 1 category is TRES_BONNES_HABITUDES_HYDRATATION');
-hy_assert(in_array('adaptation-activite-chaleur', $res_p1['weakest_dimensions'], true), 'Profile 1 identifies adaptation dimension as weakest');
-
-// Profile 2: Sportif bien hydraté (48/48 -> Très bonnes habitudes)
-$profile_2 = array_merge($base_safety, array(
-    'HY01' => '4', 'HY02' => '4',
-    'HY03' => '4', 'HY04' => '4',
-    'HY05' => '4', 'HY06' => '4',
-    'HY07' => '4', 'HY08' => '4',
-    'HY09' => '4', 'HY10' => '4',
-    'HY11' => '4', 'HY12' => '4'
-));
-$res_p2 = $engine->score($config, $profile_2);
-hy_assert($res_p2['final_score'] === 48, 'Profile 2 score is 48/48');
-hy_assert($res_p2['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', 'Profile 2 category is TRES_BONNES_HABITUDES_HYDRATATION');
-
-// Profile 3: Employé de bureau qui oublie de boire (23/48 -> Hydratation à renforcer)
-$profile_3 = array_merge($base_safety, array(
-    'HY01' => '2', 'HY02' => '2',
-    'HY03' => '1', 'HY04' => '1',
-    'HY05' => '2', 'HY06' => '2',
-    'HY07' => '3', 'HY08' => '3',
-    'HY09' => '2', 'HY10' => '1',
-    'HY11' => '2', 'HY12' => '2' // 2+2+1+1+2+2+3+3+2+1+2+2 = 23
-));
-$res_p3 = $engine->score($config, $profile_3);
-hy_assert($res_p3['final_score'] === 23, 'Profile 3 score is 23/48');
-hy_assert($res_p3['calculated_category'] === 'HYDRATATION_A_RENFORCER', 'Profile 3 category is HYDRATATION_A_RENFORCER');
-
-// Profile 4: Beaucoup de boissons sucrées (25/48 -> Hydratation à renforcer)
-$profile_4 = array_merge($base_safety, array(
-    'HY01' => '2', 'HY02' => '2',
-    'HY03' => '3', 'HY04' => '3',
-    'HY05' => '2', 'HY06' => '2',
-    'HY07' => '0', 'HY08' => '0', // beaucoup de boissons sucrées (0 pts)
-    'HY09' => '3', 'HY10' => '3',
-    'HY11' => '2', 'HY12' => '3' // 2+2+3+3+2+2+0+0+3+3+2+3 = 25
-));
-$res_p4 = $engine->score($config, $profile_4);
-hy_assert($res_p4['final_score'] === 25, 'Profile 4 score is 25/48');
-hy_assert($res_p4['calculated_category'] === 'HYDRATATION_A_RENFORCER', 'Profile 4 category is HYDRATATION_A_RENFORCER');
-hy_assert($res_p4['weakest_dimensions'][0] === 'choix-boissons', 'Profile 4 identifies choix-boissons as weakest');
-
-// Profile 5: Très bonnes habitudes, sans sport (44/44 -> 48/48 -> Très bonnes habitudes)
-$profile_5 = array_merge($base_safety, array(
-    'HY01' => '4', 'HY02' => '4',
-    'HY03' => '4', 'HY04' => '4',
-    'HY05' => 'na', 'HY06' => '4',
-    'HY07' => '4', 'HY08' => '4',
-    'HY09' => '4', 'HY10' => '4',
-    'HY11' => '4', 'HY12' => '4'
-));
-$res_p5 = $engine->score($config, $profile_5);
-hy_assert($res_p5['raw_score'] === 44, 'Profile 5 raw score is 44');
-hy_assert($res_p5['available_max'] === 44, 'Profile 5 available max is 44');
-hy_assert($res_p5['final_score'] === 48, 'Profile 5 normalized score is 48');
-hy_assert($res_p5['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', 'Profile 5 category is TRES_BONNES_HABITUDES_HYDRATATION');
+// Total raw score = 10*1 + 2*5 = 20 -> final_score = 20 -> HABITUDES_FAVORABLES
+$res_sweet = $engine->score($config, $profile_sweet);
+hy_assert($res_sweet['final_score'] === 20, 'Profile sweet score is 20');
+hy_assert($res_sweet['calculated_category'] === 'HABITUDES_FAVORABLES', 'Category is HABITUDES_FAVORABLES');
+$dim_choix = get_dim($res_sweet, 'choix-boissons');
+hy_assert($dim_choix['raw_score'] === 10, 'Choix boissons raw score is 10');
+hy_assert((float)$dim_choix['percentage'] === 100.0, 'Choix boissons percentage is 100% (highest/worst)');
+hy_assert($res_sweet['weakest_dimensions'][0] === 'choix-boissons', 'Weakest dimension is choix-boissons');
 
 // ----------------------------------------------------
 // 6. Registry & Submission Service Integration
@@ -287,15 +219,17 @@ $loaded_config = $registry->get_internal('hydratation');
 hy_assert($loaded_config !== null, 'Registry resolves hydratation questionnaire');
 hy_assert($loaded_config['id'] === 'hydratation', 'Loaded config id is hydratation');
 hy_assert($loaded_config['status'] === 'review', 'Status in review');
+hy_assert($loaded_config['scoring_direction'] === 'lower_is_better', 'Direction is lower_is_better');
+hy_assert($loaded_config['score']['target_min'] === 12, 'Target min is 12');
+hy_assert($loaded_config['score']['target_max'] === 60, 'Target max is 60');
 
 // Submission Service flow
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
 $submission_service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
 
-// We verify that scoring calculation is authoritative
-$server_scored = $engine->score($loaded_config, $profile_1);
-hy_assert($server_scored['final_score'] === 43, 'Server scoring is authoritative (43/48)');
-hy_assert($server_scored['calculated_category'] === 'TRES_BONNES_HABITUDES_HYDRATATION', 'Server category is authoritative');
-hy_assert(in_array('adaptation-activite-chaleur', $server_scored['weakest_dimensions'], true), 'Weakest dimensions correctly identified');
+$server_scored = $engine->score($loaded_config, $profile_sweet);
+hy_assert($server_scored['final_score'] === 20, 'Server scoring is authoritative (20/60)');
+hy_assert($server_scored['calculated_category'] === 'HABITUDES_FAVORABLES', 'Server category is authoritative');
+hy_assert($server_scored['weakest_dimensions'][0] === 'choix-boissons', 'Server weakest dimension authoritative');
 
 echo "Questionnaire Hydratation PHP Unit & Scoring Tests: ALL PASSED.\n";

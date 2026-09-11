@@ -13,7 +13,7 @@
 | 5 | Sommeil V2 | TERMINÉ |
 | 6 | Nutrition V2 | TERMINÉ |
 | 7 | Pieds & confort postural V2 | TERMINÉ |
-| 8 | Hydratation V2 | À FAIRE |
+| 8 | Hydratation V2 | TERMINÉ |
 | 9 | Sédentarité V2 | À FAIRE |
 | 10 | Fatigue & récupération V2 | À FAIRE |
 | 11 | Risque nutritionnel V1 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 7 — Pieds & confort postural V2
-- Prochaine phase à exécuter : PHASE 8 — Hydratation V2
+- Dernière phase terminée : PHASE 8 — Hydratation V2
+- Prochaine phase à exécuter : PHASE 9 — Sédentarité V2
 - Blocages : Aucun
-- Nombre de phases terminées : 7 / 16
-- Nombre de phases restantes : 9
-- Dernier commit de phase : lifemetrics: phase 07 - pieds confort postural v2
+- Nombre de phases terminées : 8 / 16
+- Nombre de phases restantes : 8
+- Dernier commit de phase : lifemetrics: phase 08 - hydratation v2
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -442,7 +442,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 8 — Hydratation V2
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Migration exacte depuis le PDF validé avec gestion de la réponse N/A (HY05) et normalisation arithmétique.
 - Formule de référence validée :
   final_score = ROUND((raw_score / applicable_question_count) * 12)
@@ -458,12 +458,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Critères de validation :
   - Calcul N/A et formule de normalisation conformes au PDF ; tests PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/hydratation/questionnaire.php`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, `lifemetrics-questionnaires/tests/questionnaire-hydratation.test.php`, `lifemetrics-questionnaires/tests/questionnaire-hydratation.test.js`, `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-hydratation.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-hydratation.test.js` (PASS), suites complètes PHP 20/20 (PASS) et JS 11/11 (PASS)
+- Résultat : Migration intégrale du questionnaire Hydratation depuis le PDF final validé (`Score_LifeMetrics_Hydratation_V1.pdf`). 12 questions scorées HY01–HY12 (points 1 à 5, lower_is_better), question HY05 avec option N/A (« Non concerné actuellement », `points: null`, `applicable: false`), formule de normalisation arithmétique `final_score = ROUND((raw_score / applicable_question_count) * 12)` strictement vérifiée (11 questions applicables normalisées sur l'échelle 12–60 avec `target_min: 12`, `target_max: 60`), 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`HABITUDES_FAVORABLES` 12-24, `HYDRATATION_FRAGILE` 25-32, `HABITUDES_INSUFFISANTES` 33-60), 3 questions Safety hors score HYSF01–HYSF03 déclenchant l'alerte médicale `HYDRATATION_SAFETY_MESSAGE` (priorité 100) sans altérer le score numérique brut, sélection des 2 dimensions les plus faibles/défavorables, 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (chemin planifié documenté : `/tests-sante/`, à confirmer lors du déploiement catalogue).
+- Commit : lifemetrics: phase 08 - hydratation v2
+- Date : 2026-09-11
 
 ---
 

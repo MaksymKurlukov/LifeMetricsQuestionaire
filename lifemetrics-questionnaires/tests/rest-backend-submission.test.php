@@ -240,15 +240,15 @@ sub_assert(!is_wp_error($res_hydra), 'Hydratation fixture submission succeeds');
 
 $sent_hydra = json_decode($last_http_post['args']['body'], true);
 sub_assert($sent_hydra['raw_score'] === 33, 'Hydratation raw_score=33');
-sub_assert($sent_hydra['available_max'] === 44, 'Hydratation available_max=44');
+sub_assert($sent_hydra['available_max'] === 55, 'Hydratation available_max=55');
 sub_assert($sent_hydra['final_score'] === 36, 'Hydratation final_score=36');
-sub_assert($sent_hydra['displayed_category'] === 'HABITUDES_HYDRATATION_FAVORABLES', 'Hydratation category matches');
+sub_assert($sent_hydra['displayed_category'] === 'HABITUDES_INSUFFISANTES', 'Hydratation category matches');
 sub_assert($sent_hydra['answers']['HY05']['label'] === 'Non concerné actuellement', 'HY05 label matches');
 sub_assert($sent_hydra['answers']['HY05']['applicable'] === false, 'HY05 applicable is false');
 sub_assert($sent_hydra['safety_answers']['HYSF01']['label'] === 'Non', 'HYSF01 label is Non');
 sub_assert($sent_hydra['safety_answers']['HYSF02']['label'] === 'Non', 'HYSF02 label is Non');
 sub_assert($sent_hydra['safety_answers']['HYSF03']['label'] === 'Oui', 'HYSF03 label is Oui');
-sub_assert($sent_hydra['safety_flags'] === array('HYDRATION_ATTENTION_MESSAGE'), 'safety_flags matches');
+sub_assert($sent_hydra['safety_flags'] === array('HYDRATATION_SAFETY_MESSAGE'), 'safety_flags matches');
 
 // 6. Test upstream error mapping behavior
 global $mock_post_override;
