@@ -1,812 +1,698 @@
-# LifeMetrics Questionnaires - authoritative implementation plan
+# LIFEMETRICS QUESTIONNAIRES — CODE IMPLEMENTATION & WORDPRESS RELEASE PLAN
 
-Plan version: 1.0
+---
 
-Created: 2026-09-03
+## Tableau de progression
 
-Repository: `/Applications/XAMPP/xamppfiles/htdocs/pss`
-
-Plugin: `/Applications/XAMPP/xamppfiles/htdocs/pss/lifemetrics-questionnaires`
-
-Scope of this document: planning only; no implementation is authorized by this document's creation.
-
-Current overall status: `STAGE_0_PASS / STAGE_1_PASS / STAGE_2_PASS / PSS10_RUNTIME_STABILIZATION_PASS / STAGE_3_PASS / STAGE_4_PASS / STAGE_5_PASS / STAGE_6_PASS / STAGE_7_PASS / STAGE_8_PASS / STAGE_9_PASS / STAGE_10_PASS / STAGE_11_PASS`
-
-Next executable task: `STAGE 12 - Final Production Deployment & Smoke Verification (Subject to Manual Approvals)`
-
-Stage 11 completed packaging, release candidate audit (lifemetrics-questionnaires-stage11-rc1.zip), and global tamper-resistance validation across all 8 questionnaires. Production release readiness remains gated on manual approvals (MANUAL_GOOGLE_SETUP, MANUAL_WORDPRESS_VALIDATION, LEGAL/LICENSING/PUBLICATION).
-
-## Status vocabulary
-
-- Stage status: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `PASS`, `FAIL`, `ROLLED_BACK`.
-- Content status: `CONTENT_READY` means all question and result wording needed for implementation is present; it does not mean approved for publication.
-- Scoring status: `SCORING_READY` means question scoring, ranges, dimensions, N/A rules, safety rules, and guardrails are explicit and have no known unresolved scoring decision.
-- Implementation status: `IMPLEMENTATION_READY` means the content owner has approved the exact source and all scoring prerequisites are ready; `BLOCKED_BY_CONTENT`, `BLOCKED_BY_SCORING`, and `BLOCKED_BY_APPROVAL` identify the gate.
-- `PRODUCTION_READY` is granted only after the three-level Definition of Done in section 19 is satisfied.
-- A PDF's filename or version label alone never grants any readiness status.
-
-# 1. Executive objective
-
-Provide one installable WordPress plugin ZIP containing multiple independent questionnaires with shared technical infrastructure, while allowing questionnaire-specific methodologies and presentation.
-
-Key final capabilities:
-- ONE WordPress plugin (`lifemetrics-questionnaires.zip`).
-- Embeddable via shortcode (e.g., `[lifemetrics_questionnaire id="pss10"]`, `[lifemetrics_questionnaire id="hydratation"]`).
-- Shared core infrastructure: registry, schema validation, scoring engine, generic submission orchestration.
-- Support for questionnaire-specific rules: dimensions, N/A answers, normalization, safety questions, guardrails, non-linear scoring, CTA, and result formatting.
-- PSS10 is treated as a distinct legacy profile and must remain functionally frozen, not a universal template for proprietary LifeMetrics questionnaires.
-- Frontend architecture separates shared runtime logic from optional presentation overrides (default vs. custom layouts).
-- Storage architecture uses generic server-side transport routing to questionnaire-specific Google Sheets targets.
-
-# 2. Current repository baseline
-
-## 2.1 Actual Git state on 2026-09-03
-
-- Branch: `main`, aligned with `origin/main` at commit `fd5dc7a`.
-- Tracked source is the standalone PSS10 application.
-- Tracked modification already present before this plan: `assets/.DS_Store`.
-- Untracked items already present before this plan: root `.DS_Store` and the entire `lifemetrics-questionnaires/` plugin tree, including its `.DS_Store` files.
-- Consequence: the WordPress plugin currently has no Git rollback point. This is the reason STAGE 0 is mandatory before source changes.
-
-## 2.2 Actual repository tree relevant to this project
-
-```text
-pss/
-├── index.html                              # tracked standalone entry point
-├── assets/
-│   ├── css/style.css                       # tracked standalone CSS
-│   ├── js/app.js                           # tracked standalone browser logic
-│   ├── js/config.js                        # tracked standalone Google URL config
-│   └── icons/{clock,lock,shield}.svg        # tracked standalone icons
-├── google-apps-script.gs                   # tracked standalone Apps Script
-├── README.md                               # tracked, describes standalone architecture
-├── LIFEMETRICS-GUIDE.md                    # tracked, describes standalone operations
-├── PRODUCTION-AUDIT-FINAL.md               # tracked, older standalone audit
-└── lifemetrics-questionnaires/             # currently entirely untracked
-    ├── lifemetrics-questionnaires.php      # WordPress bootstrap + all PHP behavior, 254 lines
-    ├── backend/google-apps-script.gs        # hardened plugin-side Apps Script, 143 lines
-    ├── questionnaires/pss10/
-    │   ├── template.php                    # PSS10 WordPress markup, 128 lines
-    │   └── assets/
-    │       ├── css/style.css               # PSS10-scoped stylesheet, 658 lines
-    │       ├── js/app.js                    # PSS10 WordPress browser app, 402 lines
-    │       ├── js/config.js                 # comment-only; no runtime configuration
-    │       └── icons/{clock,lock,shield}.svg
-    └── tests/backend-logic.test.js          # Apps Script smoke test, 23 lines
-```
-
-No `includes/`, shared plugin `assets/`, questionnaire PHP configuration, schema validator, PHP scoring service, frontend scoring unit tests, WordPress test harness, or generic submission contract exists yet.
-
-## 2.3 Current entry points and PSS10 flow
-
-### WordPress/PHP entry point
-
-`lifemetrics-questionnaires/lifemetrics-questionnaires.php` currently performs every plugin responsibility in one file:
-
-1. rejects direct access through `ABSPATH`;
-2. defines a server-controlled `LMQ_PSS10_GOOGLE_ENDPOINT`;
-3. registers the PSS10 stylesheet and script;
-4. prints late-enqueued CSS in the footer for builder compatibility;
-5. registers `[lifemetrics_questionnaire]`;
-6. sanitizes the ID and resolves it through an explicit one-item whitelist;
-7. enqueues PSS10 assets only when the shortcode renders;
-8. creates a unique instance ID and includes the PSS10 template;
-9. registers `POST /wp-json/lifemetrics-questionnaires/v1/pss10/submit`;
-10. validates the PSS10 payload, recomputes the category, forwards it with `wp_remote_post()`, validates the upstream response, and returns same-origin JSON.
-
-### Rendering and browser flow
-
-`questionnaires/pss10/template.php` renders intro, ten-question shell, results, modal, retry state, and toast. Each root has a unique DOM ID plus `data-lmq-questionnaire="pss10"` and its same-origin submission URL. SVG gradient and modal IDs are instance-specific.
-
-`questionnaires/pss10/assets/js/app.js`:
-
-- discovers every PSS10 root with `querySelectorAll` and keeps state inside `initPss10()`;
-- contains PSS10 questions, labels, reverse-question indices, category thresholds, and result copy;
-- supports intro, auto-next after 400 ms, back, restart, modal focus return, progress, gauge, retry, and multiple instances;
-- uses root-scoped selectors and `ownerDocument`; it contains no `document.getElementById` and no mutable `window.PSS_*` state;
-- reverse-scores questions 4, 5, 7, and 8 as `6 - selectedValue`;
-- sends only to the same-origin REST URL supplied by PHP and verifies `response.ok` plus `data.success === true`.
-
-Observed PSS10 score behavior to freeze before migration:
-
-- selected answers: integers 1-5;
-- stored/scored answers for questions 4, 5, 7, 8 are reversed;
-- total: 10-50;
-- category boundaries: 10-20 `Stress bas`, 21-26 `Stress assez élevé`, 27-50 `Stress très élevé`;
-- displayed middle/high badges currently use `Stress modéré` and `Stress élevé`, while stored categories use the longer labels;
-- no dimensions, N/A answers, or safety questions;
-- at the STAGE 2 freeze, result CTA buttons were non-navigating stubs; this historical baseline was later changed by separately authorized UI stabilization, with current CTA state recorded in the milestone report;
-- PSS10 wording, score direction, gauge behavior, modal, timing, error messages, endpoint path, and accessibility behavior are migration invariants unless a later content/UX change is separately authorized.
-
-### Backend flow
-
-```text
-browser PSS10 instance
-  -> same-origin POST /wp-json/lifemetrics-questionnaires/v1/pss10/submit
-  -> WordPress body/content-type/UUID/timestamp/answer/score/category validation
-  -> WordPress derives canonical category
-  -> fixed server-side Google Apps Script endpoint via wp_remote_post()
-  -> Apps Script validates again, derives category, rate-limits, locks, de-duplicates session_id
-  -> append to results Sheet
-  -> verified {ok:true} response
-  -> WordPress {success:true, duplicate:boolean}
-  -> browser success toast; otherwise classified retry state
-```
-
-The visitor cannot provide or override the upstream URL. The browser does not call Google directly.
-
-## 2.4 Current tests and audit evidence
-
-Read-only checks performed while preparing this plan:
-
-- XAMPP PHP 8.2.4 lint: plugin entry point `PASS`.
-- XAMPP PHP 8.2.4 lint: PSS10 template `PASS`.
-- Node syntax check: PSS10 `app.js` `PASS`.
-- `node tests/backend-logic.test.js`: `PASS`.
-- The Apps Script test verifies category boundaries, formula-injection escaping, UUID validation, traversal-like invalid input rejection, and timestamp validation.
-- Direct `node --check file.gs` is not a valid check in the installed Node version because `.gs` is an unknown module extension; the VM-based smoke test does parse the complete script and is the current executable syntax signal.
-- There are no automated PSS10 scoring tests, UI tests, PHP unit tests, schema tests, REST integration tests, WordPress activation tests, browser tests, or responsive visual tests in the plugin.
-- `PRODUCTION-AUDIT-FINAL.md` describes the older standalone/no-cors architecture and must not be treated as proof that the newer WordPress wrapper is production validated.
-
-## 2.5 Duplicated or suspicious files
-
-- `google-apps-script.gs` and `lifemetrics-questionnaires/backend/google-apps-script.gs` are different, not duplicate-equal. The plugin copy is hardened with strict JSON parsing, canonical category derivation, formula-injection protection, locking, and idempotent duplicate success. Neither may be deleted until provenance and deployed-version checks are complete.
-- The three SVG icons are byte-identical between standalone and plugin copies. They may become one shared plugin copy only after the PSS10 freeze.
-- Standalone and plugin `app.js`, `style.css`, and markup are related but not identical. The plugin versions add scoping, multiple-instance behavior, same-origin REST, and stronger error handling. They must not be mechanically replaced with root copies.
-- Plugin `config.js` contains only a comment and is not enqueued. It is a removal candidate after dependency verification, not before.
-- `.DS_Store` files are tracked/untracked noise and should be handled only after a baseline commit and explicit cleanup stage.
-- Root documentation is authoritative for the old standalone deployment, not for the WordPress plugin. Future documentation must label both contexts clearly until the standalone source is formally archived.
-
-## 2.6 Technical debt and files protected for now
-
-Known debt:
-
-- all PHP concerns are coupled in one global-function file;
-- scoring/content/UI/API are coupled in PSS10 `app.js`;
-- PSS10 content is split between JavaScript and template;
-- only the final category, not the original selected values plus scoring provenance, is server-verifiable;
-- the backend schema is hardcoded to q1-q10 and a single questionnaire;
-- no questionnaire version is stored;
-- no generic schema or lifecycle gate exists;
-- no runtime WordPress environment exists;
-- the plugin is not tracked by Git;
-- no documented link exists between repository Apps Script and the currently deployed Google version.
-
-Protected until the stage that explicitly allows changes:
-
-- all tracked standalone files at repository root;
-- all existing plugin PHP, JS, CSS, templates, icons, and Apps Script during STAGE 0-2;
-- all approved/near-approved PDF source files;
-- the live Google deployment and Sheet;
-- the absent local WordPress location (do not install it before STAGE 8).
-
-# 3. Target architecture
-
-## 3.1 Proposed final tree
-
-```text
-lifemetrics-questionnaires/
-├── lifemetrics-questionnaires.php
-├── README.md
-├── CHANGELOG.md
-├── includes/
-│   ├── class-lifemetrics-plugin.php
-│   ├── class-questionnaire-registry.php
-│   ├── class-questionnaire-schema-validator.php
-│   ├── class-questionnaire-scoring-engine.php
-│   ├── class-questionnaire-renderer.php
-│   ├── class-assets.php
-│   ├── class-shortcodes.php
-│   └── class-rest-controller.php
-├── templates/
-│   └── questionnaire.php                # default presentation template
-├── assets/
-│   ├── css/questionnaire.css            # default scoped stylesheet
-│   ├── js/questionnaire-engine.js       # universal scoring logic
-│   └── js/questionnaire-ui.js           # universal frontend runtime
-└── questionnaires/
-    ├── pss10/
-    │   └── questionnaire.php
-    ├── hydratation/
-    │   ├── questionnaire.php
-    │   ├── presentation.php             # optional questionnaire-specific override
-    │   └── style.css                    # optional questionnaire-specific CSS
-    └── sedentarite/
-        └── questionnaire.php
-```
-
-## 3.2 Shared Core vs Extension Points
-
-SHARED CORE:
-- plugin bootstrap, registry, shortcode handling.
-- schema validation, generic PHP/JS scoring engine (handles dimensions, N/A normalization, guardrails, safety, calculated categories).
-- generic submission infrastructure (REST controller, adapter infrastructure).
-- frontend runtime logic (state, scoring integration, submission error handling, auto-next).
-
-QUESTIONNAIRE EXTENSION POINTS:
-- `questionnaire.php`: defines questions, explicit point mappings, dimensions, classification rules, messages, safety block, guardrails, results, and CTA.
-- `presentation`: optional override defined in config or via directory files to allow custom layouts/themes without duplicating the `questionnaire-ui.js` business logic.
-- `storage`: backend configuration mapping each questionnaire to a distinct Google Apps Script endpoint/destination.
-
-# 4. Questionnaire schema contract
-
-## 4.1 Contract rules
-
-- Canonical authoring format: a PHP file returning one plain associative array.
-- It is loaded only from the registry's explicit map.
-- `schema_version` versions the configuration shape; `version` versions questionnaire content/scoring.
-- Changes to wording that affect interpretation, answer values, points, dimensions, thresholds, safety behavior, or guardrails require a questionnaire version increment and new golden fixtures.
-- Reordering display-only text may be a patch version; scoring changes require at least a minor version. The exact SemVer policy is finalized in DEC-009.
-- No closures/callables, HTML scripts, dynamic file includes, or environment-specific URLs in configuration.
-- All IDs use lowercase kebab-case at questionnaire level and uppercase stable codes for questions/categories where source material defines them.
-- Public registry access returns only `status === 'ready'`; `draft`, `review`, and `disabled` are never serialized to visitors or accepted by public REST.
-
-## 4.2 Required and optional fields
-
-| Field | Requirement | Contract |
+| Phase | Description | Statut |
 |---|---|---|
-| `schema_version` | REQUIRED | configuration contract version, currently `2.0.0` |
-| `id` | REQUIRED | exact registry key, lowercase `[a-z0-9-]+` |
-| `version` | REQUIRED | questionnaire SemVer string |
-| `status` | REQUIRED | `draft`, `review`, `ready`, or `disabled` |
-| `title` | REQUIRED | public result/header title |
-| `seo_title` | OPTIONAL | page metadata suggestion; shortcode does not mutate page SEO by default |
-| `description` | REQUIRED | intro copy or structured intro paragraphs |
-| `population` | REQUIRED | target population text |
-| `recall_period` | REQUIRED | evaluated period text |
-| `estimated_duration` | REQUIRED | human-readable duration |
-| `locale` | REQUIRED | initially `fr-FR` |
-| `scoring_direction` | REQUIRED | `higher_is_better` or `higher_is_worse` |
-| `score` | REQUIRED | target min/max, normalization policy, rounding mode |
-| `questions` | REQUIRED | ordered non-empty scored-question array |
-| `dimensions` | REQUIRED | may be empty only for explicitly dimensionless instruments such as migrated PSS10 |
-| `result_levels` | REQUIRED | exhaustive, non-overlapping target-score ranges with stable codes and display copy |
-| `safety_questions` | OPTIONAL | ordered non-scored questions; empty array when none |
-| `safety_messages` | REQUIRED if safety exists | stable message codes and presentation copy |
-| `classification_rules` | OPTIONAL | declarative ordered guardrails; empty array when none |
-| `classification_messages` | REQUIRED | ordinary guardrail/attention messages referenced by stable code |
-| `weakest_dimensions` | OPTIONAL | count, eligibility, tie policy, attention threshold; omitted when dimensions empty |
-| `result_ctas` | REQUIRED | ordered label, URL, variant, and enabled state; URLs must satisfy the approved destination policy |
-| `disclaimer` | REQUIRED | before-test and after-result copy |
-| `attribution` | OPTIONAL | source/licensing/legal metadata, required for PSS10 if applicable |
-| `content_revision` | OPTIONAL | internal approved document/hash reference; not a replacement for `version` |
-| `approvals` | REQUIRED for `ready` | content/scoring, legal/licensing, technical/runtime, and publication gates must be true |
-
-Each scored question requires:
-
-- `id`, `dimension` (or `null` when allowed), `text`, `required`, and ordered `answers`;
-- each answer requires a stable scalar `value`, public `label`, `points` integer/decimal or `null`, and `applicable` boolean;
-- `points: null` is legal only when `applicable: false`;
-- answer points are explicit. Reverse and non-linear scoring are represented by the points attached to answer values, avoiding questionnaire-ID or question-ID branches in engine code;
-- optional `help`, `examples`, and `scoring_note` are content/audit metadata only.
-
-Each dimension requires `id`, `label`, ordered `question_ids`, and optional attention/weakest-display settings. Question references must exist exactly once unless an approved multi-dimension design explicitly changes that invariant.
-
-Each result level requires `code`, inclusive `min`, inclusive `max`, `rank` (worst to best), `title`, `description`, and optional `recommendations`. Ranges must cover every integer target score exactly once.
-
-Each classification rule initially supports only an allowlisted rule grammar:
-
-```text
-type: category_cap
-metric: dimension_score | dimension_percentage
-dimension: <known dimension id>
-operator: < | <= | == | >= | >
-value: number
-max_category: <known result code>
-message: <known message code, optional>
-```
-
-New rule types require schema, PHP, JS, parity tests, and an ADR. Arbitrary expressions or `eval` are forbidden.
-
-## 4.3 Small illustrative configuration fragment
-
-This fragment documents the contract using approved Hydratation wording; it is not an implementation and must not be copied into production before its implementation stage.
-
-```php
-<?php
-return array(
-    'schema_version' => '2.0.0',
-    'id' => 'hydratation',
-    'version' => '1.0.0',
-    'status' => 'review',
-    'title' => 'Score LifeMetrics - Hydratation',
-    'seo_title' => "Auto-évaluation LifeMetrics - Vos habitudes d'hydratation sont-elles adaptées ?",
-    'description' => "Évaluez vos habitudes quotidiennes d'hydratation.",
-    'population' => 'Adultes de 18 à 64 ans',
-    'recall_period' => '14 derniers jours',
-    'estimated_duration' => '2-3 minutes',
-    'locale' => 'fr-FR',
-    'scoring_direction' => 'higher_is_better',
-    'score' => array(
-        'target_min' => 0,
-        'target_max' => 48,
-        'normalize_when_unavailable' => true,
-        'rounding' => 'half_up',
-    ),
-    'questions' => array(
-        array(
-            'id' => 'HY01',
-            'dimension' => 'eau-boissons',
-            'text' => "Au cours des 14 derniers jours, quelle place l'eau a-t-elle occupée parmi les boissons que vous consommez pour vous hydrater ?",
-            'required' => true,
-            'answers' => array(
-                array('value' => 'tres-faible', 'label' => 'Très faible', 'points' => 0, 'applicable' => true),
-                array('value' => 'faible', 'label' => 'Faible', 'points' => 1, 'applicable' => true),
-                array('value' => 'moitie', 'label' => 'Environ la moitié de mes boissons', 'points' => 2, 'applicable' => true),
-                array('value' => 'majoritaire', 'label' => 'Majoritaire', 'points' => 3, 'applicable' => true),
-                array('value' => 'principale', 'label' => "L'eau est clairement ma boisson principale", 'points' => 4, 'applicable' => true),
-            ),
-        ),
-    ),
-    'dimensions' => array(),
-    'result_levels' => array(),
-    'safety_questions' => array(),
-    'classification_rules' => array(),
-    'cta' => array('label' => 'Découvrir mon bilan VitaScan', 'destination' => 'vitascan'),
-    'disclaimer' => array('before' => '...', 'after' => '...'),
-);
-```
+| 1 | Schema Validator V2 | À FAIRE |
+| 2 | Scoring Engine V2 PHP / JavaScript | À FAIRE |
+| 3 | Architecture CSS extensible | À FAIRE |
+| 4 | Activité physique V2 | À FAIRE |
+| 5 | Sommeil V2 | À FAIRE |
+| 6 | Nutrition V2 | À FAIRE |
+| 7 | Pieds & confort postural V2 | À FAIRE |
+| 8 | Hydratation V2 | À FAIRE |
+| 9 | Sédentarité V2 | À FAIRE |
+| 10 | Fatigue & récupération V2 | À FAIRE |
+| 11 | Risque nutritionnel V1 | À FAIRE |
+| 12 | Bien-être V1 | À FAIRE |
+| 13 | Restitution frontend finale | À FAIRE |
+| 14 | Vérification transport et Google Sheets | À FAIRE |
+| 15 | Full Regression Test | À FAIRE |
+| 16 | WordPress Release ZIP | À FAIRE |
+
+---
+
+## État actuel du projet
+
+- Phase actuelle : Aucune
+- Dernière phase terminée : Aucune
+- Prochaine phase à exécuter : PHASE 1 — Schema Validator V2
+- Blocages : Aucun
+- Nombre de phases terminées : 0 / 16
+- Nombre de phases restantes : 16
+- Dernier commit de phase : Aucun
+- Livrable final : lifemetrics-questionnaires.zip
+
+---
+
+## Socle existant réutilisé
+
+Le projet s'appuie sur le plugin WordPress existant lifemetrics-questionnaires, testé et stable localement :
+
+1. Bootstrap & Orchestration :
+   - lifemetrics-questionnaires.php : Point d'entrée, constantes et initialisation.
+   - includes/class-lifemetrics-plugin.php : Enregistrement des hooks WordPress (wp_enqueue_scripts, add_shortcode, rest_api_init).
+2. Routage des Shortcodes :
+   - includes/class-shortcodes.php : Routeur [lifemetrics_questionnaire id="..."] isolant le PSS-10 et déléguant les questionnaires propriétaires au renderer générique.
+3. Runtime PSS-10 isolé (Gelé) :
+   - includes/class-legacy-pss10-runtime.php et questionnaires/pss10/* : Runtime, template et assets dédiés, verrouillés par 13 gardes de mutation (pss10-frontend-characterization.test.js).
+4. Catalogue & Résolution :
+   - includes/class-questionnaire-registry.php : Résolution stricte par ID canonique, chargement sécurisé, distinction get_internal() / get_public().
+5. Couche Transport & REST API :
+   - includes/class-rest-controller.php : Endpoint POST /wp-json/lifemetrics-questionnaires/v1/<id>/submit.
+   - includes/class-submission-service.php : Construction du payload JSON canonique.
+   - includes/class-google-apps-script-adapter.php : Adaptateur HTTP gérant les redirections 302 Google Apps Script et l'idempotence via session_id.
+   - backend/generic-google-apps-script.gs : Web App centralisée écrivant dans les onglets du Google Spreadsheet.
+6. Interface Frontend Générique :
+   - templates/questionnaire.php : Template DOM partagé à 3 écrans (intro, test, result).
+   - assets/js/questionnaire-ui.js : Navigation, auto-avancement (400 ms), timeout 25s, gestion du retry.
+   - assets/css/questionnaire.css : Système visuel partagé.
+7. Outillage & Tests :
+   - scripts/build-release-zip.sh : Script Bash de build du ZIP.
+   - 20 suites PHP et 11 suites JS exécutables localement.
+
+---
+
+## Règles d'architecture obligatoires
+
+### 1. Architecture existante
+- Nous réutilisons intégralement l'architecture actuelle.
+- Pas de réécriture complète du plugin.
+- Pas d'ajout de nouvelle technologie, de nouvelle base de données ou de compte utilisateur sans nécessité démontrée.
+
+### 2. Méthodologie & Hiérarchie des sources
+- Les PDF validés sont la source de vérité absolue :
+  PDF validé > ancien questionnaire.php > ancienne implémentation.
+- Règle absolue : NE RIEN INVENTER (questions, réponses, points, catégories, seuils, dimensions, guardrails, Safety, recommandations, CTAs, URLs).
+- Si une information n'est pas démontrable depuis le repository ou les PDF validés : inscrire NON DÉTERMINÉ.
+
+### 3. Source de vérité technique
+- Le code réel du repository prévaut sur toute description historique :
+  Code réel du repository > description historique du plan.
+- Si le plan indique qu'une capacité manque mais que le code démontre qu'elle existe déjà correctement, la réutiliser sans la réécrire.
+
+### 4. PSS-10
+- Le questionnaire PSS-10 reste isolé et strictement gelé.
+- Ne pas modifier son scoring historique (10–50) ni le migrer vers la convention V2.
+
+### 5. Architecture CSS extensible
+- Le fichier CSS principal reste commun : assets/css/questionnaire.css.
+- Le wrapper HTML racine de chaque questionnaire expose un identifiant stable : data-lmq-questionnaire="<id>".
+- L'architecture permet l'inclusion conditionnelle d'un fichier assets/css/questionnaires/<id>.css s'il existe (file_exists()).
+- Aucun fichier CSS spécifique vide ou inutile ne doit être créé par anticipation.
+
+### 6. Transport & Persistance
+- Conserver le flux : WordPress REST -> Submission Service -> Google Apps Script -> Google Sheets.
+- Ne modifier cette couche que si une nécessité réelle liée aux données V2 est démontrée.
+
+---
+
+## Protocole obligatoire d'exécution d'une phase
+
+### Ordre de sélection et de reprise d'une phase :
+1. S'il existe une phase BLOQUÉ :
+   - Ne pas passer à une autre phase ;
+   - Traiter uniquement ce blocage ;
+   - Si le blocage ne peut pas être résolu de manière démontrable : STOP.
+2. Sinon, s'il existe une phase EN COURS :
+   - Ne pas démarrer une nouvelle phase ;
+   - Reprendre cette phase ;
+   - Commencer par git status, git diff et l'inspection de l'état réel ;
+   - Déterminer ce qui a déjà été fait avant l'interruption ;
+   - Ne pas refaire ou écraser inutilement le travail existant ;
+   - Terminer ou bloquer cette même phase.
+3. Sinon :
+   - Prendre la première phase À FAIRE.
+
+Règle d'unicité : Il ne doit JAMAIS y avoir deux phases EN COURS simultanément. Une exécution = UNE seule phase maximum.
+
+### Déroulement de la phase sélectionnée :
+1. Lire le fichier LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md ;
+2. Identifier la phase selon l'ordre de priorité ci-dessus ;
+3. Basculer son statut à EN COURS dans le document ;
+4. Lire l'état réel du code concerné ;
+5. Comparer l'état réel du code au besoin décrit dans la phase ;
+6. Identifier ce qui existe déjà et fonctionne ;
+7. Identifier uniquement ce qui manque réellement ;
+8. Modifier le minimum nécessaire (les listes de fichiers sont indicatives, ne jamais modifier un fichier sans besoin démontré) ;
+9. Si une fonctionnalité existe déjà correctement : la réutiliser sans la réécrire ;
+10. Exécuter les tests de la phase ;
+11. Exécuter les tests de non-régression nécessaires ;
+12. Si les tests échouent :
+    - Corriger uniquement ce qui concerne la phase ;
+    - Relancer les tests ;
+    - Si un blocage réel persiste, marquer la phase BLOQUÉ, documenter le blocage et s'arrêter ;
+13. Si tout est validé :
+    - Marquer la phase TERMINÉ ;
+14. Mettre à jour :
+    - Tableau de progression ;
+    - État actuel du projet ;
+    - Section détaillée de la phase (Fichiers réellement modifiés, Tests exécutés, Résultat, NON DÉTERMINÉ, Commit, Date) ;
+    - Journal d'implémentation ;
+15. Faire un commit Git dédié uniquement à cette phase (format : lifemetrics: phase XX - <nom court>) ;
+16. S'arrêter.
+
+Une exécution = UNE seule phase maximum. Il est strictement interdit d'enchaîner automatiquement sur la phase suivante.
+
+---
+
+## Règles de modification du repository
+
+Pendant l'exécution d'une phase :
+- Ne modifier que les fichiers strictement nécessaires à cette phase ;
+- Pas de refactoring esthétique ni de renommage inutile ;
+- Pas de nouvelle dépendance sans nécessité démontrée ;
+- Pas de nouvelle architecture si l'existante suffit ;
+- Pas de fichier temporaire ou généré inutile commité ;
+- Pas de modification d'un questionnaire appartenant à une phase future sauf nécessité technique démontrable du moteur partagé ;
+- Pas de modification du PSS-10 hors test de non-régression, sauf bug directement provoqué par les changements en cours.
+
+---
+
+## Protocole Git obligatoire
+
+### Avant modification :
+1. Exécuter git status ;
+2. Identifier les modifications déjà présentes avant le travail ;
+3. Ne jamais supprimer ou écraser une modification utilisateur existante non liée ;
+4. Ne jamais inclure dans le commit des fichiers non liés à la phase.
+
+### Après validation de la phase :
+1. Exécuter les tests ;
+2. Exécuter git diff et vérifier que le diff correspond uniquement à la phase ;
+3. Mettre à jour le fichier LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md ;
+4. Exécuter git status ;
+5. Ajouter explicitement les fichiers nécessaires (git add <fichier1> <fichier2> ...) sans utiliser aveuglément git add . ;
+6. Créer le commit au format standard :
+   lifemetrics: phase XX - <nom court>
+
+Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, rebase, force push) sans instruction explicite.
+
+---
+
+## Roadmap détaillée
+
+### PHASE 1 — Schema Validator V2
+
+- Statut : À FAIRE
+- Objectif : Adapter uniquement ce qui manque réellement au validateur actuel pour accepter les configurations finales des questionnaires V2.
+- Justification : Permet au registry de valider les schémas V2 (scoring_direction: lower_is_better requis par les questionnaires propriétaires V2, champ dimensionnel calculation_mode: average, plages de scores configurables).
+- Règle scoring_direction : Les questionnaires propriétaires V2 utilisent lower_is_better. Supporter ce besoin réel. Si higher_is_better existe déjà et est réellement utilisé, le conserver. Ne pas ajouter de capacité générique sans besoin réel démontré.
+- Règle calculation_mode : Supporter calculation_mode: average pour les dimensions V2 validées. Si sum existe déjà dans le moteur et est réellement utilisé, le conserver. Sinon, ne pas ajouter sum par anticipation.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/includes/class-questionnaire-schema-validator.php
+  - lifemetrics-questionnaires/tests/questionnaire-schema.test.php
+- Modifications nécessaires :
+  - Accepter lower_is_better (et conserver higher_is_better si existant) dans scoring_direction.
+  - Supporter le champ calculation_mode: average (et sum si déjà présent) dans les dimensions.
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-schema.test.php
+- Critères de validation :
+  - Configurations V2 nécessaires acceptées ;
+  - Configurations invalides rejetées ;
+  - Tests schéma PASS sans régression existante.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 2 — Scoring Engine V2 PHP / JavaScript
+
+- Statut : À FAIRE
+- Objectif : Adapter les moteurs de scoring existants uniquement aux règles nécessaires aux questionnaires validés.
+- Justification : Assurer une parité arithmétique rigoureuse entre le calcul immédiat navigateur (questionnaire-engine.js) et le calcul faisant autorité sur le serveur WordPress (class-questionnaire-scoring-engine.php).
+- Règles N/A et Normalisation :
+  - Le moteur ne doit jamais choisir ou inventer lui-même une formule de normalisation.
+  - Supporter techniquement la normalisation lorsqu'un questionnaire validé l'exige.
+  - Appliquer exactement la règle déclarée pour ce questionnaire.
+  - Ne jamais remplacer une formule validée par une formule générique uniquement parce qu'elle est mathématiquement équivalente.
+  - Hydratation et Sédentarité doivent rester conformes à leur méthodologie validée.
+- Règles à intégrer selon besoin réel :
+  - Support de l'orientation lower_is_better (1 = favorable, 5 = défavorable ; échelle 12 à 60) ;
+  - Calcul du score dimensionnel par moyenne arithmétique (somme / N_applicables) ;
+  - Algorithme de tri et de sélection des 1 à 2 dimensions les plus défavorables (axes d'amélioration) ;
+  - Maintien de l'étanchéité des guardrails (displayed_category modifiée sans altérer le score numérique brut) et des questions Safety hors score (priorité visuelle sans impact sur le score).
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/includes/class-questionnaire-scoring-engine.php
+  - lifemetrics-questionnaires/assets/js/questionnaire-engine.js
+  - lifemetrics-questionnaires/tests/questionnaire-scoring.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-parity.test.php
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-scoring.test.php
+  - php lifemetrics-questionnaires/tests/questionnaire-parity.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-engine.test.js
+- Critères de validation :
+  - Parité arithmétique 100% entre PHP et JS ;
+  - Profils limites testés ;
+  - Guardrails et Safety n'altèrent pas le score brut ;
+  - Tests PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 3 — Architecture CSS extensible
+
+- Statut : À FAIRE
+- Objectif : Conserver le CSS global actuel tout en permettant une personnalisation future propre pour chaque questionnaire.
+- Justification : Préparer l'évolutivité graphique (ex. styles spécifiques Sommeil ou Pieds) sans modifier le core du plugin et sans créer de fichiers vides.
+- Minimum nécessaire :
+  - Identifiant stable du questionnaire dans le root DOM (data-lmq-questionnaire="<id>") ;
+  - Possibilité de cibler un questionnaire via CSS ;
+  - Possibilité d'enqueue conditionnel d'un CSS spécifique uniquement s'il existe réellement (file_exists()).
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/includes/class-assets.php
+  - lifemetrics-questionnaires/includes/class-questionnaire-renderer.php
+  - lifemetrics-questionnaires/templates/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-assets.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-renderer.test.php
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-assets.test.php
+  - php lifemetrics-questionnaires/tests/questionnaire-renderer.test.php
+- Critères de validation :
+  - Le CSS global actuel continue de fonctionner ;
+  - Aucun appel 404 émis ;
+  - Un questionnaire peut être ciblé indépendamment ;
+  - Tests renderer et assets PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 4 — Activité physique V2
+
+- Statut : À FAIRE
+- Rôle : Premier questionnaire étalon V2.
+- Objectif : Valider le moteur générique avec un questionnaire standard avant de migrer les autres, en implémentant exactement le PDF validé.
+- Règle frontend : Inclure l'adaptation frontend minimale si strictement nécessaire pour afficher et tester les axes d'amélioration de ce questionnaire.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/activite-physique/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-activite-physique.test.js
+- Critères de validation :
+  - Questions exactes, réponses exactes, scoring exact, catégories exactes, dimensions exactes, axes exacts, textes résultat exacts ;
+  - Tests PHP et JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 5 — Sommeil V2
+
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé et validation du mécanisme Safety standard (3 questions hors score).
+- Inventaire méthodologique validé :
+  - 12 questions scorées ;
+  - 3 questions Safety hors score ;
+  - 5 dimensions (aucune mention de 4 dimensions).
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-sommeil.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-sommeil.test.js
+- Critères de validation :
+  - Safety hors score avec priorité visuelle claire sans impact sur le score brut ;
+  - Tests PHP et JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 6 — Nutrition V2
+
+- Statut : À FAIRE
+- Objectif : Transcription exacte du PDF validé pour le questionnaire Nutrition (12 questions scorées, 3 questions Safety, dimensions, textes).
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js
+- Critères de validation :
+  - Conformité stricte au PDF et tests PHP/JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 7 — Pieds & confort postural V2
+
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé pour Pieds & Confort Postural (12 questions PF01–12, 6 dimensions, 4 Safety PFSF01–04, guardrail validé, funnel Podos360 validé).
+- Règle URL : Intégrer une URL uniquement si elle est réellement connue et démontrée ; sinon indiquer NON DÉTERMINÉ.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-pieds-confort-postural.test.js
+- Critères de validation :
+  - Safety et guardrail validés ; tests PHP et JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 8 — Hydratation V2
+
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé avec gestion de la réponse N/A (HY05) et normalisation arithmétique.
+- Formule de référence validée :
+  final_score = ROUND((raw_score / applicable_question_count) * 12)
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/hydratation/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-hydratation.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-hydratation.test.js
+  - lifemetrics-questionnaires/tests/hydratation-browser-submission-regression.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-hydratation.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-hydratation.test.js
+  - node lifemetrics-questionnaires/tests/hydratation-browser-submission-regression.test.js
+- Critères de validation :
+  - Calcul N/A et formule de normalisation conformes au PDF ; tests PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 9 — Sédentarité V2
+
+- Statut : À FAIRE
+- Objectif : Migration exacte depuis le PDF validé pour le questionnaire Sédentarité.
+- Éléments à valider :
+  - 12 questions ;
+  - SD07 / SD08 N/A et normalisation ;
+  - 6 dimensions ;
+  - Guardrail exact de temps quotidien assis (D1) avec calculated_category séparé de displayed_category (ne jamais réinterpréter librement le guardrail validé).
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/sedentarite/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-sedentarite.test.js
+- Critères de validation :
+  - Guardrail exact et N/A validés ; tests PHP et JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 10 — Fatigue & récupération V2
+
+- Statut : À FAIRE
+- Objectif : Implémenter fidèlement la configuration validée issue du PDF Fatigue & Récupération (12 questions, 3 Safety FRSF01–03, dimensions, seuils, textes).
+- Règle : Ne pas inventer de N/A, de guardrail ou de règle d'attention supplémentaire absents du PDF.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/fatigue-recuperation/questionnaire.php
+  - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-fatigue-recuperation.test.js
+- Critères de validation :
+  - Conformité stricte au PDF et tests PHP/JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 11 — Risque nutritionnel V1
+
+- Statut : À FAIRE
+- Objectif : Nouveau questionnaire : créer sa configuration à partir du PDF final validé.
+- Contenu requis :
+  - 12 questions ;
+  - 6 dimensions ;
+  - Scoring, catégories, guardrail validé sur questions critiques, Safety validé, axes, textes résultat, funnel validé.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/risque-nutritionnel/questionnaire.php
+  - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
+  - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-risque-nutritionnel.test.js
+- Critères de validation :
+  - Configuration valide, scoring conforme, tests PHP/JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 12 — Bien-être V1
+
+- Statut : À FAIRE
+- Objectif : Nouveau questionnaire : implémenter la version finale validée issue du PDF (12 questions, 6 dimensions, scoring, catégories, guardrail dimensionnel, axes, textes résultat, funnel de suivi).
+- Règle de persistance : Le suivi longitudinal métier est une orientation fonctionnelle. Aucune nouvelle architecture de persistance complexe n'est créée dans ce MVP.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/questionnaires/bien-etre/questionnaire.php
+  - lifemetrics-questionnaires/includes/class-lifemetrics-plugin.php
+  - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php
+  - lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.php
+  - node lifemetrics-questionnaires/tests/questionnaire-bien-etre.test.js
+- Critères de validation :
+  - Configuration valide, scoring conforme, tests PHP/JS PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 13 — Restitution frontend finale
+
+- Statut : À FAIRE
+- Objectif : Consolidation finale du frontend partagé : adapter uniquement le rendu nécessaire pour afficher correctement les informations fonctionnelles validées, en conservant le design LifeMetrics existant sauf nécessité démontrée.
+- Éléments affichés selon les PDF :
+  - Score, catégorie, titre, analyse, orientation, axes d'amélioration prioritaires, Safety avec priorité visuelle claire, bandeau Guardrail, CTA contextuel, disclaimers.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/templates/questionnaire.php
+  - lifemetrics-questionnaires/assets/js/questionnaire-ui.js
+  - lifemetrics-questionnaires/assets/css/questionnaire.css
+  - lifemetrics-questionnaires/tests/shared-frontend.test.js
+  - lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
+- Tests :
+  - node lifemetrics-questionnaires/tests/shared-frontend.test.js
+  - node lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
+- Critères de validation :
+  - Rendu fidèle et hiérarchisé sans régression d'affichage sur desktop et mobile.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 14 — Vérification transport et Google Sheets
+
+- Statut : À FAIRE
+- Objectif : Vérifier que le payload existant transporte correctement les données réellement nécessaires vers le backend et Google Sheets. Ne modifier le transport que si un manque concret est démontré.
+- Règle PSS-10 : Le PSS-10 est vérifié uniquement pour la non-régression de son flux historique existant. Ne pas migrer son payload, son scoring ou son runtime vers le moteur V2 uniquement pour uniformiser l'architecture.
+- Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/includes/class-submission-service.php
+  - lifemetrics-questionnaires/backend/generic-google-apps-script.gs
+  - lifemetrics-questionnaires/tests/rest-backend-submission.test.php
+  - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php
+  - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
+- Tests :
+  - php lifemetrics-questionnaires/tests/rest-backend-submission.test.php
+  - php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php
+  - node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
+- Critères de validation :
+  - Payload et écriture Google Sheets validés ; tests PASS.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 15 — Full Regression Test
+
+- Statut : À FAIRE
+- Objectif : Exécuter toutes les suites PHP et JS pour certifier la non-régression globale avant release.
+- Fichiers potentiellement concernés :
+  - Ensemble des fichiers dans lifemetrics-questionnaires/tests/
+- Tests :
+  - for f in lifemetrics-questionnaires/tests/*.test.php; do php "$f" || exit 1; done
+  - for f in lifemetrics-questionnaires/tests/*.test.js; do node "$f" || exit 1; done
+- Critères de validation :
+  - 0 test en échec ;
+  - 0 erreur applicative connue ;
+  - Aucun nouvel avertissement introduit par les modifications ;
+  - Gardes de non-régression PSS-10 intactes.
+- Gestion d'échec : Si un test échoue, marquer BLOQUÉ et aucun build de release ne doit être fait.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+### PHASE 16 — WordPress Release ZIP
+
+- Statut : À FAIRE
+- Objectif : Produire l'archive finale lifemetrics-questionnaires.zip installable dans WordPress.
+- Contrôles avant build :
+  - Tous les tests PASS ;
+  - Aucun fichier temporaire, cache ou artefact local inutile ;
+  - Fichiers de test exclus du ZIP de production ;
+  - Bootstrap, assets, templates et configurations présents.
+- Contrôles après build :
+  - Inspecter le contenu réel du ZIP, le dossier racine, les fichiers PHP, CSS/JS et configurations.
+- Fichiers potentiellement concernés :
+  - scripts/build-release-zip.sh
+  - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+- Tests :
+  - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip
+  - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+- Critères de validation :
+  - Archive ZIP propre générée ; audit de packaging PASS.
+- Livrables à fournir :
+  - Chemin exact du ZIP et taille ;
+  - Résumé du contenu vérifié ;
+  - Checklist de validation manuelle WordPress.
+
+- Fichiers réellement modifiés : À compléter après exécution.
+- Tests exécutés : À compléter après exécution.
+- Résultat : À compléter après exécution.
+- NON DÉTERMINÉ : À compléter si nécessaire.
+- Commit : À compléter après exécution.
+- Date : À compléter après exécution.
+
+---
+
+## Journal d'implémentation
+
+(Ce journal est complété de manière factuelle et concise après l'exécution de chaque phase validée)
+
+---
+
+# PROMPT D'EXÉCUTION RÉPÉTABLE
+
+Continue le développement LifeMetrics à partir du fichier :
+LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+
+Applique strictement le protocole et les règles définis dans ce document.
+
+Ta mission pour cette exécution est :
+1. Lire le plan et git status ;
+2. Identifier la phase prioritaire à traiter :
+   - Si BLOQUÉ : traiter uniquement ce blocage ;
+   - Sinon, si EN COURS : reprendre et terminer cette phase ;
+   - Sinon : sélectionner la première phase À FAIRE ;
+3. Exécuter UNIQUEMENT cette phase (1 exécution = 1 seule phase maximum) ;
+4. Analyser l'existant et ne modifier que le minimum strictement nécessaire ;
+5. Respecter les PDF validés comme source de vérité méthodologique (ne rien inventer) ;
+6. Préserver l'isolation et la non-régression du PSS-10 ;
+7. Exécuter les tests locaux requis pour la phase ;
+8. Mettre à jour LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md (tableau, état, détails de la phase, journal) ;
+9. Créer le commit Git dédié (lifemetrics: phase XX - <nom court>) si la phase est validée ;
+10. Ne commencer AUCUNE autre phase ;
+11. Fournir le rapport # PHASE EXECUTION REPORT ;
+12. STOP.
+
+Règles absolues :
+- une exécution = une seule phase ;
+- pas de fonctionnalité spéculative ;
+- pas de nouvelle méthodologie ;
+- pas d'URL inventée ;
+- pas de refactoring inutile ;
+- pas de modification du PSS-10 sauf nécessité de non-régression ;
+- pas de modification d'une phase future sauf moteur partagé strictement nécessaire ;
+- ne jamais écraser les modifications utilisateur existantes ;
+- ne jamais utiliser de commande Git destructive ;
+- si une donnée est inconnue : NON DÉTERMINÉ.
+
+Si la phase est déjà entièrement satisfaite par le code existant :
+- le démontrer par inspection et tests ;
+- mettre le plan à jour ;
+- la marquer terminée si tous ses critères sont réellement remplis ;
+- faire le commit du plan/tests nécessaires uniquement ;
+- ne pas réécrire du code inutilement.
+
+À la fin réponds avec :
+
+# PHASE EXECUTION REPORT
+- Phase exécutée :
+- Statut final :
+- État initial :
+- Modifications nécessaires identifiées :
+- Fichiers modifiés :
+- Tests exécutés :
+- Résultats :
+- NON DÉTERMINÉ :
+- Commit :
+- Prochaine phase :
+- Confirmation qu'aucune phase supplémentaire n'a été commencée.
 
-The empty collections above make the fragment intentionally invalid as a production questionnaire. A contract test must reject an incomplete ready configuration.
-
-# 5. Generic scoring model
-
-## 5.1 Canonical inputs and trust
-
-The request supplies stable selected answer values, not authoritative points. Both browser and PHP map values through the same versioned configuration. PHP recomputes the complete canonical result and rejects a mismatch with any client-supplied derived field. Persisted scores/categories/dimensions/safety flags are server-derived.
-
-Reverse scoring is not a special questionnaire branch. Example: a PSS10 answer value `5` may map to `points: 1` for a reversed question and `points: 5` for a normal question.
-
-## 5.2 Exact operation order
-
-1. Resolve `(questionnaire_id, questionnaire_version)` through the registry; reject a non-public lifecycle status or version mismatch.
-2. Validate the schema before scoring. A ready questionnaire with an invalid schema fails closed.
-3. Validate request shape, size, IDs, timestamp, locale, answer key set, and scalar value types.
-4. Require one selected value for every required scored and safety question. Reject unknown, duplicate, or missing question IDs.
-5. Map each selected value to its configured answer. Unknown values fail; no coercion from strings to numbers.
-6. Partition scored answers into applicable and N/A. N/A contributes neither score nor min/max capacity.
-7. Compute `raw_score` as the sum of configured points for applicable answers.
-8. Compute `available_min` and `available_max` as sums of the minimum and maximum possible configured points for each applicable question. Do not assume every question is 0-4.
-9. If normalization is enabled and capacity was removed by N/A, calculate:
-
-   ```text
-   normalized = target_min
-              + (raw_score - available_min)
-              / (available_max - available_min)
-              * (target_max - target_min)
-   final_score = configured_round(normalized)
-   ```
-
-   For the LifeMetrics 0-4 model this reduces to `ROUND(raw_score / available_max * 48)`. If `available_max === available_min`, reject as unscorable. If no capacity was removed and the configured scale already equals the raw range, `final_score = raw_score`.
-10. Compute each dimension from applicable member questions: `raw_score`, `available_min`, `available_max`, and `percentage = (raw-min)/(max-min)*100`. A dimension with zero available capacity is marked unavailable and excluded from weakest comparisons.
-11. Select `calculated_category` from the exhaustive result range containing `final_score`.
-12. Apply classification rules in declared order against canonical dimension metrics and category ranks. Rules may change only `displayed_category` and add explanatory messages; they never change `raw_score`, `available_max`, `final_score`, or `calculated_category`.
-13. Rank eligible dimensions weakest-first by percentage, then configuration order for deterministic ties; select the configured one or two. Evaluate attention thresholds against configured raw or percentage metrics.
-14. Evaluate safety answers independently. Triggered safety flags add stable codes and priority messages; they never alter score or category and are rendered before general recommendations even when the score is favorable.
-15. Build the canonical result and storage payload, then compare it with any client-derived summary. Return the canonical server result.
-
-## 5.3 Boundaries and parity
-
-- Range endpoints are inclusive and must be exhaustive/non-overlapping.
-- `half_up` is the initial only allowed rounding mode: JavaScript helper and PHP `PHP_ROUND_HALF_UP` must match golden vectors.
-- Category quality is determined by explicit `rank`, not lexical ordering.
-- Guardrails are applied after numeric classification and before display rendering.
-- Safety evaluation occurs after score computation only for pipeline clarity; UI priority is independent and always above general recommendations.
-- Raw answer values, awarded points, applicability, and questionnaire version must remain auditable in the canonical submission.
-- Every algorithm fixture is executed against both PHP and JavaScript; unequal canonical outputs are a release failure.
-
-# 6. Frontend engine responsibilities
-
-## `questionnaire-engine.js`
-
-- validate the client-safe serialized configuration defensively;
-- own per-instance state: intro/question/result, current index, selected values, session ID, pending timer, last payload, submission state;
-- map answer values to points and compute the exact model in section 5;
-- expose pure calculation/state functions that run in Node without a DOM;
-- produce a view model for the UI and a request object for the API;
-- contain no `document`, `window`, `fetch`, WordPress, Google, questionnaire ID, or question ID branches.
-
-## `questionnaire-ui.js`
-
-- discover uninitialized roots and create one isolated controller per root;
-- render intro, questions, answer controls, progress, back/restart, result levels, dimensions, guardrail explanations, safety messages, CTA, retry/error states, and optional information modal;
-- preserve keyboard navigation, labels, focus management, `aria-live`, progress semantics, reduced-motion behavior, and unique per-instance IDs;
-- cancel stale auto-next timers when navigating back/restarting;
-- use only root-scoped DOM queries and event listeners;
-- contain no scoring formula, Google URL, hardcoded questionnaire content, `document.getElementById`, or mutable global questionnaire state.
-
-## `questionnaire-api.js`
-
-- submit JSON to the same-origin URL supplied on the root/config;
-- send cookies only same-origin, set content type, enforce an explicit timeout through `AbortController`, parse/validate responses, and classify configuration/validation/network/backend errors;
-- support idempotent retry of the exact last request and prevent concurrent double submission;
-- never calculate or render results, never read Google-specific fields, and never accept an upstream URL from questionnaire content.
-
-The three files may be shipped as classic scripts with one deliberately namespaced immutable bootstrap if WordPress/browser compatibility requires it, or as modules after compatibility testing. The final choice is made in STAGE 5; adding a bundler is out of scope unless native scripts cannot satisfy target browsers.
-
-# 7. WordPress PHP architecture
-
-## 7.1 Bootstrap and services
-
-`lifemetrics-questionnaires.php` becomes a small bootstrap: direct-access guard, plugin metadata, version/path/URL constants, required orchestrator file, and `LifeMetrics_Questionnaires_Plugin::init()`.
-
-The orchestrator registers services once. No service container or dependency-injection framework is needed; explicit constructors/static initialization are sufficient.
-
-## 7.2 Registry and resolution
-
-The registry owns a hardcoded map from supported ID to canonical file. It never constructs an include path from shortcode or REST input. Resolution:
-
-```text
-shortcode id
- -> sanitize_key
- -> exact registry lookup
- -> load plain PHP array
- -> validate id matches key and schema is valid
- -> require status=ready for public access
- -> renderer
-```
-
-Unknown, invalid, review, draft, or disabled IDs render an empty string plus an optional developer-only logged diagnostic; no path detail or content is exposed to the visitor.
-
-## 7.3 Renderer and serialization
-
-- Renderer creates `wp_unique_id('lmq-')`, submit URL, asset URL map, and an allowlisted client-safe configuration projection.
-- It escapes text/attributes/URLs at output and JSON-encodes with WordPress helpers.
-- Configuration is attached per instance in a `<script type="application/json" data-lmq-config>` child or an equivalent nonce-independent data mechanism; `wp_localize_script` global config is avoided because it conflicts with multiple differing instances.
-- One shared template renders semantic placeholders. Questionnaire-specific copy comes from config.
-- Shared asset handles enqueue once when the first valid shortcode renders. Late stylesheet handling remains until verified unnecessary in both Gutenberg and Elementor.
-
-## 7.4 REST and server validation
-
-Canonical route: `POST /wp-json/lifemetrics-questionnaires/v1/{id}/submit`, implemented through an allowlisted route regex and registry lookup. This preserves the existing PSS10 URL shape.
-
-REST responsibilities:
-
-- public permission callback is explicit because the questionnaire is anonymous, but authorization assumptions are documented;
-- enforce body-size and JSON content-type limits before parsing;
-- validate submission envelope and exact config version;
-- rate-limit design is addressed without collecting new personal data;
-- compute canonical result with PHP scoring engine;
-- compare/reject mismatched client derived values;
-- submit only canonical data through the adapter;
-- map upstream errors to stable non-sensitive error codes;
-- return canonical display result and duplicate status.
-
-CSRF nonce is not an authorization control for an intentionally public anonymous endpoint. If used, it is a friction/replay control only and must not replace validation, idempotency, and abuse monitoring.
-
-# 8. Backend/integration architecture
-
-## 8.1 Storage architecture (DEC-024)
-
-Storage uses ONE central Google Spreadsheet ("LifeMetrics — Questionnaires") hosting dedicated raw data worksheets per questionnaire and separated analytics/dashboard tabs:
-
-- **Central Spreadsheet**: Single file simplifies administration, permissions, backups, and cross-instrument analytics.
-- **Dedicated Raw Data Worksheets**: `PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`. Each tab retains its own physical column schema for analytical clarity.
-- **Dedicated Dashboard / Analytics Worksheets**: `Dashboard_Global`, `Dashboard_<Questionnaire>` compute aggregate metrics/visualizations from raw data. Direct submission writes to dashboard tabs are prohibited.
-- **Server-Side Allowlist Routing**: Submissions pass from WordPress REST to a central Google Apps Script endpoint (`LMQ_GOOGLE_ENDPOINT`), which resolves `questionnaire_id` to its dedicated worksheet via an internal allowlist.
-- **Legacy PSS10 Compatibility**: `LMQ_PSS10_GOOGLE_ENDPOINT` is preserved as a narrow legacy exception until PSS10 storage is formally consolidated.
-
-## 8.2 Integration invariants
-
-- Browser never calls Google Apps Script.
-- Endpoint is configured server-side only and allowlisted; request input can never select a URL.
-- WordPress and Apps Script validate independently and derive canonical scores/categories.
-- Formula-injection protection applies to every string written to Sheets, including JSON cells if exported/formula-parsed.
-- Duplicate submission returns idempotent success and never creates another canonical row.
-- Apps Script lock covers duplicate check plus append.
-- Upstream HTTP and JSON body are verified before frontend success.
-- Timeout, retry, stale-deployment detection, schema-version rejection, and deployment provenance are tested.
-- Existing backend is not migrated until STAGE 10 and an export/backup plus rollback deployment exists.
-
-# 9. Standard submission payload
-
-## 9.1 Browser request envelope
-
-```json
-{
-  "submission_schema_version": "1.0.0",
-  "questionnaire_id": "sedentarite",
-  "questionnaire_version": "1.0.0",
-  "client_version": "<plugin asset version>",
-  "session_id": "<uuid-v4>",
-  "completed_at": "<UTC ISO-8601>",
-  "locale": "fr-FR",
-  "source_page": "/questionnaire-sedentarite/",
-  "answers": {
-    "SD01": "<stable answer value>",
-    "SD02": "<stable answer value>"
-  },
-  "client_result": {
-    "raw_score": 0,
-    "available_max": 0,
-    "final_score": 0,
-    "calculated_category": "CODE",
-    "displayed_category": "CODE"
-  }
-}
-```
-
-`client_result` is optional diagnostic evidence and never authoritative. The server response contains the canonical result.
-
-## 9.2 Canonical persisted envelope
-
-At minimum:
-
-- `submission_schema_version`;
-- `questionnaire_id`, `questionnaire_version`, `client_version`;
-- `session_id`, `completed_at`, server `received_at`;
-- `locale`;
-- sanitized path-only `source_page` or null;
-- `answers`: selected value, server-derived points, and applicability per question;
-- `raw_score`, `available_min`, `available_max`, `final_score`;
-- `calculated_category`, `displayed_category`;
-- `applied_classification_rules`;
-- `dimensions`: raw/min/max/percentage/attention per dimension;
-- `weakest_dimensions`;
-- `safety_flags` with stable codes only;
-- adapter/storage schema version and duplicate marker as operational metadata.
-
-Current PSS10 `created_at` is migrated to `completed_at` through an explicit compatibility mapping; historical fields are not silently reinterpreted.
-
-## 9.3 Privacy/PHI implications
-
-Questionnaire answers and safety flags can reveal health-related information even without name/email. Treat the dataset as potentially sensitive personal data if it can be linked through logs, URLs, accounts, IP addresses, or external systems.
-
-- Do not add name, email, phone, WordPress user ID, IP, full user-agent, device fingerprint, free text, or marketing identifiers without a separate privacy decision/DPIA and explicit consent basis.
-- Store `source_page` as path only; strip query string, fragment, credentials, and arbitrary visitor values because URLs can contain identifiers or health data.
-- `locale` is low-risk and useful for content/version interpretation.
-- `client_version` and `submission_schema_version` are required for debugging/audit.
-- Define retention, access control, export/deletion procedure, incident handling, Sheet ownership, and log redaction before production.
-- Safety messages must not leak answer details into public/server logs.
-
-# 10. Questionnaire inventory
-
-Search scope included the repository, Codex attachments, and `/Volumes/T7/StageBut3`. Seven relevant questionnaire PDFs were found in `/Volumes/T7/StageBut3/Questionner de test `. No matching PDFs/specifications were found for Stress & équilibre quotidien, Composition corporelle, or Bien-être général.
-
-Readiness below is evidence-based from the PDFs, not an approval claim:
-
-| questionnaire_id | document/source | content_status | scoring_status | safety | N/A | guardrail | CTA | implementation_status | blockers |
-|---|---|---|---|---|---|---|---|---|---|
-| `pss10` | current plugin + tracked standalone; no local questionnaire PDF found | legacy behavior frozen for structural migration | executable 1-5/reverse/10-50 baseline approved on 2026-09-04 | none | none | none | current stub buttons approved only as legacy baseline | `BLOCKED_BY_APPROVAL` | licensing/attribution and any production UX/content/CTA approval remain pending for their planned stages |
-| `activite-physique` | `Score_LifeMetrics_Activite_Physique_V1.pdf` | `CONTENT_READY` (document de travail) | ranges specified, but PDF explicitly requires synthetic validation/pilot | none | none | none | VitaScan | `BLOCKED_BY_SCORING` | run/approve synthetic profiles; content-owner approval |
-| `sommeil` | `Score_LifeMetrics_Sommeil_V1.pdf` | `CONTENT_READY` (document de travail) | scoring/dimensions specified; no completed synthetic-validation evidence in document | SLSF01-03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | synthetic boundary/profile approval; content-owner approval |
-| `hydratation` | `Score_LifeMetrics_Hydratation_V1.pdf` | `CONTENT_READY` (document de travail) | `SCORING_READY` based on documented synthetic validation | HYSF01-03 | HY05 | none | VitaScan | `BLOCKED_BY_APPROVAL` | explicit content-owner approval and destination URL |
-| `nutrition` | `Score_LifeMetrics_Nutrition_V1.pdf` | `CONTENT_READY` (document de travail) | scoring specified; no completed synthetic-validation section | NTSF01-03 | none | none | VitaScan | `BLOCKED_BY_SCORING` | synthetic scoring/boundary approval; content-owner approval |
-| `fatigue-recuperation` | `Score_LifeMetrics_Fatigue_Recuperation_V1.pdf` | `CONTENT_READY` | `SCORING_READY` based on documented synthetic validation and retained ranges | FRSF01-03 | none | dimension attention only | VitaScan + Metabolism Analytics | `BLOCKED_BY_APPROVAL` | explicit content-owner approval and CTA destination |
-| `sedentarite` | `Score_LifeMetrics_Sedentarite_V1.pdf` | `CONTENT_READY` (`Document LifeMetrics`) | `SCORING_READY`; profiles A-F and mandatory D1 guardrail documented | none | SD07, SD08 | D1 <= 2/8 caps display at `SEDENTARITE_A_REDUIRE` | VitaScan + Metabolism Analytics | `BLOCKED_BY_APPROVAL` | confirm approved source, final CTA URL, and formal stage approval; still not production-ready |
-| `pieds-confort-postural` | `Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf` | `CONTENT_READY` | categories explicitly provisional; PF09-PF10 guardrail undecided | PFSF01-04 | none | unresolved | Podos360 | `BLOCKED_BY_SCORING` | synthetic profiles A-F; guardrail decision; approve ranges/content |
-| `stress-equilibre` | no source found | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | complete approved specification missing |
-| `composition-corporelle` | no source found | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | complete approved specification missing |
-| `bien-etre-general` | no source found | `BLOCKED_BY_CONTENT` | unknown | unknown | unknown | unknown | unknown | `BLOCKED_BY_CONTENT` | complete approved specification missing |
-
-Exact files found:
-
-```text
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Activite_Physique_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Hydratation_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Nutrition_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sedentarite_V1.pdf
-/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sommeil_V1.pdf
-```
-
-Inventory maintenance rule: record source path, SHA-256, document version/date, page count, approval owner/date, implementation version, and any transcription deviations before coding a questionnaire. Never fill missing wording or rules from general health knowledge.
-
-# 11. Migration strategy for PSS10
-
-## 11.1 Frozen invariants
-
-Before refactoring, capture executable fixtures and screenshots for:
-
-- exact ten questions, answer labels, order, 1-5 values, reverse mapping 4/5/7/8;
-- totals 10 and 50 plus category boundaries 20/21/26/27;
-- intro/question/result/modal copy and attribution links;
-- intro -> question -> auto-next -> back/change -> result -> restart;
-- 400 ms auto-next behavior and cancellation on navigation;
-- progress values/labels, selected-answer restoration, gauge score/needle;
-- stored versus displayed category labels;
-- same-origin endpoint path and payload fields;
-- unique UUID per new run, one submission per completion, exact retry payload reuse;
-- error messages/toasts and success only after verified backend response;
-- multiple instances, unique element/radio/SVG/modal identifiers, root CSS/DOM isolation;
-- keyboard Escape/modal focus and responsive layout.
-
-## 11.2 Migration sequence
-
-1. Create golden fixture vectors and DOM/static assertions without editing source.
-2. Add generic infrastructure in parallel; legacy shortcode/route remains active.
-3. Express PSS10 as `questionnaire.php`, including explicit answer points for reverse questions, result copy, attribution, and UI metadata.
-4. Run schema and PHP/JS scoring parity tests; compare every frozen vector.
-5. Render generic PSS10 behind a development-only selection mechanism or isolated test shortcode/page; do not switch public output yet.
-6. Compare legacy and generic DOM screenshots/interactions at desktop/tablet/mobile and multiple-instance pages.
-7. Switch the production shortcode implementation in one commit only after all tests pass.
-8. Keep legacy PSS10 files and route behavior available for one rollback checkpoint; remove only in a later cleanup commit after runtime acceptance.
-9. Do not change PSS10 scoring methodology, category copy, CTA behavior, or legal attribution during structural migration.
-
-## 11.3 Regression and rollback
-
-Required regression tests: PHP/JS golden vectors, request/response contract, static forbidden-pattern checks, browser path, retry/errors, multi-instance, Gutenberg, Elementor, responsive snapshots, and a sandbox Sheet duplicate test.
-
-Rollback trigger: any score/category/payload divergence, missing content, accessibility regression, asset loading regression, REST incompatibility, or backend write discrepancy. Roll back the single cutover commit to the legacy renderer/assets/handler; preserve test evidence and generic files for diagnosis. Do not rewrite the live Sheet to hide a migration failure.
-
-Files eventually affected: bootstrap, new includes/assets/template, `questionnaires/pss10/questionnaire.php`, legacy PSS10 template/assets, tests, plugin docs. Apps Script remains unchanged until STAGE 10.
-
-# 12. Test strategy
-
-## STATIC
-
-- PHP lint for every PHP file with the approved minimum supported PHP 8.2;
-- JS parse checks using `.js` inputs; Apps Script parse through VM/copy-to-temporary-`.js` test;
-- registry paths remain within plugin directory and match explicit map;
-- no visitor-derived include paths;
-- no `document.getElementById`, `window.PSS_*`, hardcoded questionnaire/question branches, direct `script.google.com` in frontend, hardcoded `/wp-content/`, `eval`, or executable config callbacks;
-- CSS selectors scoped under `.lm-questionnaire` except documented reset/keyframes; no global element leakage;
-- no duplicate shared icons/assets after approved cleanup;
-- no secrets or backend endpoints in browser files/configuration.
-
-## UNIT
-
-- normal explicit 0-4 mapping;
-- PSS10 reverse mapping and 10-50 bounds;
-- N/A removes min/max capacity and half-up normalization matches PHP/JS;
-- one and multiple N/A cases, all-unavailable rejection;
-- dimension raw/min/max/percentage including partial N/A;
-- weakest one/two dimensions, tie ordering, unavailable exclusion, attention threshold;
-- safety flags with favorable and unfavorable scores;
-- category endpoints and exhaustive coverage;
-- category cap guardrail at D1 2/8, no cap at 3/8, unchanged numeric scores;
-- higher-is-better and higher-is-worse category rank behavior if both remain supported.
-
-## CONTRACT
-
-- required/optional fields and lifecycle enum;
-- duplicate IDs, missing references, invalid status/version/locale;
-- answer values unique; `points:null` only for N/A;
-- result ranges exhaustive/non-overlapping; ranks/codes unique;
-- guardrail references and operators allowlisted;
-- serialized client config excludes internal URLs/approval metadata;
-- browser request and canonical persisted payload validation;
-- server rejects client/server score/category/dimension mismatch and unknown answers.
-
-## WORDPRESS INTEGRATION
-
-- clean activation/deactivation with no warnings;
-- generic shortcode valid/invalid/draft/disabled behavior;
-- canonical REST route, body limit, content type, validation, upstream errors;
-- assets absent on pages without shortcode and loaded once with one/multiple instances;
-- late-rendered shortcode CSS behavior;
-- Gutenberg and Elementor render/editor/public views;
-- no hardcoded content paths; symlinked plugin works.
-
-## BROWSER / E2E
-
-- intro, modal/focus, start, each question, auto-next, back/change, progress, final answer;
-- result/category/gauge or generic visualization, weakest dimensions, attention marker, guardrail message;
-- safety message appears before recommendations and with high score;
-- submit, verified success, timeout, malformed response, validation error, backend error, offline retry, duplicate success;
-- restart creates new session and clears state;
-- two different questionnaire instances and two same-ID instances do not share state.
-
-## RESPONSIVE / ACCESSIBILITY
-
-- representative desktop 1440 px, tablet 768 px, mobile 375 px plus zoom 200%;
-- no horizontal overflow, clipped controls, overlapping text, unreadable result blocks;
-- keyboard-only flow, visible focus, radio group semantics, headings, labels, status announcements, contrast, reduced motion.
-
-## BACKEND
-
-- success; invalid JSON/type/size/schema/version/questionnaire/answer;
-- formula-leading strings; server score/category derivation;
-- duplicate and concurrent duplicate attempts under lock;
-- lock timeout, backend unavailable, non-2xx, malformed JSON, `{ok:false}`;
-- old and new PSS10 path during migration;
-- common-sheet headers/version, stale deployment detection, shadow-write reconciliation, rollback.
-
-Every non-trivial scoring branch leaves one minimal runnable regression check. A stage cannot claim PASS based only on lint.
-
-# 13. Local WordPress environment stage
-
-Current verified facts: `/Applications/XAMPP/xamppfiles/htdocs/pss-wordpress-test` is absent; WP-CLI is absent; XAMPP PHP is 8.2.4; shell/Homebrew PHP is 8.4.1. Process inspection was sandbox-restricted during this audit, so Apache/MariaDB stopped status is retained from the supplied verified baseline and must be rechecked at execution time.
-
-STAGE 8 will, only after explicit approval:
-
-1. verify ports, XAMPP Apache/MariaDB status, PHP extensions, and existing databases;
-2. start only the required isolated services;
-3. create a dedicated local database/user with non-production credentials;
-4. install a clean supported WordPress into `/Applications/XAMPP/xamppfiles/htdocs/pss-wordpress-test`;
-5. create the exact symlink from its plugin directory to the repository plugin;
-6. activate the plugin and capture activation logs;
-7. create test pages for no shortcode, valid PSS10, invalid ID, duplicate PSS10 instances, mixed questionnaires, Gutenberg, and Elementor if available;
-8. configure a sandbox/fake backend endpoint, never the production Sheet, for destructive/error tests;
-9. record WordPress/PHP/database/theme/builder versions and teardown/restart instructions.
-
-This plan creation does not start services, create a database, install WordPress/WP-CLI, or create the symlink.
-
-# 14. Stage-by-stage implementation roadmap
-
-Only one stage may be `IN_PROGRESS`. Every stage ends with a report and stop. PASS does not authorize the next stage.
-
-## STAGE 0 to STAGE 5 - COMPLETED
-- **Status:** `PASS`
-- **Objective:** Establish baseline, schema 2.0.0, freeze PSS10 legacy behavior, extract WP architecture, implement universal scoring, and create shared frontend UI/API.
-
-## STAGE 6 - Migrate PSS10 to generic configuration
-- **Status:** `PASS`
-- **Objective:** Prove the generic stack supports the structurally different PSS10 legacy profile without changing its observed behavior.
-- **Prerequisites:** STAGES 0-5 PASS.
-- **Scope:** `questionnaires/pss10/questionnaire.php`, legacy adapter hooks.
-- **Do not touch:** Proprietary methodologies, generic frontend logic, Google Sheet destinations.
-- **Tasks:** Transcribe PSS10 to canonical `questionnaire.php`. Render with generic engine. Ensure visual/scoring parity.
-- **Required tests:** Frozen outputs equal; public shortcode/route shape unchanged.
-- **Pass criteria:** 100% regression parity on scoring and payload.
-- **Blockers:** None expected.
-- **Rollback:** Revert cutover commit; retain legacy files.
-- **Next stage:** STAGE 7.
-
-## STAGE 7 - All-PDF Capability Audit & Engine Hardening
-- **Status:** `PASS`
-- **Objective:** Prove the common platform supports all proprietary LifeMetrics PDF methodologies before building them, and harden the engine against any gaps.
-- **Prerequisites:** STAGE 6 PASS.
-- **Scope:** `QUESTIONNAIRE_INVENTORY.md`, `class-questionnaire-scoring-engine.php`, `questionnaire-engine.js`.
-- **Do not touch:** UI code, backend code.
-- **Tasks:** Audit Activité, Hydratation, Fatigue, Nutrition, Sédentarité, Sommeil, Pieds against generic capabilities (N/A, dimensions, guardrails, non-linear). Implement any missing engine features (e.g. Sommeil SL01 non-linearity).
-- **Required tests:** Unit tests for any added engine capability.
-- **Pass criteria:** Every PDF's logic is definitively supported by the engine or explicitly blocked by methodology approvals.
-- **Rollback:** Revert engine additions if they break PSS10 regressions.
-- **Next stage:** STAGE 8.
-
-## STAGE 8 - Isolated Local WordPress & PSS10 Validation
-- **Status:** `PASS`
-- **Objective:** Create real local WordPress runtime, test generic REST routing, and prove migrated PSS10 end-to-end.
-- **Prerequisites:** STAGE 7 PASS.
-- **Scope:** Local WP environment, `class-rest-controller.php`.
-- **Do not touch:** Production WP, production Google Sheet.
-- **Tasks:** Setup local WP. Symlink plugin. Run PSS10 shortcode. Verify responsive behavior.
-- **Required tests:** Integration/browser/responsive matrix.
-- **Pass criteria:** PSS10 works seamlessly in standard WP environment without console/PHP errors.
-- **Rollback:** Destroy local WP container/DB.
-- **Next stage:** STAGE 9.
-
-## STAGE 9 - Multi-Destination Google Backend Architecture
-- **Status:** `PASS`
-- **Objective:** Implement generic server-side submission transport routing to questionnaire-specific Google Sheets targets.
-- **Prerequisites:** STAGE 8 PASS.
-- **Scope:** `class-submission-service.php`, `class-google-apps-script-adapter.php`, backend configuration metadata.
-- **Do not touch:** Frontend submission API, monolithic sheet assumptions (they are obsolete).
-- **Tasks:** Build server-side map routing submissions to different Apps Script URLs. Establish exact payload schema expectations per questionnaire.
-- **Required tests:** Backend tests BACK-001 through BACK-012 (multi-destination routing).
-- **Pass criteria:** Submissions securely reach intended, independent Google destinations.
-- **Rollback:** Revert adapter commits.
-- **Next stage:** STAGE 10.
-
-## STAGE 10 - Proprietary Questionnaires Rollout
-- **Status:** `PASS` (Sequential execution: 7/7 complete)
-  - 1. Sédentarité (`sedentarite`): `PASS` (Stage 10.1 on 2026-09-09)
-  - 2. Hydratation (`hydratation`): `PASS` (Stage 10.2 on 2026-09-09)
-  - 3. Fatigue & Récupération (`fatigue-recuperation`): `PASS` (Stage 10.3 on 2026-09-09)
-  - 4. Sommeil (`sommeil`): `PASS` (Stage 10.4 on 2026-09-09)
-  - 5. Nutrition (`nutrition`): `PASS` (Stage 10.5 on 2026-09-09)
-  - 6. Activité Physique (`activite-physique`): `PASS` (Stage 10.6 on 2026-09-09)
-  - 7. Pieds & Confort Postural (`pieds-confort-postural`): `PASS` (Stage 10.7 on 2026-09-09)
-- **Objective:** Implement the proprietary questionnaires sequentially (Sédentarité, Hydratation, Fatigue, Sommeil, Nutrition, Activité, Pieds).
-- **Prerequisites:** STAGE 9 PASS, methodology approvals.
-- **Scope:** `questionnaires/<id>/questionnaire.php`, `presentation.php` (if needed).
-- **Do not touch:** Shared core engine, `questionnaire-ui.js`, PSS10.
-- **Tasks:** Process sequentially one questionnaire per execution. For each: create `questionnaire.php`, register in registry mapping, verify Schema 2.0.0 compliance, add dedicated test suite matching PDF synthetic profiles.
-- **Required tests:** Full scoring fixtures and synthetic profiles per PDF.
-- **Pass criteria:** Each test completes independently and passes all schema, boundary, and scoring tests.
-- **Rollback:** Disable questionnaire config status to `draft` or `disabled`.
-- **Next stage:** STAGE 11 (Final Production Packaging & Release).
-
-## STAGE 11 - Final Production Packaging & Release Readiness
-- **Status:** `PASS` (Release Candidate Audit Complete; Production Readiness Pending Manual Gates)
-- **Objective:** Generate deterministic release package `lifemetrics-questionnaires-stage11-rc1.zip`, run full tamper-resistance suite across all 8 questionnaires, and establish release gate matrix.
-- **Prerequisites:** STAGE 10 PASS (7/7 questionnaires complete).
-- **Scope:** Release packaging script (`scripts/build-release-zip.sh`), release audit test (`stage11-release-audit.test.php`), global tamper-resistance test (`global-tamper-resistance.test.php`), documentation (`STAGE_REPORTS/STAGE-11.md`, `CHANGELOG.md`, `TEST_MATRIX.md`).
-- **Do not touch:** Methodology of previous questionnaires.
-- **Tasks:** Build release candidate ZIP excluding dev/test files; verify package structure and syntax; verify all 8 questionnaires reject client-forged scores/flags; audit secret isolation; verify shortcode/REST lifecycle fails closed.
-- **Required tests:** Global tamper suite (8 questionnaires), Stage 11 release audit, full test regression (32 test suites).
-- **Pass criteria:** 32/32 tests pass (19 PHP + 13 JS, 0 errors, 0 warnings); clean ZIP generated with 33 runtime files.
-- **Pending manual gates:** `MANUAL_GOOGLE_SETUP = PENDING`, `MANUAL_WORDPRESS_VALIDATION = PENDING`, `LEGAL_LICENSING_STATUS = PENDING`, `PUBLICATION_APPROVAL_STATUS = PENDING`.
-- **Next stage:** STAGE 12 (Production Deployment & Smoke Verification upon approval).
