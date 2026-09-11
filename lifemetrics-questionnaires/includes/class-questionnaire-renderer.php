@@ -18,7 +18,7 @@ final class LifeMetrics_Questionnaire_Renderer
         if (method_exists($this->assets, 'register')) {
             $this->assets->register();
         }
-        $this->assets->enqueue();
+        $this->assets->enqueue($config['id'] ?? '');
 
         $instance_id = wp_unique_id('lmq-' . $config['id'] . '-');
 
@@ -29,7 +29,7 @@ final class LifeMetrics_Questionnaire_Renderer
 
         ob_start();
         ?>
-        <div class="lmq-questionnaire-root" id="<?php echo esc_attr($instance_id); ?>">
+        <div class="lmq-questionnaire-root" id="<?php echo esc_attr($instance_id); ?>" data-lmq-questionnaire="<?php echo esc_attr($config['id']); ?>">
             <script type="application/json" data-lmq-config>
                 <?php echo $json_config; ?>
             </script>

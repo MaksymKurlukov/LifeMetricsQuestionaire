@@ -8,7 +8,7 @@
 |---|---|---|
 | 1 | Schema Validator V2 | TERMINÉ |
 | 2 | Scoring Engine V2 PHP / JavaScript | TERMINÉ |
-| 3 | Architecture CSS extensible | À FAIRE |
+| 3 | Architecture CSS extensible | TERMINÉ |
 | 4 | Activité physique V2 | À FAIRE |
 | 5 | Sommeil V2 | À FAIRE |
 | 6 | Nutrition V2 | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 2 — Scoring Engine V2 PHP / JavaScript
-- Prochaine phase à exécuter : PHASE 3 — Architecture CSS extensible
+- Dernière phase terminée : PHASE 3 — Architecture CSS extensible
+- Prochaine phase à exécuter : PHASE 4 — Activité physique V2
 - Blocages : Aucun
-- Nombre de phases terminées : 2 / 16
-- Nombre de phases restantes : 14
-- Dernier commit de phase : lifemetrics: phase 02 - scoring engine v2
+- Nombre de phases terminées : 3 / 16
+- Nombre de phases restantes : 13
+- Dernier commit de phase : lifemetrics: phase 03 - extensible css architecture
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -256,7 +256,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 3 — Architecture CSS extensible
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Conserver le CSS global actuel tout en permettant une personnalisation future propre pour chaque questionnaire.
 - Justification : Préparer l'évolutivité graphique (ex. styles spécifiques Sommeil ou Pieds) sans modifier le core du plugin et sans créer de fichiers vides.
 - Minimum nécessaire :
@@ -278,12 +278,12 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - Un questionnaire peut être ciblé indépendamment ;
   - Tests renderer et assets PASS.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : lifemetrics-questionnaires/includes/class-assets.php, lifemetrics-questionnaires/includes/class-questionnaire-renderer.php, lifemetrics-questionnaires/tests/questionnaire-assets.test.php, lifemetrics-questionnaires/tests/questionnaire-renderer.test.php
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-assets.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-renderer.test.php (PASS), suites complètes PHP (20 tests PASS) et JS (11 tests PASS)
+- Résultat : Architecture CSS extensible en place. Attribut data-lmq-questionnaire exposé sur le root DOM et conteneur. Enqueue conditionnel d'assets spécifiques géré via file_exists() avec dépendance lmq-shared-style et versioning filemtime.
+- NON DÉTERMINÉ : Aucun.
+- Commit : lifemetrics: phase 03 - extensible css architecture
+- Date : 2026-09-11
 
 ---
 
@@ -647,6 +647,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-scoring.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-parity.test.php (PASS), node lifemetrics-questionnaires/tests/questionnaire-engine.test.js (PASS), suite complète PHP/JS (PASS)
 - Résultat : Prise en charge de `scoring_direction: lower_is_better` dans le tri des dimensions les plus défavorables (weakest_dimensions). Parité PHP/JavaScript validée à 100%. Étanchéité préservée sur guardrails et questions Safety.
 - Notes : Prêt pour la Phase 3 (Architecture CSS extensible).
+
+### 2026-09-11 — Phase 3 : Architecture CSS extensible
+- Statut : TERMINÉ
+- Fichiers modifiés : lifemetrics-questionnaires/includes/class-assets.php, lifemetrics-questionnaires/includes/class-questionnaire-renderer.php, lifemetrics-questionnaires/tests/questionnaire-assets.test.php, lifemetrics-questionnaires/tests/questionnaire-renderer.test.php, LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md
+- Tests exécutés : php lifemetrics-questionnaires/tests/questionnaire-assets.test.php (PASS), php lifemetrics-questionnaires/tests/questionnaire-renderer.test.php (PASS), suite complète PHP/JS (PASS)
+- Résultat : Exposition de `data-lmq-questionnaire="<id>"` sur le wrapper DOM et enqueue conditionnel avec contrôle `file_exists()` d'un éventuel fichier `assets/css/questionnaires/<id>.css`. Zéro 404 émis et aucun fichier vide créé.
+- Notes : Prêt pour la Phase 4 (Activité physique V2).
 
 ---
 

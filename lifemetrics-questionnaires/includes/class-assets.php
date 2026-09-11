@@ -45,9 +45,23 @@ final class LifeMetrics_Questionnaire_Assets
         );
     }
 
-    public function enqueue(): void
+    public function enqueue(string $questionnaire_id = ''): void
     {
         wp_enqueue_style('lmq-shared-style');
         wp_enqueue_script('lmq-shared-ui');
+
+        if ($questionnaire_id !== '') {
+            $specific_css = '/assets/css/questionnaires/' . $questionnaire_id . '.css';
+            if (file_exists($this->plugin_path . $specific_css)) {
+                $handle = 'lmq-style-' . $questionnaire_id;
+                wp_register_style(
+                    $handle,
+                    $this->plugin_url . $specific_css,
+                    array('lmq-shared-style'),
+                    filemtime($this->plugin_path . $specific_css)
+                );
+                wp_enqueue_style($handle);
+            }
+        }
     }
 }
