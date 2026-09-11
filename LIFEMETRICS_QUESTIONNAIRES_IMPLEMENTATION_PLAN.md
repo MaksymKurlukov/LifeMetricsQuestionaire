@@ -18,7 +18,7 @@
 | 10 | Fatigue & récupération V2 | TERMINÉ |
 | 11 | Risque nutritionnel V1 | TERMINÉ |
 | 12 | Bien-être V1 | TERMINÉ |
-| 13 | Restitution frontend finale | À FAIRE |
+| 13 | Restitution frontend finale | TERMINÉ |
 | 14 | Vérification transport et Google Sheets | À FAIRE |
 | 15 | Full Regression Test | À FAIRE |
 | 16 | WordPress Release ZIP | À FAIRE |
@@ -28,12 +28,12 @@
 ## État actuel du projet
 
 - Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 12 — Bien-être V1
-- Prochaine phase à exécuter : PHASE 13 — Restitution frontend finale
+- Dernière phase terminée : PHASE 13 — Restitution frontend finale
+- Prochaine phase à exécuter : PHASE 14 — Vérification transport et Google Sheets
 - Blocages : Aucun
-- Nombre de phases terminées : 12 / 16
-- Nombre de phases restantes : 4
-- Dernier commit de phase : lifemetrics: phase 12 - bien-etre v1
+- Nombre de phases terminées : 13 / 16
+- Nombre de phases restantes : 3
+- Dernier commit de phase : lifemetrics: phase 13 - restitution frontend finale
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -615,7 +615,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 13 — Restitution frontend finale
 
-- Statut : À FAIRE
+- Statut : TERMINÉ
 - Objectif : Consolidation finale du frontend partagé : adapter uniquement le rendu nécessaire pour afficher correctement les informations fonctionnelles validées, en conservant le design LifeMetrics existant sauf nécessité démontrée.
 - Éléments affichés selon les PDF :
   - Score, catégorie, titre, analyse, orientation, axes d'amélioration prioritaires, Safety avec priorité visuelle claire, bandeau Guardrail, CTA contextuel, disclaimers.
@@ -626,17 +626,34 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - lifemetrics-questionnaires/tests/shared-frontend.test.js
   - lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
 - Tests :
+  - node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js
   - node lifemetrics-questionnaires/tests/shared-frontend.test.js
   - node lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
 - Critères de validation :
   - Rendu fidèle et hiérarchisé sans régression d'affichage sur desktop et mobile.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés :
+  - `lifemetrics-questionnaires/assets/css/questionnaire.css`
+  - `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`
+  - `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`
+  - `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés :
+  - `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS)
+  - `node lifemetrics-questionnaires/tests/shared-frontend.test.js` (PASS)
+  - `node lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js` (PASS)
+  - Full suite PHP (23/23 PASS)
+  - Full suite JS (19/19 PASS)
+- Résultat : Restitution frontend partagée consolidée :
+  1. Intro : Surcharge visuelle réduite, espacements resserrés et lisibilité maximale des descriptions (largeur max 38rem, line-height 1.65, structuration des paragraphes).
+  2. Badges Intro : Ajout d'icônes SVG intégrées (Anonyme, Sécurisé, Durée) alignées et compactes sans dépendance externe.
+  3. Questions : Typographie stabilisée et homogénéisée (`clamp(1.125rem, 2.5vw, 1.35rem)`, weight 600, line-height 1.45) indépendamment de la longueur du texte.
+  4. Restitution : Titre « Mon résultat » mis en valeur avec séparateur subtil en dégradé brandé LifeMetrics.
+  5. Catégories : Restauration des couleurs sémantiques claires (vert favorable / orange intermédiaire / rouge défavorable) selon `displayed_category`, couvrant fidèlement les transitions avec guardrails (ex. vert calculé -> orange affiché).
+  6. Textes d'analyse longs : Espacement aéré et padding équilibré pour un confort de lecture optimal.
+  7. CTAs de résultat : Suppression totale du soulignement sur tous les états (`normal`, `visited`, `hover`, `focus`, `active`) avec conservation du focus visible accessible et garantie de 2 CTAs principaux uniques.
+- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (placeholder technique `/tests-sante/`).
+- Commit : lifemetrics: phase 13 - restitution frontend finale
+- Date : 2026-09-11
 
 ---
 
@@ -765,12 +782,19 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Résultat : Migration rigoureuse du questionnaire Sommeil depuis le PDF final validé (`Score_LifeMetrics_Sommeil_V1.pdf`). 12 questions scorées SL01–SL12 (points 1 à 5, lower_is_better), barème exact SL01 (7-9h = 1 pt, >9h = 2 pts, 6-7h = 3 pts, 5-6h = 4 pts, <5h = 5 pts), 3 questions Safety hors score SLSF01–SLSF03 déclenchant l'alerte médicale `SOMMEIL_SAFETY_MESSAGE` sans altération du score brut, 5 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`SATISFAISANT` 12-24, `ENCORE_FRAGILE` 25-32, `PERTURBE` 33-60), sélection des 2 dimensions les plus défavorables, intégration des 2 CTAs globaux (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
 - Notes : Prêt pour la Phase 6 (Nutrition V2).
 
-### 2026-09-11 — PHASE 6 — Nutrition V2
+### 2026-09-11 — PHASE 13 — Restitution frontend finale
 - Statut : TERMINÉ
-- Fichiers modifiés : `lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php`, `lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `php lifemetrics-questionnaires/tests/questionnaire-nutrition.test.php` (PASS), `node lifemetrics-questionnaires/tests/questionnaire-nutrition.test.js` (PASS), suite complète PHP 20/20 (PASS), suite complète JS 11/11 (PASS)
-- Résultat : Migration rigoureuse du questionnaire Nutrition depuis le PDF final validé (`Score_LifeMetrics_Nutrition_V1 09.33.50.pdf`). 12 questions scorées NT01–NT12 (points 1 à 5, lower_is_better), barèmes spécifiques avec plateau validé sur Q3/NT03 (3+ ou 2 fois/sem = 1 pt, ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais/presque jamais = 5 pts) et Q6/NT06 (>2 ou ~2 fois/sem = 1 pt, ~1 fois/sem = 3 pts, <1 fois/sem = 4 pts, Jamais = 5 pts), 6 dimensions en `calculation_mode: average`, échelle 12–60 avec 3 catégories (`HABITUDES_FAVORABLES` 12-24, `EQUILIBRE_FRAGILE` 25-32, `HABITUDES_INSUFFISANTES` 33-60), 3 questions Safety hors score NTSF01–NTSF03 déclenchant l'alerte médicale `NUTRITION_SAFETY_MESSAGE` (priorité 100) sans altérer le score numérique brut, sélection des 2 dimensions les plus défavorables, 2 CTAs globaux conformes à la règle de résultat (CTA principal « Je veux faire un bilan » -> `https://lifemetrics.fr/formulaire-bilan/` ; CTA secondaire « Découvrir les autres questionnaires » -> `/tests-sante/`), disclaimers conformes. Zéro régression sur le reste du plugin et PSS-10.
-- Notes : Prêt pour la Phase 7 (Pieds & confort postural V2).
+- Fichiers modifiés : `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`, `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), suite complète PHP 23/23 (PASS), suite complète JS 19/19 (PASS)
+- Résultat : Restitution frontend globale optimisée :
+  1. Intro : Surcharge visuelle réduite, espacement équilibré, structuration nette des paragraphes.
+  2. Badges Intro : Icônes vectorielles SVG légères et accessibles (Anonyme, Sécurisé, Durée).
+  3. Questions : Typographie homogénéisée et stable indépendamment de la longueur du texte.
+  4. Mon résultat : Titre valorisé avec séparateur stylisé.
+  5. Catégories : Couleurs sémantiques (vert/orange/rouge) restaurées et liées à `displayed_category` (incluant les garde-fous).
+  6. Textes longs : Confort de lecture optimal (line-height 1.7, padding aéré).
+  7. CTAs : Suppression stricte du soulignement sur tous les états avec focus visible préservé.
+- Notes : Prêt pour la Phase 14 (Vérification transport et Google Sheets).
 
 ---
 

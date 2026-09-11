@@ -123,19 +123,31 @@
 }
 
 .lmq-questionnaire .intro-text {
-  font-size: var(--text-base);
+  font-size: clamp(0.925rem, 2vw, 1rem);
   color: var(--color-text-muted);
-  margin: 0 0 var(--space-md);
-  max-width: min(100%, 32.5rem);
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
+  margin: 0 auto var(--space-md);
+  max-width: min(100%, 38rem);
+  line-height: 1.65;
+}
+
+.lmq-questionnaire .intro-text p {
+  margin: 0 0 var(--space-sm);
+}
+
+.lmq-questionnaire .intro-text p:last-child {
+  margin-bottom: 0;
+}
+
+.lmq-questionnaire .intro-text .intro-text__secondary {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  opacity: 0.88;
 }
 
 .lmq-questionnaire .badges {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
   flex-wrap: wrap;
 }
 
@@ -144,48 +156,60 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: 0.5rem;
   background: linear-gradient(90deg, #FFF8F4 0%, #FFEFE0 100%);
-  padding: var(--space-sm) var(--space-md);
+  padding: 0.45rem 1rem;
   border-radius: 999px;
   box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 107, 44, 0.12);
 }
 
 .lmq-questionnaire .badge-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: 0.35rem;
   font-size: var(--text-sm);
   font-weight: 600;
   color: #F26422;
+  white-space: nowrap;
+}
+
+.lmq-questionnaire .badge-item svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  stroke: #F26422;
+  display: block;
 }
 
 .lmq-questionnaire .divider {
   width: 1px;
-  height: clamp(1rem, 4vw, 1.25rem);
+  height: 1rem;
   background: linear-gradient(180deg, #FF5900 0%, #FFC5A5 100%);
+  opacity: 0.5;
 }
 
 .lmq-questionnaire .btn--cta {
   display: block;
   width: 100%;
-  max-width: min(35rem, 100%);
-  margin: 0 auto clamp(3rem, 12vw, 8rem);
+  max-width: min(28rem, 100%);
+  margin: var(--space-md) auto clamp(2rem, 5vw, 3.5rem);
   padding: var(--space-md) var(--space-xl);
-  font-size: var(--text-hero);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
   box-shadow: 0 0.625rem 2.5rem rgba(255, 107, 44, 0.28);
   font-weight: 700;
   letter-spacing: 0.05em;
+  text-align: center;
 }
 
 .lmq-questionnaire .btn--cta:hover:not(:disabled) {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 48px rgba(255, 107, 44, 0.32);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(255, 107, 44, 0.32);
 }
 
 .lmq-questionnaire .btn--cta:active:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(255, 107, 44, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 107, 44, 0.22);
 }
 
 .lmq-questionnaire .intro-footer {
@@ -363,13 +387,15 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   margin: 0 0 var(--space-sm);
+  font-weight: 500;
 }
 
 .lmq-questionnaire .test-prefix {
-  font-size: var(--text-base);
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: 500;
   margin: 0 0 var(--space-xs);
-  color: var(--color-text);
+  color: var(--color-text-muted);
+  line-height: 1.45;
 }
 
 .lmq-questionnaire .test-hint {
@@ -379,11 +405,12 @@
 }
 
 .lmq-questionnaire .test-question {
-  font-size: var(--text-lg);
-  font-weight: 500;
+  font-size: clamp(1.125rem, 2.5vw, 1.35rem);
+  font-weight: 600;
   margin: 0 0 var(--space-md);
   color: var(--color-text);
-  line-height: 1.4;
+  line-height: 1.45;
+  max-width: 100%;
 }
 
 .lmq-questionnaire .answers {
@@ -434,39 +461,72 @@
 }
 
 /* ---------- Résultat ---------- */
+.lmq-questionnaire .card--result .result-title,
 .lmq-questionnaire .result-title {
-  font-size: var(--text-xl);
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 var(--space-md);
   text-align: center;
   color: var(--color-text);
+  letter-spacing: -0.01em;
+  position: relative;
+  display: block;
+  padding-bottom: var(--space-xs);
+}
+
+.lmq-questionnaire .card--result .result-title::after,
+.lmq-questionnaire .result-title::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #FF9B6B 0%, #FF6B2C 100%);
+  margin: var(--space-xs) auto 0;
 }
 
 .lmq-questionnaire .result-badge {
   display: inline-block;
-  padding: var(--space-xs) var(--space-sm);
+  padding: 0.35rem 1rem;
   border-radius: 999px;
   font-size: var(--text-sm);
-  font-weight: 600;
-  margin-bottom: var(--space-xs);
+  font-weight: 700;
+  margin: 0 auto var(--space-md);
   text-align: center;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
 }
 
-/* Catégories Favorables (Vert) */
+/* Catégories Favorables (Vert / Rank 1) */
+.lmq-questionnaire .result-badge--favorable,
+.lmq-questionnaire .result-badge--rank-1,
 .lmq-questionnaire .result-badge--low,
 .lmq-questionnaire .result-badge--optimal,
-.lmq-questionnaire .result-badge--favorable,
 .lmq-questionnaire .result-badge--tres-favorable,
 .lmq-questionnaire .result-badge--recuperation-optimale,
 .lmq-questionnaire .result-badge--confort-optimal,
 .lmq-questionnaire .result-badge--confort-satisfaisant,
-.lmq-questionnaire .result-badge--bon {
-  background: rgba(74, 222, 128, 0.2);
-  color: #166534;
+.lmq-questionnaire .result-badge--bon,
+.lmq-questionnaire .result-badge--SATISFAISANT,
+.lmq-questionnaire .result-badge--SATISFAISANTE,
+.lmq-questionnaire .result-badge--HABITUDES_FAVORABLES,
+.lmq-questionnaire .result-badge--CONFORT_FAVORABLE,
+.lmq-questionnaire .result-badge--RECUPERATION_FAVORABLE,
+.lmq-questionnaire .result-badge--RISQUE_FAIBLE,
+.lmq-questionnaire .result-badge--BIEN_ETRE_FAVORABLE {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* Catégories Modérées / Acceptables (Jaune/Orange) */
+.lmq-questionnaire .interpretation-title--favorable,
+.lmq-questionnaire .interpretation-title--rank-1 {
+  color: #15803d;
+}
+
+/* Catégories Intermédiaires (Orange / Rank 2) */
+.lmq-questionnaire .result-badge--intermediate,
+.lmq-questionnaire .result-badge--rank-2,
 .lmq-questionnaire .result-badge--medium,
 .lmq-questionnaire .result-badge--acceptable,
 .lmq-questionnaire .result-badge--modere,
@@ -475,12 +535,29 @@
 .lmq-questionnaire .result-badge--vigilance-posturale,
 .lmq-questionnaire .result-badge--vigilance-moderee,
 .lmq-questionnaire .result-badge--inconfort-modere,
-.lmq-questionnaire .result-badge--inconfort-leger {
-  background: rgba(251, 191, 36, 0.25);
-  color: #92400e;
+.lmq-questionnaire .result-badge--inconfort-leger,
+.lmq-questionnaire .result-badge--ENCORE_FRAGILE,
+.lmq-questionnaire .result-badge--A_RENFORCER,
+.lmq-questionnaire .result-badge--EQUILIBRE_FRAGILE,
+.lmq-questionnaire .result-badge--CONFORT_A_AMELIORER,
+.lmq-questionnaire .result-badge--HYDRATATION_FRAGILE,
+.lmq-questionnaire .result-badge--SEDENTARITE_A_REDUIRE,
+.lmq-questionnaire .result-badge--RECUPERATION_FRAGILE,
+.lmq-questionnaire .result-badge--RISQUE_A_SURVEILLER,
+.lmq-questionnaire .result-badge--BIEN_ETRE_A_RENFORCER {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-/* Catégories Critiques / Vigilance élevée (Rouge) */
+.lmq-questionnaire .interpretation-title--intermediate,
+.lmq-questionnaire .interpretation-title--rank-2 {
+  color: #b45309;
+}
+
+/* Catégories Défavorables (Rouge / Rank 3) */
+.lmq-questionnaire .result-badge--unfavorable,
+.lmq-questionnaire .result-badge--rank-3,
 .lmq-questionnaire .result-badge--high,
 .lmq-questionnaire .result-badge--attention,
 .lmq-questionnaire .result-badge--critique,
@@ -489,8 +566,22 @@
 .lmq-questionnaire .result-badge--inconfort-severe,
 .lmq-questionnaire .result-badge--sedentarite-elevee,
 .lmq-questionnaire .result-badge--eleve,
-.lmq-questionnaire .result-badge--tres-insuffisant {
+.lmq-questionnaire .result-badge--tres-insuffisant,
+.lmq-questionnaire .result-badge--PERTURBE,
+.lmq-questionnaire .result-badge--INSUFFISANTE,
+.lmq-questionnaire .result-badge--HABITUDES_INSUFFISANTES,
+.lmq-questionnaire .result-badge--INCONFORT_IMPORTANT,
+.lmq-questionnaire .result-badge--SEDENTARITE_ELEVEE,
+.lmq-questionnaire .result-badge--FATIGUE_IMPORTANTE,
+.lmq-questionnaire .result-badge--RISQUE_IMPORTANT,
+.lmq-questionnaire .result-badge--BIEN_ETRE_FRAGILISE {
   background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.lmq-questionnaire .interpretation-title--unfavorable,
+.lmq-questionnaire .interpretation-title--rank-3 {
   color: #b91c1c;
 }
 
@@ -551,33 +642,39 @@
 }
 
 .lmq-questionnaire .interpretation-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  font-weight: 700;
   margin: 0 0 var(--space-sm);
   text-align: center;
   color: var(--color-text);
+  line-height: 1.35;
 }
 
 .lmq-questionnaire .score-meta,
 .lmq-questionnaire .analysis-meta {
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 var(--space-md);
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   text-align: center;
+  line-height: 1.5;
 }
 
 .lmq-questionnaire .analysis-block {
   background: var(--color-cream);
-  border-radius: var(--radius);
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  margin-bottom: var(--space-lg);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .lmq-questionnaire .analysis-text {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.6;
+  font-size: clamp(0.925rem, 2vw, 1rem);
+  line-height: 1.7;
   color: var(--color-text);
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Dimensions / Axes d'amélioration */
@@ -701,49 +798,83 @@
   width: 100%;
 }
 
-.lmq-questionnaire .result-actions .btn {
+.lmq-questionnaire .result-actions .btn,
+.lmq-questionnaire .result-actions a.btn,
+.lmq-questionnaire .result-actions button.btn {
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   width: 100%;
-  max-width: min(35rem, 100%);
+  max-width: min(32rem, 100%);
   margin: 0 auto;
   padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-soft);
+  text-decoration: none !important;
 }
 
-.lmq-questionnaire .result-actions .btn[data-lmq-role="primary-cta"],
-.lmq-questionnaire .result-actions .btn[data-lmq-role="primary-cta"]:hover,
-.lmq-questionnaire .result-actions .btn[data-lmq-role="primary-cta"]:focus,
-.lmq-questionnaire .result-actions .btn[data-lmq-role="primary-cta"]:active {
+.lmq-questionnaire .result-actions a.btn:visited,
+.lmq-questionnaire .result-actions a.btn:hover,
+.lmq-questionnaire .result-actions a.btn:focus,
+.lmq-questionnaire .result-actions a.btn:active,
+.lmq-questionnaire .result-actions button.btn:visited,
+.lmq-questionnaire .result-actions button.btn:hover,
+.lmq-questionnaire .result-actions button.btn:focus,
+.lmq-questionnaire .result-actions button.btn:active {
+  text-decoration: none !important;
+}
+
+.lmq-questionnaire .result-actions .btn--primary,
+.lmq-questionnaire .result-actions a.btn--primary,
+.lmq-questionnaire .result-actions a.btn--primary:visited,
+.lmq-questionnaire .result-actions a.btn--primary:hover,
+.lmq-questionnaire .result-actions a.btn--primary:focus,
+.lmq-questionnaire .result-actions a.btn--primary:active {
   color: #fff !important;
   text-decoration: none !important;
 }
 
 .lmq-questionnaire .result-actions .btn--primary:hover:not(:disabled) {
-  box-shadow: 0 0.625rem 2.25rem rgba(255, 107, 44, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 0.625rem 2.25rem rgba(255, 107, 44, 0.35);
+  text-decoration: none !important;
+}
+
+.lmq-questionnaire .result-actions .btn--secondary,
+.lmq-questionnaire .result-actions a.btn--secondary,
+.lmq-questionnaire .result-actions a.btn--secondary:visited,
+.lmq-questionnaire .result-actions a.btn--secondary:hover,
+.lmq-questionnaire .result-actions a.btn--secondary:focus,
+.lmq-questionnaire .result-actions a.btn--secondary:active {
+  color: var(--color-text) !important;
+  text-decoration: none !important;
+  border: 1px solid var(--color-border);
 }
 
 .lmq-questionnaire .result-actions .btn--secondary:hover:not(:disabled) {
-  box-shadow: 0 0.5rem 1.75rem rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.75rem rgba(0, 0, 0, 0.08);
+  text-decoration: none !important;
+  background: #ebe6df;
 }
 
 .lmq-questionnaire .result-actions .btn--tertiary {
-  margin-top: var(--space-xl);
-  max-width: min(22.5rem, 100%);
+  margin-top: var(--space-lg);
+  max-width: min(20rem, 100%);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   font-weight: 500;
   background: #e8e6e4;
   color: var(--color-text-muted, #666);
   box-shadow: 0 0.125rem 0.75rem rgba(0, 0, 0, 0.04);
+  text-decoration: none !important;
 }
 
 .lmq-questionnaire .result-actions .btn--tertiary:hover:not(:disabled) {
   background: #ddd;
   color: var(--color-text, #1a1a1a);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  text-decoration: none !important;
 }
 
 /* ---------- Modal ---------- */

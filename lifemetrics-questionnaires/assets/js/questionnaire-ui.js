@@ -57,7 +57,20 @@
       const title = rootEl.querySelector('[data-lmq-role="intro-title"]');
       const text = rootEl.querySelector('[data-lmq-role="intro-text"]');
       if (title) title.textContent = config.title;
-      if (text) text.textContent = config.description;
+      if (text && config.description) {
+        const paragraphs = config.description.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        if (paragraphs.length > 1) {
+          text.innerHTML = '';
+          paragraphs.forEach((para, pIdx) => {
+            const p = document.createElement('p');
+            p.textContent = para;
+            if (pIdx > 0) p.className = 'intro-text__secondary';
+            text.appendChild(p);
+          });
+        } else {
+          text.textContent = config.description;
+        }
+      }
 
       const badgesContainer = rootEl.querySelector('[data-lmq-role="badges"]');
       if (badgesContainer) {
@@ -65,8 +78,22 @@
         const pill = document.createElement('div');
         pill.className = 'badges-pill';
 
-        const badgeList = ['Anonyme', 'Sécurisé', config.estimated_duration || '2-3 min'];
-        badgeList.forEach((text, idx) => {
+        const badgesConfig = [
+          {
+            text: 'Anonyme',
+            icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          },
+          {
+            text: 'Sécurisé',
+            icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+          },
+          {
+            text: config.estimated_duration || '2-3 min',
+            icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+          }
+        ];
+
+        badgesConfig.forEach((badge, idx) => {
           if (idx > 0) {
             const div = document.createElement('div');
             div.className = 'divider';
@@ -74,9 +101,7 @@
           }
           const item = document.createElement('div');
           item.className = 'badge-item';
-          const span = document.createElement('span');
-          span.textContent = text;
-          item.appendChild(span);
+          item.innerHTML = `${badge.icon}<span>${badge.text}</span>`;
           pill.appendChild(item);
         });
         badgesContainer.appendChild(pill);
@@ -201,16 +226,25 @@
       }
 
       const level = config.result_levels ? config.result_levels.find(l => l.code === scoreResult.displayed_category) : null;
+      const rank = level ? (level.rank || 1) : 1;
+      const semanticType = rank === 1 ? 'favorable' : (rank === 2 ? 'intermediate' : 'unfavorable');
+
+      const resultCard = rootEl.querySelector('.card--result');
+      if (resultCard) {
+        resultCard.classList.remove('lmq-result--favorable', 'lmq-result--intermediate', 'lmq-result--unfavorable', 'lmq-result--rank-1', 'lmq-result--rank-2', 'lmq-result--rank-3');
+        resultCard.classList.add(`lmq-result--${semanticType}`, `lmq-result--rank-${rank}`);
+      }
 
       const resultBadge = rootEl.querySelector('[data-lmq-role="result-badge"]');
       if (resultBadge && level) {
         resultBadge.textContent = level.title;
-        resultBadge.className = `result-badge result-badge--${level.code}`;
+        resultBadge.className = `result-badge result-badge--${level.code} result-badge--rank-${rank} result-badge--${semanticType}`;
       }
 
       const interpTitle = rootEl.querySelector('[data-lmq-role="interpretation-title"]');
       if (interpTitle && level) {
         interpTitle.textContent = level.title;
+        interpTitle.className = `interpretation-title interpretation-title--${semanticType} interpretation-title--rank-${rank}`;
       }
 
       const scoreMeta = rootEl.querySelector('[data-lmq-role="score-meta"]');
