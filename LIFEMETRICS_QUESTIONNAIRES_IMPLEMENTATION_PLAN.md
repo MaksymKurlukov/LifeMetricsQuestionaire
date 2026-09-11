@@ -613,46 +613,30 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ---
 
-### PHASE 13 — Restitution frontend finale
+### PHASE 13 — Restitution frontend finale & Redesign UX/UI
 
 - Statut : TERMINÉ
-- Objectif : Consolidation finale du frontend partagé : adapter uniquement le rendu nécessaire pour afficher correctement les informations fonctionnelles validées, en conservant le design LifeMetrics existant sauf nécessité démontrée.
-- Éléments affichés selon les PDF :
-  - Score, catégorie, titre, analyse, orientation, axes d'amélioration prioritaires, Safety avec priorité visuelle claire, bandeau Guardrail, CTA contextuel, disclaimers.
-- Fichiers potentiellement concernés :
-  - lifemetrics-questionnaires/templates/questionnaire.php
-  - lifemetrics-questionnaires/assets/js/questionnaire-ui.js
-  - lifemetrics-questionnaires/assets/css/questionnaire.css
-  - lifemetrics-questionnaires/tests/shared-frontend.test.js
-  - lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
-- Tests :
-  - node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js
-  - node lifemetrics-questionnaires/tests/shared-frontend.test.js
-  - node lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js
-- Critères de validation :
-  - Rendu fidèle et hiérarchisé sans régression d'affichage sur desktop et mobile.
-
-- Fichiers réellement modifiés :
+- Objectif : Harmoniser et moderniser l'expérience utilisateur et l'interface de restitution sur l'ensemble des 10 questionnaires (9 questionnaires propriétaires V2 + PSS-10), en respectant scrupuleusement la méthodologie validée et en intégrant les conclusions de l'Independent UX/UI Design Review.
+- Fichiers modifiés :
+  - `lifemetrics-questionnaires/templates/questionnaire.php`
   - `lifemetrics-questionnaires/assets/css/questionnaire.css`
   - `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`
   - `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`
-  - `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Améliorations clés réalisées :
+  1. Header épuré « Mon résultat » avec séparateur structural en dégradé brandé.
+  2. Suppression du double badge redondant : catégorie unifiée et mise en valeur sous la jauge (`interpretation-title`).
+  3. Micro-texte d'échelle clair avec sens de lecture.
+  4. Alertes de sécurité prioritaires placées avant l'analyse et les axes d'amélioration.
+  5. Analyse détaillée en progressive disclosure (phrase clé d'accroche + contenu complet dépliable).
+  6. Grille d'axes d'amélioration sous forme de cartes structurées (icône, titre dimension, message d'amélioration).
+  7. Hiérarchie stricte des CTAs : 1 primaire dominant orange, 1 secondaire outline ghost avec flèche, 1 lien tertiaire discret pour recommencer le test.
+  8. Indicateurs radio visuels sur les options de réponse et badge de question de vigilance sur les étapes de sécurité.
+  9. Zero overflow horizontal sur mobile (375px), fluidité parfaite sur tablette (768px) et desktop (1440px).
 - Tests exécutés :
-  - `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS)
-  - `node lifemetrics-questionnaires/tests/shared-frontend.test.js` (PASS)
-  - `node lifemetrics-questionnaires/tests/hydratation-ui-flow-regression.test.js` (PASS)
-  - Full suite PHP (23/23 PASS)
-  - Full suite JS (19/19 PASS)
-- Résultat : Restitution frontend partagée consolidée :
-  1. Intro : Surcharge visuelle réduite, espacements resserrés et lisibilité maximale des descriptions (largeur max 38rem, line-height 1.65, structuration des paragraphes).
-  2. Badges Intro : Ajout d'icônes SVG intégrées (Anonyme, Sécurisé, Durée) alignées et compactes sans dépendance externe.
-  3. Questions : Typographie stabilisée et homogénéisée (`clamp(1.125rem, 2.5vw, 1.35rem)`, weight 600, line-height 1.45) indépendamment de la longueur du texte.
-  4. Restitution : Titre « Mon résultat » mis en valeur avec séparateur subtil en dégradé brandé LifeMetrics.
-  5. Catégories : Restauration des couleurs sémantiques claires (vert favorable / orange intermédiaire / rouge défavorable) selon `displayed_category`, couvrant fidèlement les transitions avec guardrails (ex. vert calculé -> orange affiché).
-  6. Textes d'analyse longs : Espacement aéré et padding équilibré pour un confort de lecture optimal.
-  7. CTAs de résultat : Suppression totale du soulignement sur tous les états (`normal`, `visited`, `hover`, `focus`, `active`) avec conservation du focus visible accessible et garantie de 2 CTAs principaux uniques.
-- NON DÉTERMINÉ : URL finale de production du catalogue des questionnaires pour le CTA secondaire (placeholder technique `/tests-sante/`).
-- Commit : lifemetrics: phase 13 - restitution frontend finale
+  - Full suite PHP (23 tests PASS)
+  - Full suite JS (19 tests PASS)
+  - Full Chrome CDP Browser Audit Matrix (10/10 questionnaires, 3 viewports, 4 scénarios: ALL PASSED)
+- Commit : `lifemetrics: phase 13 - ux ui redesign`
 - Date : 2026-09-11
 
 ---

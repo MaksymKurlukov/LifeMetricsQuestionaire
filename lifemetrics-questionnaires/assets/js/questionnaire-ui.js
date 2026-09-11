@@ -114,6 +114,12 @@
       const q = allQuestions[state.currentQuestionIndex];
       if (!q) return;
 
+      const isSafetyQuestion = (config.safety_questions || []).some(sq => sq.id === q.id);
+      const safetyBadge = rootEl.querySelector('[data-lmq-role="safety-badge"]');
+      if (safetyBadge) {
+        safetyBadge.hidden = !isSafetyQuestion;
+      }
+
       const prefixEl = rootEl.querySelector('[data-lmq-role="test-prefix"]');
       if (prefixEl) {
         if (q.help) {
@@ -135,6 +141,7 @@
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'answer-btn';
+          btn.textContent = ans.label;
           if (state.answers[q.id] === ans.value) {
             btn.classList.add('selected');
             btn.setAttribute('aria-checked', 'true');
@@ -142,7 +149,6 @@
             btn.setAttribute('aria-checked', 'false');
           }
           btn.setAttribute('role', 'radio');
-          btn.textContent = ans.label;
           btn.onclick = () => {
             if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
 
@@ -235,10 +241,10 @@
         resultCard.classList.add(`lmq-result--${semanticType}`, `lmq-result--rank-${rank}`);
       }
 
-      const resultBadge = rootEl.querySelector('[data-lmq-role="result-badge"]');
-      if (resultBadge && level) {
-        resultBadge.textContent = level.title;
-        resultBadge.className = `result-badge result-badge--${level.code} result-badge--rank-${rank} result-badge--${semanticType}`;
+      const badge = rootEl.querySelector('[data-lmq-role="result-badge"]');
+      if (badge && level) {
+        badge.textContent = level.title;
+        badge.className = `result-badge result-badge--${semanticType} result-badge--rank-${rank}`;
       }
 
       const interpTitle = rootEl.querySelector('[data-lmq-role="interpretation-title"]');
@@ -250,14 +256,95 @@
       const scoreMeta = rootEl.querySelector('[data-lmq-role="score-meta"]');
       if (scoreMeta && config.score && config.score.target_min !== undefined && config.score.target_max !== undefined) {
         const directionNote = config.scoring_direction === 'higher_is_better'
-          ? `${config.score.target_max} est le meilleur score possible et ${config.score.target_min} le plus bas.`
-          : `${config.score.target_min} est le meilleur score possible et ${config.score.target_max} le plus mauvais.`;
-        scoreMeta.textContent = `Le score est compris entre ${config.score.target_min} et ${config.score.target_max}, sachant que ${directionNote}`;
+          ? `${config.score.target_max} le plus favorable`
+          : `${config.score.target_min} le plus favorable`;
+        scoreMeta.textContent = `Score de ${config.score.target_min} à ${config.score.target_max} (${directionNote})`;
       }
 
+      // Safety messages (Priority before analysis & axes)
+      const safetyContainer = rootEl.querySelector('[data-lmq-role="safety-messages"]');
+      if (safetyContainer) {
+        safetyContainer.innerHTML = '';
+        if (scoreResult.safety_flag_codes && scoreResult.safety_flag_codes.length > 0) {
+          safetyContainer.hidden = false;
+          scoreResult.safety_flag_codes.forEach(code => {
+             const msg = config.safety_messages ? config.safety_messages[code] : null;
+             if (msg) {
+               const el = document.createElement('div');
+               el.className = 'safety-card';
+               const strong = document.createElement('strong');
+               strong.textContent = msg.title;
+               const p = document.createElement('p');
+               p.textContent = msg.text;
+               el.appendChild(strong);
+               el.appendChild(p);
+               safetyContainer.appendChild(el);
+             }
+          });
+        } else {
+          safetyContainer.hidden = true;
+        }
+      }
+
+      // Progressive disclosure for analysis text
+      const analysisBlock = rootEl.querySelector('[data-lmq-role="analysis-block"]');
+      const analysisLead = rootEl.querySelector('[data-lmq-role="analysis-lead"]');
+      const analysisDetails = rootEl.querySelector('[data-lmq-role="analysis-details"]');
       const analysisText = rootEl.querySelector('[data-lmq-role="analysis-text"]');
-      if (analysisText && level) {
-        analysisText.textContent = level.description;
+      const analysisToggle = rootEl.querySelector('[data-lmq-role="analysis-toggle"]');
+
+      if (level && level.description) {
+        const fullText = level.description;
+        let lead = '';
+        let details = '';
+
+        if (fullText.includes('\n\n')) {
+          const parts = fullText.split(/\n\n+/);
+          lead = parts[0];
+          details = parts.slice(1).join('\n\n');
+        } else {
+          const match = fullText.match(/^([^.!?]+[.!?])\s+([A-ZÀ-Ÿ].*)$/s);
+          if (match && match[2].length > 40) {
+            lead = match[1];
+            details = match[2];
+          } else {
+            lead = fullText;
+            details = '';
+          }
+        }
+
+        if (analysisLead) analysisLead.textContent = lead;
+        if (analysisText) analysisText.textContent = details;
+
+        if (analysisToggle) {
+          if (details.trim().length > 0) {
+            analysisToggle.hidden = false;
+            analysisToggle.setAttribute('aria-expanded', 'false');
+            if (analysisDetails) analysisDetails.hidden = true;
+            const toggleText = analysisToggle.querySelector('.toggle-text');
+            if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
+
+            analysisToggle.onclick = () => {
+              const isExpanded = analysisToggle.getAttribute('aria-expanded') === 'true';
+              const nextState = !isExpanded;
+              analysisToggle.setAttribute('aria-expanded', String(nextState));
+              if (analysisDetails) analysisDetails.hidden = !nextState;
+              if (toggleText) {
+                toggleText.textContent = nextState ? "Masquer l'analyse" : "Lire l'analyse détaillée";
+              }
+              const toggleIcon = analysisToggle.querySelector('.toggle-icon');
+              if (toggleIcon) {
+                toggleIcon.style.transform = nextState ? 'rotate(180deg)' : 'rotate(0deg)';
+              }
+            };
+          } else {
+            analysisToggle.hidden = true;
+            if (analysisDetails) analysisDetails.hidden = true;
+          }
+        }
+        if (analysisBlock) analysisBlock.hidden = false;
+      } else if (analysisBlock) {
+        analysisBlock.hidden = true;
       }
 
       const gaugeFill = rootEl.querySelector('[data-lmq-role="gauge-fill"]');
@@ -271,52 +358,53 @@
         gaugeNeedle.setAttribute('transform', `rotate(${180 - ratio * 180}, 100, 100)`);
       }
 
-      const safetyContainer = rootEl.querySelector('[data-lmq-role="safety-messages"]');
-      if (safetyContainer) {
-        safetyContainer.innerHTML = '';
-        if (scoreResult.safety_flag_codes) {
-          scoreResult.safety_flag_codes.forEach(code => {
-             const msg = config.safety_messages[code];
-             if (msg) {
-               const el = document.createElement('div');
-               el.className = 'safety-message';
-               const strong = document.createElement('strong');
-               strong.textContent = msg.title;
-               const p = document.createElement('p');
-               p.textContent = msg.text;
-               el.appendChild(strong);
-               el.appendChild(p);
-               safetyContainer.appendChild(el);
-             }
-          });
-        }
-      }
-
+      // Priority Improvement Axes Cards Grid
       const dimensionsContainer = rootEl.querySelector('[data-lmq-role="dimensions"]');
       if (dimensionsContainer) {
         dimensionsContainer.innerHTML = '';
         if (scoreResult.weakest_dimensions && scoreResult.weakest_dimensions.length > 0) {
-          const dimTitle = document.createElement('h4');
-          dimTitle.textContent = 'Axes d\'amélioration';
+          dimensionsContainer.hidden = false;
+          const dimTitle = document.createElement('h3');
+          dimTitle.className = 'axes-title';
+          dimTitle.textContent = 'Axes prioritaires';
           dimensionsContainer.appendChild(dimTitle);
+
+          const axesGrid = document.createElement('div');
+          axesGrid.className = 'axes-grid';
+
           scoreResult.weakest_dimensions.forEach(dimId => {
-            const dimConfig = config.dimensions.find(d => d.id === dimId);
+            const dimConfig = (config.dimensions || []).find(d => d.id === dimId);
             if (dimConfig) {
-              const el = document.createElement('div');
-              el.className = 'dimension-item';
-              el.textContent = dimConfig.label;
-              dimensionsContainer.appendChild(el);
+              const card = document.createElement('div');
+              card.className = 'axis-card';
+              
+              const header = document.createElement('div');
+              header.className = 'axis-card__header';
+              header.innerHTML = `<span class="axis-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><h4 class="axis-card__title">${dimConfig.label}</h4>`;
+              card.appendChild(header);
+
+              if (dimConfig.improvement_message) {
+                const msg = document.createElement('p');
+                msg.className = 'axis-card__text';
+                msg.textContent = dimConfig.improvement_message;
+                card.appendChild(msg);
+              }
+              axesGrid.appendChild(card);
             }
           });
+          dimensionsContainer.appendChild(axesGrid);
+        } else {
+          dimensionsContainer.hidden = true;
         }
       }
 
       const classContainer = rootEl.querySelector('[data-lmq-role="classification-messages"]');
       if (classContainer) {
         classContainer.innerHTML = '';
-        if (scoreResult.classification_message_codes) {
+        if (scoreResult.classification_message_codes && scoreResult.classification_message_codes.length > 0) {
+          classContainer.hidden = false;
           scoreResult.classification_message_codes.forEach(code => {
-             const msg = config.classification_messages[code];
+             const msg = config.classification_messages ? config.classification_messages[code] : null;
              if (msg) {
                const el = document.createElement('div');
                el.className = 'classification-message';
@@ -329,9 +417,12 @@
                classContainer.appendChild(el);
              }
           });
+        } else {
+          classContainer.hidden = true;
         }
       }
 
+      // CTAs with strict hierarchy (Primary orange dominant, Secondary outline ghost)
       const ctasContainer = rootEl.querySelector('[data-lmq-role="ctas"]');
       if (ctasContainer && config.result_ctas && config.result_ctas.length > 0) {
         ctasContainer.innerHTML = '';
@@ -339,16 +430,16 @@
           if (!cta.enabled) return;
           const a = document.createElement('a');
           a.href = cta.url;
-          a.className = cta.variant === 'primary' ? 'btn btn--primary' : 'btn btn--secondary';
+          a.className = cta.variant === 'primary' ? 'btn btn--primary btn--cta-primary' : 'btn btn--secondary btn--cta-secondary';
           a.textContent = cta.label;
           ctasContainer.appendChild(a);
         });
-        const restartBtn = document.createElement('button');
-        restartBtn.type = 'button';
-        restartBtn.className = 'btn btn--tertiary';
-        restartBtn.textContent = 'Refaire le test';
+      }
+
+      // Discrete Tertiary restart button
+      const restartBtn = rootEl.querySelector('[data-lmq-role="restart"]');
+      if (restartBtn) {
         restartBtn.onclick = handleRestart;
-        ctasContainer.appendChild(restartBtn);
       }
 
       if (submitUrl) {

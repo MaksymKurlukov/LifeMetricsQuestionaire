@@ -24,56 +24,87 @@ $modal_title_id = $instance_id . '-modal-title';
 
     <section class="section" data-lmq-section="test" hidden>
       <div class="card card--test">
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" data-lmq-role="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="test-header">
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" data-lmq-role="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="test-meta">
+            <span class="progress-label" data-lmq-role="progress-label"></span>
+            <span class="safety-badge" data-lmq-role="safety-badge" hidden>Question de vigilance</span>
+          </div>
         </div>
-        <p class="progress-label" data-lmq-role="progress-label"></p>
         <p class="test-prefix" data-lmq-role="test-prefix"></p>
         <h2 class="test-question" data-lmq-role="test-question"></h2>
         <div class="answers" data-lmq-role="answers" role="radiogroup" aria-label="Choisissez une réponse"></div>
         <div class="test-actions">
-          <button type="button" class="btn btn--secondary btn--back" data-lmq-role="back" disabled>← Retour</button>
+          <button type="button" class="btn--back" data-lmq-role="back" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Retour</span>
+          </button>
         </div>
       </div>
     </section>
 
     <section class="section" data-lmq-section="result" hidden>
       <div class="card card--result">
-        <h2 class="result-title" data-lmq-role="result-header">Mon résultat</h2>
-        <div class="result-badge" data-lmq-role="result-badge"></div>
-        <div class="gauge-wrap" data-lmq-role="gauge-wrap">
-          <div class="gauge-score" data-lmq-role="result-score" aria-live="polite">
-            <span class="result-score__value">0</span><span class="gauge-score__max"></span>
-          </div>
-          <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
-            <defs>
-              <linearGradient id="<?php echo esc_attr($gradient_id); ?>" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#4ade80" />
-                <stop offset="50%" stop-color="#fbbf24" />
-                <stop offset="100%" stop-color="#ef4444" />
-              </linearGradient>
-            </defs>
-            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#eee" stroke-width="12" />
-            <path class="gauge-fill" data-lmq-role="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
-            <line class="gauge-needle" data-lmq-role="gauge-needle" x1="100" y1="100" x2="100" y2="30" stroke="#333" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </div>
-        <h3 class="interpretation-title" data-lmq-role="interpretation-title"></h3>
-        <p class="analysis-meta" data-lmq-role="score-meta"></p>
-        <div class="analysis-block">
-          <p class="analysis-text" data-lmq-role="analysis-text"></p>
+        <div class="result-header">
+          <h2 class="result-title" data-lmq-role="result-header">Mon résultat</h2>
+          <div class="result-header__divider" aria-hidden="true"></div>
         </div>
 
-        <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
+        <div class="result-hero">
+          <div class="gauge-wrap" data-lmq-role="gauge-wrap">
+            <div class="gauge-score" data-lmq-role="result-score" aria-live="polite">
+              <span class="result-score__value">0</span><span class="gauge-score__max"></span>
+            </div>
+            <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="<?php echo esc_attr($gradient_id); ?>" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#4ade80" />
+                  <stop offset="50%" stop-color="#fbbf24" />
+                  <stop offset="100%" stop-color="#ef4444" />
+                </linearGradient>
+              </defs>
+              <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#eee" stroke-width="12" />
+              <path class="gauge-fill" data-lmq-role="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+              <line class="gauge-needle" data-lmq-role="gauge-needle" x1="100" y1="100" x2="100" y2="30" stroke="#333" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+          <h3 class="interpretation-title" data-lmq-role="interpretation-title"></h3>
+          <p class="analysis-meta" data-lmq-role="score-meta"></p>
+        </div>
+
+        <!-- Safety alert placed BEFORE analysis and axes in priority -->
         <div data-lmq-role="safety-messages" class="safety-messages"></div>
         <div data-lmq-role="classification-messages" class="classification-messages"></div>
+
+        <!-- Progressive Disclosure Analysis -->
+        <div class="analysis-block" data-lmq-role="analysis-block">
+          <div class="analysis-lead" data-lmq-role="analysis-lead"></div>
+          <div class="analysis-details" data-lmq-role="analysis-details" id="<?php echo esc_attr($instance_id . '-analysis-details'); ?>" hidden>
+            <p class="analysis-text" data-lmq-role="analysis-text"></p>
+          </div>
+          <button type="button" class="analysis-toggle" data-lmq-role="analysis-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr($instance_id . '-analysis-details'); ?>">
+            <span class="toggle-text">Lire l'analyse détaillée</span>
+            <svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Priority Improvement Axes Cards Grid -->
+        <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
 
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>
           <p class="result-save-alert__text" data-lmq-role="save-alert-text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>
           <button type="button" class="btn btn--secondary btn--retry" data-lmq-role="retry">Réessayer</button>
         </div>
-        <div class="result-actions" data-lmq-role="ctas">
-          <button type="button" class="btn btn--tertiary" data-lmq-role="restart">Refaire le test</button>
+
+        <!-- Strict CTA Hierarchy (2 main CTAs + subtle separate restart) -->
+        <div class="result-actions" data-lmq-role="ctas"></div>
+        <div class="result-restart-wrap">
+          <button type="button" class="btn--restart" data-lmq-role="restart">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>Refaire le test</span>
+          </button>
         </div>
       </div>
     </section>
