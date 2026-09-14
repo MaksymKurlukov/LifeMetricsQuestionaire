@@ -166,6 +166,10 @@ $modal_title_id = $instance_id . '-modal-title';
       max-width: 100%;
       margin-left: 0;
     }
+    .lmq-preview-viewport [data-lmq-role="test-question"],
+    .lmq-preview-viewport [data-lmq-role="result-header"] {
+      scroll-margin-top: 5rem;
+    }
     .badge-status {
       display: inline-block;
       padding: 2px 8px;
@@ -207,6 +211,10 @@ $modal_title_id = $instance_id . '-modal-title';
       }
       .lmq-preview-stage {
         padding: 8px;
+      }
+      .lmq-preview-viewport [data-lmq-role="test-question"],
+      .lmq-preview-viewport [data-lmq-role="result-header"] {
+        scroll-margin-top: 12rem;
       }
     }
     @media (max-width: 390px) {
