@@ -38,6 +38,10 @@
   box-sizing: border-box;
 }
 
+.lmq-questionnaire [hidden] {
+  display: none !important;
+}
+
 .lmq-questionnaire {
   position: relative;
   left: 50%;

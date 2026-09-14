@@ -130,7 +130,11 @@
       const isSafetyQuestion = (config.safety_questions || []).some(sq => sq.id === q.id);
       const safetyBadge = rootEl.querySelector('[data-lmq-role="safety-badge"]');
       if (safetyBadge) {
-        safetyBadge.hidden = !isSafetyQuestion;
+        const safetyBadgeLabel = typeof config.safety_badge_label === 'string'
+          ? config.safety_badge_label.trim()
+          : '';
+        safetyBadge.textContent = safetyBadgeLabel;
+        safetyBadge.hidden = !isSafetyQuestion || safetyBadgeLabel === '';
       }
 
       const prefixEl = rootEl.querySelector('[data-lmq-role="test-prefix"]');
@@ -386,7 +390,14 @@
       const dimensionsContainer = rootEl.querySelector('[data-lmq-role="dimensions"]');
       if (dimensionsContainer) {
         dimensionsContainer.innerHTML = '';
-        if (scoreResult.weakest_dimensions && scoreResult.weakest_dimensions.length > 0) {
+        const visibleDimensions = (scoreResult.weakest_dimensions || []).map(dimId => {
+          return (config.dimensions || []).find(d => d.id === dimId);
+        }).filter(dimConfig => {
+          return dimConfig && typeof dimConfig.improvement_message === 'string'
+            && dimConfig.improvement_message.trim() !== '';
+        });
+
+        if (visibleDimensions.length > 0) {
           dimensionsContainer.hidden = false;
           const dimTitle = document.createElement('h3');
           dimTitle.className = 'axes-title';
@@ -396,9 +407,7 @@
           const axesGrid = document.createElement('div');
           axesGrid.className = 'axes-grid';
 
-          scoreResult.weakest_dimensions.forEach(dimId => {
-            const dimConfig = (config.dimensions || []).find(d => d.id === dimId);
-            if (dimConfig) {
+          visibleDimensions.forEach(dimConfig => {
               const card = document.createElement('div');
               card.className = 'axis-card';
               
@@ -407,14 +416,11 @@
               header.innerHTML = `<span class="axis-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><h4 class="axis-card__title">${dimConfig.label}</h4>`;
               card.appendChild(header);
 
-              if (dimConfig.improvement_message) {
-                const msg = document.createElement('p');
-                msg.className = 'axis-card__text';
-                msg.textContent = dimConfig.improvement_message;
-                card.appendChild(msg);
-              }
+              const msg = document.createElement('p');
+              msg.className = 'axis-card__text';
+              msg.textContent = dimConfig.improvement_message;
+              card.appendChild(msg);
               axesGrid.appendChild(card);
-            }
           });
           dimensionsContainer.appendChild(axesGrid);
         } else {

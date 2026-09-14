@@ -135,6 +135,15 @@ $res_12 = $engine->score($config, $answers_min);
 ap_assert($res_12['final_score'] === 12, 'Min score is 12');
 ap_assert($res_12['calculated_category'] === 'SATISFAISANTE', 'Score 12 category is SATISFAISANTE');
 ap_assert($res_12['displayed_category'] === 'SATISFAISANTE', 'Score 12 displayed category is SATISFAISANTE');
+ap_assert($res_12['weakest_dimensions'] === array(), 'A favorable profile below mean 2.50 has no improvement axis');
+
+$answers_green_axis = $answers_min;
+$answers_green_axis['AP04'] = 'less_1'; // D2 mean = (4 + 1) / 2 = 2.50
+$res_green_axis = $engine->score($config, $answers_green_axis);
+ap_assert($res_green_axis['displayed_category'] === 'SATISFAISANTE', 'Threshold axis scenario remains favorable');
+ap_assert($res_green_axis['weakest_dimensions'] === array('renforcement-mobilite'), 'A favorable profile exposes at most one dimension at mean 2.50');
+$green_axis_dimension = array_values(array_filter($res_green_axis['dimensions'], static fn($dimension) => $dimension['id'] === 'renforcement-mobilite'))[0];
+ap_assert($green_axis_dimension['mean_score'] === 2.5, 'Dimension mean is exposed consistently by PHP');
 
 // Max score (all worst answers = 5) -> 60/60 -> INSUFFISANTE
 $answers_max = array(

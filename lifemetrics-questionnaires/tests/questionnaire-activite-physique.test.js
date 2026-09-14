@@ -101,6 +101,13 @@ const res_12 = engine.score(config, answers_min);
 assert.equal(res_12.final_score, 12);
 assert.equal(res_12.calculated_category, 'SATISFAISANTE');
 assert.equal(res_12.displayed_category, 'SATISFAISANTE');
+assert.deepEqual(res_12.weakest_dimensions, [], 'A favorable profile below mean 2.50 has no improvement axis');
+
+const answers_green_axis = { ...answers_min, AP04: 'less_1' }; // D2 mean = (4 + 1) / 2 = 2.50
+const res_green_axis = engine.score(config, answers_green_axis);
+assert.equal(res_green_axis.displayed_category, 'SATISFAISANTE');
+assert.deepEqual(res_green_axis.weakest_dimensions, ['renforcement-mobilite'], 'A favorable profile exposes at most one dimension at mean 2.50');
+assert.equal(res_green_axis.dimensions.find(d => d.id === 'renforcement-mobilite').mean_score, 2.5);
 
 // Max score (all worst answers = 5) -> 60/60 -> INSUFFISANTE
 const answers_max = {

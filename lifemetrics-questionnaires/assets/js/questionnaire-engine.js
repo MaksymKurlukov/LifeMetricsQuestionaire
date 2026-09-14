@@ -30,6 +30,12 @@
     return level.code;
   }
 
+  function categorySeverityIndex(config, categoryCode) {
+    var levels = config.result_levels.slice().sort(function (left, right) { return left.min - right.min; });
+    if (config.scoring_direction === 'higher_is_better') levels.reverse();
+    return levels.findIndex(function (level) { return level.code === categoryCode; });
+  }
+
   function score(config, answers) {
     var safetyQuestions = config.safety_questions || [];
     var dimensionsList = config.dimensions || [];
@@ -48,7 +54,7 @@
     var removedCapacity = false;
     var dimensionTotals = {};
     dimensionsList.forEach(function (dimension) {
-      dimensionTotals[dimension.id] = { raw_score: 0, available_min: 0, available_max: 0 };
+      dimensionTotals[dimension.id] = { raw_score: 0, available_min: 0, available_max: 0, available_count: 0 };
     });
 
     config.questions.forEach(function (question) {
@@ -67,6 +73,7 @@
         dimensionTotals[question.dimension].raw_score += answer.points;
         dimensionTotals[question.dimension].available_min += minimum;
         dimensionTotals[question.dimension].available_max += maximum;
+        dimensionTotals[question.dimension].available_count += 1;
       }
     });
 
@@ -86,13 +93,14 @@
       var totals = dimensionTotals[definition.id];
       var capacity = totals.available_max - totals.available_min;
       var percentage = capacity === 0 ? null : (totals.raw_score - totals.available_min) / capacity * 100;
+      var meanScore = totals.available_count === 0 ? null : totals.raw_score / totals.available_count;
       var attention = false;
       if (percentage !== null && definition.attention) {
         var metric = definition.attention.metric === 'score' ? totals.raw_score : percentage;
         attention = compare(metric, definition.attention.operator, definition.attention.value);
       }
       return Object.assign({ id: definition.id }, totals, {
-        percentage: percentage, unavailable: percentage === null, attention: attention,
+        percentage: percentage, mean_score: meanScore, unavailable: percentage === null, attention: attention,
         _order: order, _eligible: definition.weakest_eligible
       });
     });
@@ -131,12 +139,19 @@
       }
     });
 
-    var weakest = dimensions.filter(function (dimension) { return dimension._eligible && !dimension.unavailable; })
+    var eligibleDimensions = dimensions.filter(function (dimension) { return dimension._eligible && !dimension.unavailable; })
       .sort(function (left, right) {
         var diff = isLowerBetter ? right.percentage - left.percentage : left.percentage - right.percentage;
         return diff || left._order - right._order;
-      })
-      .slice(0, config.weakest_dimensions ? config.weakest_dimensions.count : 0)
+      });
+    var severityIndex = categorySeverityIndex(config, displayed);
+    var weakestLimit = Math.min(config.weakest_dimensions ? config.weakest_dimensions.count : 0, 2);
+    if (severityIndex === 0 && isLowerBetter) {
+      eligibleDimensions = eligibleDimensions.filter(function (dimension) { return dimension.mean_score >= 2.5; });
+      weakestLimit = Math.min(weakestLimit, 1);
+    }
+    var weakest = eligibleDimensions
+      .slice(0, weakestLimit)
       .map(function (dimension) { return dimension.id; });
     dimensions.forEach(function (dimension) { delete dimension._order; delete dimension._eligible; });
 

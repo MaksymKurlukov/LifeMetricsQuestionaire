@@ -84,6 +84,7 @@ function createMockRoot(id, qConfig) {
     '[data-lmq-role="answers"]': createMockElement("div"),
     '[data-lmq-role="progress-label"]': createMockElement("p"),
     '[data-lmq-role="progress-bar"]': createMockElement("div", { style: {} }),
+    '[data-lmq-role="safety-badge"]': createMockElement("span", { hidden: true }),
     '[data-lmq-role="back"]': createMockElement("button"),
     ".card--result": createMockElement("div", { classes: ["card", "card--result"] }),
     ".result-score__value": createMockElement("span"),
@@ -188,6 +189,8 @@ assert.ok(badgeGreen.className.includes("result-badge--rank-1"), "Green result h
 assert.ok(badgeGreen.className.includes("result-badge--favorable"), "Green result has favorable semantic class");
 const titleGreen = rootGreen.querySelector('[data-lmq-role="interpretation-title"]');
 assert.ok(titleGreen.className.includes("interpretation-title--favorable"), "Green interpretation title is favorable");
+assert.equal(rootGreen.querySelector('[data-lmq-role="dimensions"]').hidden, true, "Axes without validated user content stay hidden");
+assert.equal(rootGreen.querySelector('[data-lmq-role="safety-badge"]').hidden, true, "Unvalidated safety badge stays hidden on ordinary questions");
 
 // ----------------------------------------------------
 // 3. Mock DOM: Orange Result (Rank 2)

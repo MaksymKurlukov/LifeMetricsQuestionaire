@@ -26,7 +26,7 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
         $removed_capacity = false;
         $dimension_totals = array();
         foreach ($config['dimensions'] as $dimension) {
-            $dimension_totals[$dimension['id']] = array('raw_score' => 0, 'available_min' => 0, 'available_max' => 0);
+            $dimension_totals[$dimension['id']] = array('raw_score' => 0, 'available_min' => 0, 'available_max' => 0, 'available_count' => 0);
         }
 
         foreach ($config['questions'] as $question) {
@@ -53,6 +53,7 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
                 $dimension_totals[$question['dimension']]['raw_score'] += $answer['points'];
                 $dimension_totals[$question['dimension']]['available_min'] += $minimum;
                 $dimension_totals[$question['dimension']]['available_max'] += $maximum;
+                $dimension_totals[$question['dimension']]['available_count']++;
             }
         }
 
@@ -75,6 +76,7 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
             $totals = $dimension_totals[$definition['id']];
             $capacity = $totals['available_max'] - $totals['available_min'];
             $percentage = $capacity === 0 ? null : ($totals['raw_score'] - $totals['available_min']) / $capacity * 100;
+            $mean_score = $totals['available_count'] === 0 ? null : $totals['raw_score'] / $totals['available_count'];
             $attention = false;
             if ($percentage !== null && isset($definition['attention'])) {
                 $metric = $definition['attention']['metric'] === 'score' ? $totals['raw_score'] : $percentage;
@@ -85,7 +87,9 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
                 'raw_score' => $totals['raw_score'],
                 'available_min' => $totals['available_min'],
                 'available_max' => $totals['available_max'],
+                'available_count' => $totals['available_count'],
                 'percentage' => $percentage,
+                'mean_score' => $mean_score,
                 'unavailable' => $percentage === null,
                 'attention' => $attention,
                 '_order' => $index,
@@ -133,7 +137,13 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
 
         $weakest = array_values(array_filter($dimensions, static fn($dimension) => $dimension['_eligible'] && !$dimension['unavailable']));
         usort($weakest, static fn($a, $b) => ($is_lower_better ? ($b['percentage'] <=> $a['percentage']) : ($a['percentage'] <=> $b['percentage'])) ?: ($a['_order'] <=> $b['_order']));
-        $weakest = array_column(array_slice($weakest, 0, $config['weakest_dimensions']['count'] ?? 0), 'id');
+        $severity_index = $this->category_severity_index($config, $displayed);
+        $weakest_limit = min($config['weakest_dimensions']['count'] ?? 0, 2);
+        if ($severity_index === 0 && $is_lower_better) {
+            $weakest = array_values(array_filter($weakest, static fn($dimension) => $dimension['mean_score'] >= 2.5));
+            $weakest_limit = min($weakest_limit, 1);
+        }
+        $weakest = array_column(array_slice($weakest, 0, $weakest_limit), 'id');
         foreach ($dimensions as &$dimension) {
             unset($dimension['_order'], $dimension['_eligible']);
         }
@@ -203,6 +213,21 @@ final class LifeMetrics_Questionnaire_Scoring_Engine
     private function find_by_code(array $items, string $code): array
     {
         foreach ($items as $item) { if ($item['code'] === $code) { return $item; } }
+        throw new InvalidArgumentException('invalid_configuration');
+    }
+
+    private function category_severity_index(array $config, string $category_code): int
+    {
+        $levels = $config['result_levels'];
+        usort($levels, static fn($left, $right) => $left['min'] <=> $right['min']);
+        if (($config['scoring_direction'] ?? '') === 'higher_is_better') {
+            $levels = array_reverse($levels);
+        }
+        foreach ($levels as $index => $level) {
+            if ($level['code'] === $category_code) {
+                return $index;
+            }
+        }
         throw new InvalidArgumentException('invalid_configuration');
     }
 
