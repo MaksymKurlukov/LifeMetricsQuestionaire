@@ -1,6 +1,19 @@
 
 (function (engine) {
 
+  function resolveSemanticType(config, categoryCode) {
+    const levels = Array.isArray(config.result_levels) ? config.result_levels.slice() : [];
+    if (levels.length === 0) return 'favorable';
+
+    levels.sort((left, right) => Number(left.min) - Number(right.min));
+    if (config.scoring_direction === 'higher_is_better') levels.reverse();
+
+    const severityIndex = levels.findIndex(level => level.code === categoryCode);
+    if (severityIndex <= 0) return 'favorable';
+    if (severityIndex >= levels.length - 1) return 'unfavorable';
+    return 'intermediate';
+  }
+
   function initQuestionnaire(rootEl) {
     if (rootEl.getAttribute && rootEl.getAttribute('data-lmq-initialized') === 'true') return;
     if (rootEl.setAttribute) rootEl.setAttribute('data-lmq-initialized', 'true');
@@ -232,13 +245,16 @@
       }
 
       const level = config.result_levels ? config.result_levels.find(l => l.code === scoreResult.displayed_category) : null;
-      const rank = level ? (level.rank || 1) : 1;
-      const semanticType = rank === 1 ? 'favorable' : (rank === 2 ? 'intermediate' : 'unfavorable');
+      const rank = level && level.rank !== undefined ? level.rank : 1;
+      const semanticType = resolveSemanticType(config, scoreResult.displayed_category);
+      const guardrailApplied = typeof scoreResult.calculated_category === 'string'
+        && scoreResult.calculated_category !== scoreResult.displayed_category;
 
       const resultCard = rootEl.querySelector('.card--result');
       if (resultCard) {
-        resultCard.classList.remove('lmq-result--favorable', 'lmq-result--intermediate', 'lmq-result--unfavorable', 'lmq-result--rank-1', 'lmq-result--rank-2', 'lmq-result--rank-3');
+        resultCard.classList.remove('lmq-result--favorable', 'lmq-result--intermediate', 'lmq-result--unfavorable', 'lmq-result--rank-0', 'lmq-result--rank-1', 'lmq-result--rank-2', 'lmq-result--rank-3', 'lmq-result--guardrail');
         resultCard.classList.add(`lmq-result--${semanticType}`, `lmq-result--rank-${rank}`);
+        if (guardrailApplied) resultCard.classList.add('lmq-result--guardrail');
       }
 
       const badge = rootEl.querySelector('[data-lmq-role="result-badge"]');
@@ -356,6 +372,14 @@
         const ratio = Math.max(0, Math.min(1, (scoreResult.final_score - min) / (max - min)));
         gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
         gaugeNeedle.setAttribute('transform', `rotate(${180 - ratio * 180}, 100, 100)`);
+        gaugeFill.classList.remove('gauge-fill--favorable', 'gauge-fill--intermediate', 'gauge-fill--unfavorable', 'gauge-fill--guardrail');
+        gaugeFill.classList.add(`gauge-fill--${semanticType}`);
+        if (guardrailApplied) gaugeFill.classList.add('gauge-fill--guardrail');
+
+        const gaugeWrap = rootEl.querySelector('[data-lmq-role="gauge-wrap"]');
+        if (gaugeWrap && level) {
+          gaugeWrap.setAttribute('aria-label', `Score ${scoreResult.final_score} sur ${config.score.target_max}. Catégorie : ${level.title}.`);
+        }
       }
 
       // Priority Improvement Axes Cards Grid

@@ -91,6 +91,9 @@ function createMockRoot(id, qConfig) {
     '[data-lmq-role="result-badge"]': createMockElement("div"),
     '[data-lmq-role="interpretation-title"]': createMockElement("h3"),
     '[data-lmq-role="score-meta"]': createMockElement("p"),
+    '[data-lmq-role="gauge-wrap"]': createMockElement("div"),
+    '[data-lmq-role="gauge-fill"]': createMockElement("path"),
+    '[data-lmq-role="gauge-needle"]': createMockElement("line"),
     '[data-lmq-role="analysis-text"]': createMockElement("p"),
     '[data-lmq-role="safety-messages"]': createMockElement("div"),
     '[data-lmq-role="classification-messages"]': createMockElement("div"),
@@ -215,6 +218,16 @@ const titleRed = rootRed.querySelector('[data-lmq-role="interpretation-title"]')
 assert.ok(titleRed.className.includes("interpretation-title--unfavorable"), "Red interpretation title is unfavorable");
 
 // ----------------------------------------------------
+// 4b. Zero-based ranks still resolve from category severity
+// ----------------------------------------------------
+const configPss = loadConfig("pss10");
+const answersPssHigh = {};
+for (let i = 1; i <= 10; i++) answersPssHigh["Q" + i] = "3";
+const rootPssHigh = runSimulatedTest(configPss, answersPssHigh);
+const badgePssHigh = rootPssHigh.querySelector('[data-lmq-role="result-badge"]');
+assert.ok(badgePssHigh.className.includes("result-badge--unfavorable"), "PSS-10 high result is visually unfavorable despite rank 2");
+
+// ----------------------------------------------------
 // 5. Mock DOM: Guardrail Transition (Calculated Green -> Displayed Orange)
 // ----------------------------------------------------
 // D1 at 4+4=8 (mean 4.00), others at 1 (total = 8 + 10 = 18 <= 24 calculated green, but guardrail triggers displayed orange)
@@ -225,6 +238,9 @@ assert.ok(badgeGuardrail.className.includes("result-badge--rank-2"), "Guardrail-
 assert.ok(badgeGuardrail.className.includes("result-badge--intermediate"), "Guardrail-capped displayed category gets intermediate semantic class");
 const titleGuardrail = rootGuardrail.querySelector('[data-lmq-role="interpretation-title"]');
 assert.ok(titleGuardrail.className.includes("interpretation-title--intermediate"), "Guardrail-capped interpretation title gets intermediate class");
+const guardrailGauge = rootGuardrail.querySelector('[data-lmq-role="gauge-fill"]');
+assert.ok(guardrailGauge.classes.includes("gauge-fill--intermediate"), "Guardrail gauge uses displayed intermediate category");
+assert.ok(guardrailGauge.classes.includes("gauge-fill--guardrail"), "Guardrail gauge keeps a distinct displayed-category treatment");
 
 // ----------------------------------------------------
 // 6. Badges & CTA verification
