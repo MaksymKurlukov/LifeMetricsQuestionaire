@@ -1,8 +1,8 @@
 # LifeMetrics Questionnaires Architecture
 
-Document version: 2.0.0
+Document version: 2.1.0
 Status: `VERIFIED PRODUCTION ARCHITECTURE`
-Last updated: 2026-09-10
+Last updated: 2026-09-14
 
 ## 1. System Purpose & Core Principles
 
@@ -12,8 +12,8 @@ The `lifemetrics-questionnaires` plugin provides a unified, extensible runtime f
 1. **Configuration as Data**: Questionnaire content, questions, answer scales, dimension definitions, scoring ranges, result tiers, safety checks, and actions live in pure PHP declarative configurations.
 2. **Server-Authoritative Authority**: Client scoring is advisory for immediate feedback only. WordPress recalculates all scores, normalizations, dimension profiles, safety triggers, and result tiers on the server before storage.
 3. **No Database Burden / Direct Google Storage**: Submissions are transmitted via server-side HTTP webhook directly to a centralized Google Apps Script Web App writing to a Google Spreadsheet. No local custom database tables or admin storage configuration needed.
-4. **Frozen PSS-10 Clinical Legacy**: PSS-10 is isolated and preserved 100% intact through `LifeMetrics_Legacy_PSS10_Runtime` with zero behavioral or visual drift.
-5. **Generic Shared Architecture**: All 7 proprietary questionnaires share a unified renderer, stylesheet, and client/server engine.
+4. **Isolated PSS-10 Legacy Runtime**: Production PSS-10 remains served through `LifeMetrics_Legacy_PSS10_Runtime`. Its configuration can also be rendered by the standalone common preview for visual comparison without replacing the production runtime.
+5. **Generic Shared Architecture**: All 9 LifeMetrics questionnaires share one renderer, stylesheet, and pair of client/server scoring engines.
 
 ---
 
@@ -22,13 +22,15 @@ The `lifemetrics-questionnaires` plugin provides a unified, extensible runtime f
 | Questionnaire ID | Human Title | Questions | Range | Storage Worksheet | Mode |
 |---|---|---|---|---|---|
 | `pss10` | Échelle de Stress Perçu | 10 | 10–50 | `PSS10` | Frozen Legacy |
-| `sedentarite` | Score Sédentarité | 10 (2 with N/A) | 0–48 | `Sedentarite` | Generic |
-| `hydratation` | Score Hydratation | 12 (1 with N/A) + 3 Safety | 0–48 | `Hydratation` | Generic |
-| `fatigue-recuperation` | Score Fatigue & Récupération | 12 + 3 Safety | 0–48 | `Fatigue` | Generic |
-| `sommeil` | Score Sommeil | 12 + 3 Safety | 0–48 | `Sommeil` | Generic |
-| `nutrition` | Score Nutrition | 12 + 3 Safety | 0–48 | `Nutrition` | Generic |
-| `activite-physique` | Score Activité Physique | 12 | 0–48 | `Activite_Physique` | Generic |
-| `pieds-confort-postural` | Score Pieds & Confort Postural | 12 + 4 Safety | 0–48 | `Pieds_Confort` | Generic |
+| `activite-physique` | Score LifeMetrics - Activité physique | 12 | 12–60 | `Activite_Physique` | Generic V2 (`review`) |
+| `bien-etre` | Score LifeMetrics - Bien-être | 12 | 12–60 | `Bien_Etre` | Generic V2 (`review`) |
+| `fatigue-recuperation` | Score LifeMetrics - Fatigue & récupération | 12 + 3 Safety | 12–60 | `Fatigue` | Generic V2 (`review`) |
+| `hydratation` | Score LifeMetrics - Hydratation | 12 (1 avec N/A) + 3 Safety | 12–60 | `Hydratation` | Generic V2 (`review`) |
+| `nutrition` | Score LifeMetrics - Nutrition | 12 + 3 Safety | 12–60 | `Nutrition` | Generic V2 (`review`) |
+| `pieds-confort-postural` | Score LifeMetrics - Pieds & confort postural | 12 + 4 Safety | 12–60 | `Pieds_Confort` | Generic V2 (`review`) |
+| `risque-nutritionnel` | Score LifeMetrics - Risque nutritionnel | 12 + 4 Safety | 12–60 | `Risque_Nutritionnel` | Generic V2 (`review`) |
+| `sedentarite` | Score LifeMetrics - Sédentarité | 12 (2 avec N/A) | 12–60 | `Sedentarite` | Generic V2 (`review`) |
+| `sommeil` | Score LifeMetrics - Sommeil | 12 + 3 Safety | 12–60 | `Sommeil` | Generic V2 (`review`) |
 
 ---
 
@@ -117,6 +119,9 @@ The `lifemetrics-questionnaires` plugin provides a unified, extensible runtime f
 ### F. Scoring Engine (`class-questionnaire-scoring-engine.php`)
 - Computes raw score, available capacity (accounting for N/A items), normalized final score, dimension metrics, attention flags, and safety triggers.
 - JavaScript equivalent in `assets/js/questionnaire-engine.js` guarantees 100% parity for browser feedback.
+- All nine LifeMetrics V2 questionnaires use a 12–60 normalized range with `lower_is_better`; PSS-10 keeps its isolated 10–50 `higher_is_worse` scale.
+- Result colors resolve from the displayed category severity, independently of whether ranks are encoded as 0/1/2 or 1/2/3.
+- Guardrails preserve the numeric score while changing only the displayed category. Favorable results expose a priority axis only for an available dimension whose mean is at least 2.50; intermediate and unfavorable results expose at most two.
 
 ### G. Submission Service & Upstream Adapter (`class-submission-service.php`, `class-google-apps-script-adapter.php`)
 - Generates canonical submission payload with full audit metadata.
@@ -134,6 +139,7 @@ The `lifemetrics-questionnaires` plugin provides a unified, extensible runtime f
 
 ## 6. Verification Status
 
-- **Automated Tests**: 20 PHP test suites, 11 JavaScript test suites (all passing).
+- **Automated Tests**: 23 PHP test suites and 19 JavaScript test suites (all passing).
 - **PSS-10 Characterization**: 13 mutation guards protecting the clinical baseline.
-- **Real Browser E2E**: Fully verified for Hydratation on live production WordPress (RC12).
+- **Shared Preview**: `preview.php` renders all nine LifeMetrics V2 questionnaires plus the PSS-10 configuration at desktop, tablet, and mobile widths without WordPress storage side effects.
+- **Real Browser E2E**: Hydratation remains covered on live production WordPress (RC12); the standalone preview supports the full cross-questionnaire visual matrix.
