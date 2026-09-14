@@ -37,10 +37,7 @@ $modal_title_id = $instance_id . '-modal-title';
         <h2 class="test-question" data-lmq-role="test-question"></h2>
         <div class="answers" data-lmq-role="answers" role="radiogroup" aria-label="Choisissez une réponse"></div>
         <div class="test-actions">
-          <button type="button" class="btn--back" data-lmq-role="back" disabled>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Retour</span>
-          </button>
+          <button type="button" class="btn btn--secondary btn--back" data-lmq-role="back" disabled>← Retour</button>
         </div>
       </div>
     </section>
@@ -49,7 +46,7 @@ $modal_title_id = $instance_id . '-modal-title';
       <div class="card card--result">
         <div class="result-header">
           <h2 class="result-title" data-lmq-role="result-header">Mon résultat</h2>
-          <div class="result-header__divider" aria-hidden="true"></div>
+          <div class="result-badge" data-lmq-role="result-badge"></div>
         </div>
 
         <div class="result-hero">
@@ -98,13 +95,10 @@ $modal_title_id = $instance_id . '-modal-title';
           <button type="button" class="btn btn--secondary btn--retry" data-lmq-role="retry">Réessayer</button>
         </div>
 
-        <!-- Strict CTA Hierarchy (2 main CTAs + subtle separate restart) -->
+        <!-- Strict CTA Hierarchy (2 main CTAs + tertiary restart) -->
         <div class="result-actions" data-lmq-role="ctas"></div>
         <div class="result-restart-wrap">
-          <button type="button" class="btn--restart" data-lmq-role="restart">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            <span>Refaire le test</span>
-          </button>
+          <button type="button" class="btn btn--tertiary btn--restart" data-lmq-role="restart">Refaire le test</button>
         </div>
       </div>
     </section>

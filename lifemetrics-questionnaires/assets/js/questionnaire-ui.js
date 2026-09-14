@@ -140,10 +140,10 @@
         q.answers.forEach(ans => {
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.className = 'answer-btn';
+          btn.className = 'answer-card answer-btn';
           btn.textContent = ans.label;
           if (state.answers[q.id] === ans.value) {
-            btn.classList.add('selected');
+            btn.classList.add('selected', 'answer-card--selected');
             btn.setAttribute('aria-checked', 'true');
           } else {
             btn.setAttribute('aria-checked', 'false');
@@ -155,10 +155,10 @@
             state.answers[q.id] = ans.value;
 
             Array.from(answersContainer.children).forEach(child => {
-              child.classList.remove('selected');
+              child.classList.remove('selected', 'answer-card--selected');
               child.setAttribute('aria-checked', 'false');
             });
-            btn.classList.add('selected');
+            btn.classList.add('selected', 'answer-card--selected');
             btn.setAttribute('aria-checked', 'true');
 
             state.autoNextTimer = setTimeout(() => {
