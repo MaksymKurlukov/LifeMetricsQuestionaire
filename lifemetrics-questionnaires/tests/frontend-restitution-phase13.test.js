@@ -193,6 +193,33 @@ assert.equal(titleGreen.hidden, true, "Category title is not repeated below the 
 assert.equal(rootGreen.querySelector('[data-lmq-role="dimensions"]').hidden, true, "Axes without validated user content stay hidden");
 assert.equal(rootGreen.querySelector('[data-lmq-role="safety-badge"]').hidden, true, "Unvalidated safety badge stays hidden on ordinary questions");
 
+const gaugeScores = [12, 14, 24, 25, 32, 33, 60];
+const gaugeOffsets = gaugeScores.map(targetScore => {
+  const answers = {};
+  let remaining = targetScore - 12;
+  for (let layer = 1; layer <= 4; layer++) {
+    for (let i = 1; i <= 12; i++) {
+      const id = "BE" + (i < 10 ? "0" + i : i);
+      const current = Number(answers[id] || "1");
+      if (remaining > 0) {
+        answers[id] = String(current + 1);
+        remaining--;
+      } else if (!answers[id]) {
+        answers[id] = "1";
+      }
+    }
+  }
+  const root = runSimulatedTest(configBE, answers);
+  return Number(root.querySelector('[data-lmq-role="gauge-fill"]').getAttribute('stroke-dashoffset'));
+});
+const circumference = Math.PI * 80;
+const expectedMinimumOffset = circumference * (1 - 0.08);
+assert.ok(Math.abs(gaugeOffsets[0] - expectedMinimumOffset) < 0.001, "12/60 keeps an 8% visible gauge segment");
+for (let i = 1; i < gaugeOffsets.length; i++) {
+  assert.ok(gaugeOffsets[i] < gaugeOffsets[i - 1], `${gaugeScores[i]}/60 advances the gauge beyond ${gaugeScores[i - 1]}/60`);
+}
+assert.equal(gaugeOffsets.at(-1), 0, "60/60 fills the complete semicircle");
+
 // ----------------------------------------------------
 // 3. Mock DOM: Orange Result (Rank 2)
 // ----------------------------------------------------
@@ -249,12 +276,21 @@ assert.ok(titleGuardrail.className.includes("interpretation-title--intermediate"
 const guardrailGauge = rootGuardrail.querySelector('[data-lmq-role="gauge-fill"]');
 assert.ok(guardrailGauge.classes.includes("gauge-fill--intermediate"), "Guardrail gauge uses displayed intermediate category");
 assert.ok(guardrailGauge.classes.includes("gauge-fill--guardrail"), "Guardrail gauge keeps a distinct displayed-category treatment");
+assert.ok(Number(guardrailGauge.getAttribute('stroke-dashoffset')) < expectedMinimumOffset, "Guardrail gauge keeps the raw score position above the minimum segment");
 
 // ----------------------------------------------------
 // 6. Badges & CTA verification
 // ----------------------------------------------------
 const badgesContainer = rootGreen.querySelector('[data-lmq-role="badges"]');
 assert.ok(badgesContainer.children[0].children.filter(c => c.className === 'badge-item').length === 3, "3 badges with SVG icons rendered");
+const durationItem = badgesContainer.children[0].children.filter(c => c.className === 'badge-item')[2];
+assert.equal(durationItem.children.at(-1).textContent, "2–3 minutes", "Configured duration uses an en dash without an approximate prefix");
+
+const configAP = loadConfig("activite-physique");
+const answersAP = Object.fromEntries(configAP.questions.map(q => [q.id, q.answers[0].value]));
+const rootAP = runSimulatedTest(configAP, answersAP);
+const durationAP = rootAP.querySelector('[data-lmq-role="badges"]').children[0].children.filter(c => c.className === 'badge-item')[2];
+assert.equal(durationAP.children.at(-1).textContent, "2–3 minutes", "The visual duration removes Environ while preserving configuration content");
 
 const ctasContainer = rootGreen.querySelector('[data-lmq-role="ctas"]');
 const links = ctasContainer.children.filter(c => c.tag === "a");

@@ -31,6 +31,24 @@
     return !internalPatterns.some(pattern => pattern.test(help));
   }
 
+  function formatEstimatedDuration(duration) {
+    const value = typeof duration === 'string' && duration.trim() !== ''
+      ? duration.trim()
+      : '2-3 min';
+    return value
+      .replace(/^environ\s+/i, '')
+      .replace(/(\d)\s*-\s*(\d)/g, '$1–$2');
+  }
+
+  function resolveGaugeRatios(score, min, max) {
+    const scoreRatio = Math.max(0, Math.min(1, (score - min) / (max - min)));
+    const minimumVisibleRatio = 0.08;
+    const fillRatio = scoreRatio >= 1
+      ? 1
+      : minimumVisibleRatio + scoreRatio * (1 - minimumVisibleRatio);
+    return { scoreRatio, fillRatio };
+  }
+
   function initQuestionnaire(rootEl) {
     if (rootEl.getAttribute && rootEl.getAttribute('data-lmq-initialized') === 'true') return;
     if (rootEl.setAttribute) rootEl.setAttribute('data-lmq-initialized', 'true');
@@ -118,7 +136,7 @@
             icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
           },
           {
-            text: config.estimated_duration || '2-3 min',
+            text: formatEstimatedDuration(config.estimated_duration),
             icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
           }
         ];
@@ -422,9 +440,9 @@
         const circumference = Math.PI * 80;
         const min = config.score.target_min || 0;
         const max = config.score.target_max;
-        const ratio = Math.max(0, Math.min(1, (scoreResult.final_score - min) / (max - min)));
-        gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
-        gaugeNeedle.setAttribute('transform', `rotate(${180 - ratio * 180}, 100, 100)`);
+        const gaugeRatios = resolveGaugeRatios(scoreResult.final_score, min, max);
+        gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - gaugeRatios.fillRatio));
+        gaugeNeedle.setAttribute('transform', `rotate(${180 - gaugeRatios.scoreRatio * 180}, 100, 100)`);
         gaugeFill.classList.remove('gauge-fill--favorable', 'gauge-fill--intermediate', 'gauge-fill--unfavorable', 'gauge-fill--guardrail');
         gaugeFill.classList.add(`gauge-fill--${semanticType}`);
         if (guardrailApplied) gaugeFill.classList.add('gauge-fill--guardrail');
