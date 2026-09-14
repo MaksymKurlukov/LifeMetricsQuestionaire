@@ -546,16 +546,16 @@ return array (
     0 => 
     array (
       'label' => 'Je veux faire un bilan',
-      'url' => '/formulaire-bilan/',
+      'url' => 'https://lifemetrics.fr/formulaire-bilan/',
       'variant' => 'primary',
       'enabled' => true,
     ),
     1 => 
     array (
-      'label' => 'Découvrir les autres tests',
+      'label' => 'Découvrir les autres questionnaires',
       'url' => '/tests-sante/',
       'variant' => 'secondary',
-      'enabled' => false,
+      'enabled' => true,
     ),
   ),
   'disclaimer' => 

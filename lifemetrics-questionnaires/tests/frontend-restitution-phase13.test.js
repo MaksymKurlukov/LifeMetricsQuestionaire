@@ -189,6 +189,7 @@ assert.ok(badgeGreen.className.includes("result-badge--rank-1"), "Green result h
 assert.ok(badgeGreen.className.includes("result-badge--favorable"), "Green result has favorable semantic class");
 const titleGreen = rootGreen.querySelector('[data-lmq-role="interpretation-title"]');
 assert.ok(titleGreen.className.includes("interpretation-title--favorable"), "Green interpretation title is favorable");
+assert.equal(titleGreen.hidden, true, "Category title is not repeated below the identical result badge");
 assert.equal(rootGreen.querySelector('[data-lmq-role="dimensions"]').hidden, true, "Axes without validated user content stay hidden");
 assert.equal(rootGreen.querySelector('[data-lmq-role="safety-badge"]').hidden, true, "Unvalidated safety badge stays hidden on ordinary questions");
 
@@ -229,6 +230,10 @@ for (let i = 1; i <= 10; i++) answersPssHigh["Q" + i] = "3";
 const rootPssHigh = runSimulatedTest(configPss, answersPssHigh);
 const badgePssHigh = rootPssHigh.querySelector('[data-lmq-role="result-badge"]');
 assert.ok(badgePssHigh.className.includes("result-badge--unfavorable"), "PSS-10 high result is visually unfavorable despite rank 2");
+const pssLinks = rootPssHigh.querySelector('[data-lmq-role="ctas"]').children.filter(c => c.tag === "a");
+assert.equal(pssLinks.length, 2, "PSS-10 common preview renders both primary CTAs");
+assert.equal(pssLinks[0].href, "https://lifemetrics.fr/formulaire-bilan/");
+assert.equal(pssLinks[1].textContent, "Découvrir les autres questionnaires");
 
 // ----------------------------------------------------
 // 5. Mock DOM: Guardrail Transition (Calculated Green -> Displayed Orange)

@@ -319,6 +319,7 @@
       if (interpTitle && level) {
         interpTitle.textContent = level.title;
         interpTitle.className = `interpretation-title interpretation-title--${semanticType} interpretation-title--rank-${rank}`;
+        interpTitle.hidden = badge && badge.textContent.trim() === interpTitle.textContent.trim();
       }
 
       const scoreMeta = rootEl.querySelector('[data-lmq-role="score-meta"]');

@@ -53,7 +53,7 @@ $progress_label_id = $instance_id . '-progress-label';
         </div>
 
         <div class="result-hero">
-          <div class="gauge-wrap" data-lmq-role="gauge-wrap">
+          <div class="gauge-wrap" data-lmq-role="gauge-wrap" role="img">
             <div class="gauge-score" data-lmq-role="result-score" aria-live="polite">
               <span class="result-score__value">0</span><span class="gauge-score__max"></span>
             </div>
