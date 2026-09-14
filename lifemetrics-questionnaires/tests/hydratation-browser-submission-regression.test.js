@@ -225,4 +225,4 @@ setTimeout(() => {
     assert.equal(alertBox.hidden, true);
     console.log('Hydratation browser submission regression tests: ALL PASSED.');
   }, 100);
-}, 500);
+}, 700);

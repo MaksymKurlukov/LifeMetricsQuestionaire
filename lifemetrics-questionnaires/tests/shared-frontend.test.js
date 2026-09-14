@@ -23,7 +23,7 @@ function createMockElement(tag, customProps = {}) {
     getAttribute: function(k) { return this[k]; },
     appendChild: function(c) { this.children = this.children || []; this.children.push(c); },
     set innerHTML(v) { this.children = []; },
-    focus: function() {}, addEventListener: function() {},
+    focus: function() { this.focused = true; }, addEventListener: function() {},
     children: [],
     ...customProps
   };
@@ -61,11 +61,14 @@ function createMockRoot(id, config, submitUrl) {
       '[data-lmq-role="intro-title"]': createMockElement('h1'),
       '[data-lmq-role="intro-text"]': createMockElement('div'),
       '[data-lmq-role="start"]': createMockElement('button'),
+      '[data-lmq-role="recall-period"]': createMockElement('p', { hidden: true }),
+      '[data-lmq-role="test-help"]': createMockElement('p', { hidden: true }),
       '[data-lmq-role="test-question"]': createMockElement('h2'),
       '[data-lmq-role="answers"]': createMockElement('div'),
       '[data-lmq-role="progress-label"]': createMockElement('p'),
       '[data-lmq-role="progress-bar"]': createMockElement('div', { style: {} }),
       '[data-lmq-role="back"]': createMockElement('button'),
+      '[data-lmq-role="result-header"]': createMockElement('h2'),
       '.result-score__value': createMockElement('span'),
       '[data-lmq-role="analysis-text"]': createMockElement('p'),
       '[data-lmq-role="safety-messages"]': createMockElement('div'),
@@ -157,6 +160,12 @@ setTimeout(() => {
 
   // Answer Root 1 Q1
   const answers1 = root1._elements['[data-lmq-role="answers"]'].children;
+  assert.equal(answers1[0].tabIndex, 0, 'Only the first radio is initially tabbable');
+  assert.equal(answers1[1].tabIndex, -1, 'Other radios use roving tabindex');
+  let arrowPrevented = false;
+  answers1[0].onkeydown({ key: 'ArrowDown', preventDefault: () => { arrowPrevented = true; } });
+  assert.equal(arrowPrevented, true, 'Arrow key navigation prevents page scrolling');
+  assert.equal(answers1[1].getAttribute('aria-checked'), 'true', 'Arrow key selects the adjacent answer');
   answers1[0].onclick(); // 1
 
   setTimeout(() => {
@@ -186,12 +195,16 @@ setTimeout(() => {
       assert.equal(learnMore.hidden, false); // unhidden because config has disclaimer
       learnMore.onclick({ preventDefault: () => {} });
       assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].hidden, false);
+      assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].getAttribute('aria-hidden'), 'false');
+      assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].classList.contains('modal--open'), true);
 
       const mContent = root1._elements['[data-lmq-role="modal-content"]'];
       assert.equal(mContent.children[0].textContent, "Before info");
 
       root1._elements['[data-lmq-role="modal-close"]'].onclick();
       assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].hidden, true);
+      assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].getAttribute('aria-hidden'), 'true');
+      assert.equal(root1._elements['[data-lmq-role="modal-overlay"]'].classList.contains('modal--open'), false);
 
       // --- TEST TIMEOUT / RETRY / DUPLICATE ---
       // We expect 1 fetch to have been fired by now.
@@ -212,8 +225,8 @@ setTimeout(() => {
       assert.equal(fetchedUrls.length, 2); // Still 2!
 
       console.log('Shared UI functional tests passed.');
-    }, 450);
-  }, 450);
+    }, 700);
+  }, 700);
 }, 50);
 
 const context = vm.createContext({

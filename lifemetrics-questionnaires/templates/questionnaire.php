@@ -3,6 +3,8 @@ defined('ABSPATH') || exit;
 
 $gradient_id = $instance_id . '-gauge-gradient';
 $modal_title_id = $instance_id . '-modal-title';
+$question_title_id = $instance_id . '-question-title';
+$progress_label_id = $instance_id . '-progress-label';
 ?>
 <div
   class="lmq-questionnaire"
@@ -26,16 +28,17 @@ $modal_title_id = $instance_id . '-modal-title';
       <div class="card card--test">
         <div class="test-header">
           <div class="progress-bar-wrap">
-            <div class="progress-bar" data-lmq-role="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar" data-lmq-role="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-labelledby="<?php echo esc_attr($progress_label_id); ?>"></div>
           </div>
           <div class="test-meta">
-            <span class="progress-label" data-lmq-role="progress-label"></span>
-            <span class="safety-badge" data-lmq-role="safety-badge" hidden>Question de vigilance</span>
+            <span id="<?php echo esc_attr($progress_label_id); ?>" class="progress-label" data-lmq-role="progress-label"></span>
+            <span class="safety-badge" data-lmq-role="safety-badge" hidden></span>
           </div>
         </div>
-        <p class="test-prefix" data-lmq-role="test-prefix"></p>
-        <h2 class="test-question" data-lmq-role="test-question"></h2>
-        <div class="answers" data-lmq-role="answers" role="radiogroup" aria-label="Choisissez une réponse"></div>
+        <p class="test-prefix" data-lmq-role="recall-period" hidden></p>
+        <p class="test-hint" data-lmq-role="test-help" hidden></p>
+        <h2 id="<?php echo esc_attr($question_title_id); ?>" class="test-question" data-lmq-role="test-question" tabindex="-1"></h2>
+        <div class="answers" data-lmq-role="answers" role="radiogroup" aria-labelledby="<?php echo esc_attr($question_title_id); ?>"></div>
         <div class="test-actions">
           <button type="button" class="btn btn--secondary btn--back" data-lmq-role="back" disabled>← Retour</button>
         </div>
@@ -45,7 +48,7 @@ $modal_title_id = $instance_id . '-modal-title';
     <section class="section" data-lmq-section="result" hidden>
       <div class="card card--result">
         <div class="result-header">
-          <h2 class="result-title" data-lmq-role="result-header">Mon résultat</h2>
+          <h2 class="result-title" data-lmq-role="result-header" tabindex="-1">Mon résultat</h2>
           <div class="result-badge" data-lmq-role="result-badge"></div>
         </div>
 

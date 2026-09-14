@@ -14,6 +14,23 @@
     return 'intermediate';
   }
 
+  function isUserFacingHelp(help) {
+    if (typeof help !== 'string' || help.trim() === '') return false;
+    const internalPatterns = [
+      /^Item\b/i,
+      /\b(?:BE|SD|PF|FR|RN|HY|AP|SL)\d{2}\b/,
+      /\bgradation(?: comportementale)? LifeMetrics\b/i,
+      /^Question intégrative\b/i,
+      /^(?:Cette|La) question (?:évalue|mesure|utilise|fait partie)\b/i,
+      /^(?:Mesure|Évalue|Permet d'identifier|On interroge)\b/i,
+      /^Échelle simple LifeMetrics\b/i,
+      /^Il s'agit d'un indicateur déclaratif\b/i,
+      /^Les données Anses\b/i,
+      /\b(?:score|guardrail|bloc de sécurité)\b/i
+    ];
+    return !internalPatterns.some(pattern => pattern.test(help));
+  }
+
   function initQuestionnaire(rootEl) {
     if (rootEl.getAttribute && rootEl.getAttribute('data-lmq-initialized') === 'true') return;
     if (rootEl.setAttribute) rootEl.setAttribute('data-lmq-initialized', 'true');
@@ -123,7 +140,8 @@
       showSection('intro');
     }
 
-    function renderQuestion() {
+    function renderQuestion(options) {
+      const shouldFocusHeading = Boolean(options && options.focusHeading);
       const q = allQuestions[state.currentQuestionIndex];
       if (!q) return;
 
@@ -137,14 +155,24 @@
         safetyBadge.hidden = !isSafetyQuestion || safetyBadgeLabel === '';
       }
 
-      const prefixEl = rootEl.querySelector('[data-lmq-role="test-prefix"]');
-      if (prefixEl) {
-        if (q.help) {
-          prefixEl.textContent = q.help;
-          prefixEl.hidden = false;
+      const recallPeriodEl = rootEl.querySelector('[data-lmq-role="recall-period"]');
+      if (recallPeriodEl) {
+        const recallPeriod = config.id === 'pss10' && typeof config.recall_period === 'string'
+          ? config.recall_period.trim()
+          : '';
+        recallPeriodEl.textContent = recallPeriod ? `${recallPeriod} :` : '';
+        recallPeriodEl.hidden = recallPeriod === '';
+      }
+
+      const helpEl = rootEl.querySelector('[data-lmq-role="test-help"]')
+        || rootEl.querySelector('[data-lmq-role="test-prefix"]');
+      if (helpEl) {
+        if (isUserFacingHelp(q.help)) {
+          helpEl.textContent = q.help;
+          helpEl.hidden = false;
         } else {
-          prefixEl.textContent = '';
-          prefixEl.hidden = true;
+          helpEl.textContent = '';
+          helpEl.hidden = true;
         }
       }
 
@@ -154,7 +182,28 @@
       const answersContainer = rootEl.querySelector('[data-lmq-role="answers"]');
       if (answersContainer && q.answers) {
         answersContainer.innerHTML = '';
-        q.answers.forEach(ans => {
+        const selectedAnswerIndex = q.answers.findIndex(ans => state.answers[q.id] === ans.value);
+
+        const selectAnswer = (btn, ans) => {
+          if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
+
+          state.answers[q.id] = ans.value;
+
+          Array.from(answersContainer.children).forEach(child => {
+            const selected = child === btn;
+            child.classList.toggle('selected', selected);
+            child.classList.toggle('answer-card--selected', selected);
+            child.setAttribute('aria-checked', String(selected));
+            child.tabIndex = selected ? 0 : -1;
+          });
+          if (typeof btn.focus === 'function') btn.focus();
+
+          state.autoNextTimer = setTimeout(() => {
+            nextQuestion();
+          }, 650);
+        };
+
+        q.answers.forEach((ans, answerIndex) => {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'answer-card answer-btn';
@@ -166,21 +215,19 @@
             btn.setAttribute('aria-checked', 'false');
           }
           btn.setAttribute('role', 'radio');
-          btn.onclick = () => {
-            if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
-
-            state.answers[q.id] = ans.value;
-
-            Array.from(answersContainer.children).forEach(child => {
-              child.classList.remove('selected', 'answer-card--selected');
-              child.setAttribute('aria-checked', 'false');
-            });
-            btn.classList.add('selected', 'answer-card--selected');
-            btn.setAttribute('aria-checked', 'true');
-
-            state.autoNextTimer = setTimeout(() => {
-              nextQuestion();
-            }, 400);
+          btn.tabIndex = selectedAnswerIndex >= 0 ? (answerIndex === selectedAnswerIndex ? 0 : -1) : (answerIndex === 0 ? 0 : -1);
+          btn.onclick = () => selectAnswer(btn, ans);
+          btn.onkeydown = (event) => {
+            const key = event.key;
+            if (!['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'].includes(key)) return;
+            event.preventDefault();
+            let nextIndex = answerIndex;
+            if (key === 'ArrowDown' || key === 'ArrowRight') nextIndex = (answerIndex + 1) % q.answers.length;
+            if (key === 'ArrowUp' || key === 'ArrowLeft') nextIndex = (answerIndex - 1 + q.answers.length) % q.answers.length;
+            if (key === 'Home') nextIndex = 0;
+            if (key === 'End') nextIndex = q.answers.length - 1;
+            const nextButton = answersContainer.children[nextIndex];
+            if (nextButton) selectAnswer(nextButton, q.answers[nextIndex]);
           };
           answersContainer.appendChild(btn);
         });
@@ -202,12 +249,13 @@
       }
 
       showSection('test');
+      if (shouldFocusHeading && title && typeof title.focus === 'function') title.focus();
     }
 
     function nextQuestion() {
       if (state.currentQuestionIndex < allQuestions.length - 1) {
         state.currentQuestionIndex++;
-        renderQuestion();
+        renderQuestion({ focusHeading: true });
       } else {
         submitTest();
       }
@@ -217,7 +265,7 @@
       if (state.autoNextTimer) clearTimeout(state.autoNextTimer);
       if (state.currentQuestionIndex > 0) {
         state.currentQuestionIndex--;
-        renderQuestion();
+        renderQuestion({ focusHeading: true });
       }
     }
 
@@ -515,6 +563,9 @@
           if (retryBtn) retryBtn.disabled = false;
         });
       }
+
+      const resultHeading = rootEl.querySelector('[data-lmq-role="result-header"]');
+      if (resultHeading && typeof resultHeading.focus === 'function') resultHeading.focus();
     }
 
     const modal = rootEl.querySelector('[data-lmq-role="modal-overlay"]');
@@ -526,7 +577,7 @@
         learnMoreBtn.hidden = false;
 
         const modalTitle = rootEl.querySelector('[data-lmq-role="modal-title"]');
-        if (modalTitle) modalTitle.textContent = 'À propos de ce test';
+        if (modalTitle) modalTitle.textContent = 'À propos de ce questionnaire';
 
         const modalContent = rootEl.querySelector('[data-lmq-role="modal-content"]');
         if (modalContent) {
@@ -547,14 +598,18 @@
 
     function openModal() {
       if (modal) {
-        modal.hidden = false;
         state.previouslyFocused = document.activeElement;
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('modal--open');
         if (modalCloseBtn) modalCloseBtn.focus();
       }
     }
 
     function closeModal() {
       if (modal) {
+        modal.classList.remove('modal--open');
+        modal.setAttribute('aria-hidden', 'true');
         modal.hidden = true;
         if (state.previouslyFocused) state.previouslyFocused.focus();
       }
@@ -598,7 +653,7 @@
           state.sessionId = generateSessionId();
         }
         state.currentQuestionIndex = 0;
-        renderQuestion();
+        renderQuestion({ focusHeading: true });
       };
     }
 

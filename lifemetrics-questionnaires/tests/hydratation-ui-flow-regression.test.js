@@ -337,6 +337,6 @@ setTimeout(() => {
       assert.equal(sedRoot._elements['[data-lmq-role="answers"]'].children.length, 2);
 
       console.log('Hydratation UI flow regression tests: ALL PASSED.');
-    }, 450);
-  }, 450);
-}, 450);
+    }, 700);
+  }, 700);
+}, 700);

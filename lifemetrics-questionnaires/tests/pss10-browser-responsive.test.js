@@ -14,6 +14,7 @@ const pss10Config = {
   locale: 'fr-FR',
   title: 'Évaluez votre niveau de stress',
   description: 'Évaluez rapidement votre niveau de stress ressenti',
+  recall_period: 'Au cours du mois dernier',
   score: { target_min: 10, target_max: 50, normalize_when_unavailable: false, rounding: 'half_up' },
   questions: Array.from({ length: 10 }, (_, i) => ({
     id: `Q${i + 1}`,
@@ -109,6 +110,8 @@ function createMockRoot(instanceId, config, submitUrl) {
     '[data-lmq-role="intro-title"]': createMockElement('h1'),
     '[data-lmq-role="intro-text"]': createMockElement('div'),
     '[data-lmq-role="start"]': createMockElement('button'),
+    '[data-lmq-role="recall-period"]': createMockElement('p', { hidden: true }),
+    '[data-lmq-role="test-help"]': createMockElement('p', { hidden: true }),
     '[data-lmq-role="test-question"]': createMockElement('h2'),
     '[data-lmq-role="answers"]': createMockElement('div'),
     '[data-lmq-role="progress-label"]': createMockElement('p'),
@@ -198,6 +201,7 @@ for (const bp of breakpoints) {
     root._elements['[data-lmq-role="start"]'].onclick();
     assert.equal(root._elements['[data-lmq-section="intro"]'].hidden, true, `${bp.name}: intro hidden after start`);
     assert.equal(root._elements['[data-lmq-section="test"]'].hidden, false, `${bp.name}: test visible after start`);
+    assert.equal(root._elements['[data-lmq-role="recall-period"]'].textContent, 'Au cours du mois dernier :', `${bp.name}: PSS recall period is visible`);
 
     // 3. Step through all 10 questions answering vector 21 (answers: 3, 2, 2, 4, 4, 2, 4, 4, 2, 2)
     const answersSequence = ['3', '2', '2', '4', '4', '2', '4', '4', '2', '2'];
@@ -231,10 +235,10 @@ for (const bp of breakpoints) {
       assert.ok(targetBtn, `${bp.name}: answer button found for Q${index + 1} value ${val}`);
       targetBtn.onclick();
 
-      // Wait for autoNextTimer (400ms in questionnaire-ui.js) to finish and render next question
+      // Wait for the deliberate answer confirmation delay before the next question.
       setTimeout(() => {
         stepQuestion(index + 1);
-      }, 450);
+      }, 700);
     }
 
     stepQuestion(0);

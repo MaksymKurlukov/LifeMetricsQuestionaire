@@ -405,6 +405,10 @@
   line-height: 1.4;
 }
 
+.lmq-questionnaire .test-question:focus {
+  outline: none;
+}
+
 .lmq-questionnaire .answers {
   display: flex;
   flex-direction: column;
