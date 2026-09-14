@@ -59,21 +59,44 @@ $modal_title_id = $instance_id . '-modal-title';
       z-index: 9999;
       background: #1e293b;
       color: #f8fafc;
-      padding: 10px 20px;
+      padding: 10px 16px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 15px;
+      gap: 10px 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .lmq-dev-toolbar__main {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 10px;
+    }
+    .lmq-dev-toolbar__brand {
+      flex: 0 0 auto;
+      color: #38bdf8;
+      font-size: 15px;
+    }
+    .lmq-dev-toolbar__field {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 8px;
+    }
+    .lmq-dev-toolbar__label {
+      color: #94a3b8;
+      white-space: nowrap;
     }
     .lmq-dev-toolbar a {
       color: #38bdf8;
       text-decoration: none;
     }
     .lmq-dev-toolbar select {
+      min-width: 0;
+      max-width: min(28rem, 42vw);
       background: #0f172a;
       color: #f8fafc;
       border: 1px solid #334155;
@@ -92,6 +115,9 @@ $modal_title_id = $instance_id . '-modal-title';
       border: 1px solid #334155;
     }
     .lmq-dev-toolbar .device-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       background: transparent;
       border: none;
       color: #94a3b8;
@@ -101,6 +127,11 @@ $modal_title_id = $instance_id . '-modal-title';
       font-size: 12px;
       font-weight: 600;
       transition: all 0.2s;
+    }
+    .lmq-dev-toolbar .device-btn svg {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
     }
     .lmq-dev-toolbar .device-btn.active {
       background: #38bdf8;
@@ -129,6 +160,12 @@ $modal_title_id = $instance_id . '-modal-title';
     .lmq-preview-viewport.device-mobile {
       max-width: 375px;
     }
+    .lmq-preview-viewport .lmq-questionnaire {
+      left: 0;
+      width: 100%;
+      max-width: 100%;
+      margin-left: 0;
+    }
     .badge-status {
       display: inline-block;
       padding: 2px 8px;
@@ -140,29 +177,74 @@ $modal_title_id = $instance_id . '-modal-title';
       color: #ffffff;
       margin-left: 8px;
     }
+    @media (max-width: 700px) {
+      .lmq-dev-toolbar {
+        align-items: stretch;
+      }
+      .lmq-dev-toolbar__main {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .lmq-dev-toolbar__field {
+        order: 2;
+        width: 100%;
+      }
+      .lmq-dev-toolbar select {
+        width: 100%;
+        max-width: none;
+      }
+      .badge-status {
+        margin-left: auto;
+      }
+      .lmq-dev-toolbar .device-toggles {
+        width: 100%;
+      }
+      .lmq-dev-toolbar .device-btn {
+        flex: 1 1 0;
+        justify-content: center;
+        min-width: 0;
+        padding: 6px 4px;
+      }
+      .lmq-preview-stage {
+        padding: 8px;
+      }
+    }
+    @media (max-width: 390px) {
+      .lmq-dev-toolbar {
+        padding: 8px;
+      }
+      .lmq-dev-toolbar__label {
+        display: none;
+      }
+      .lmq-dev-toolbar .device-btn {
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background: #faf8f5;">
 
   <!-- Dev Bar -->
   <div class="lmq-dev-toolbar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <strong style="color: #38bdf8; font-size: 15px;">LifeMetrics Preview</strong>
-      <label for="q-select" style="color: #94a3b8;">Questionnaire :</label>
-      <select id="q-select" onchange="location.href='?q=' + this.value">
-        <?php foreach ($questionnaires as $slug => $label): ?>
-          <option value="<?php echo esc_attr($slug); ?>" <?php echo $slug === $selected_q ? 'selected' : ''; ?>>
-            <?php echo esc_html($label); ?> (<?php echo esc_html($slug); ?>)
-          </option>
-        <?php endforeach; ?>
-      </select>
+    <div class="lmq-dev-toolbar__main">
+      <strong class="lmq-dev-toolbar__brand">LifeMetrics Preview</strong>
       <span class="badge-status"><?php echo esc_html($config['status'] ?? 'ok'); ?></span>
+      <div class="lmq-dev-toolbar__field">
+        <label class="lmq-dev-toolbar__label" for="q-select">Questionnaire :</label>
+        <select id="q-select" aria-label="Questionnaire à prévisualiser" onchange="location.href='?q=' + this.value">
+          <?php foreach ($questionnaires as $slug => $label): ?>
+            <option value="<?php echo esc_attr($slug); ?>" <?php echo $slug === $selected_q ? 'selected' : ''; ?>>
+              <?php echo esc_html($label); ?> (<?php echo esc_html($slug); ?>)
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
 
-    <div class="device-toggles">
-      <button type="button" class="device-btn active" onclick="setDevice('desktop', this)">🖥️ Desktop</button>
-      <button type="button" class="device-btn" onclick="setDevice('tablet', this)">📱 Tablet (768px)</button>
-      <button type="button" class="device-btn" onclick="setDevice('mobile', this)">📱 Mobile (375px)</button>
+    <div class="device-toggles" aria-label="Largeur de prévisualisation">
+      <button type="button" class="device-btn active" onclick="setDevice('desktop', this)" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 20h8M12 16v4"/></svg>Ordinateur</button>
+      <button type="button" class="device-btn" onclick="setDevice('tablet', this)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>Tablette</button>
+      <button type="button" class="device-btn" onclick="setDevice('mobile', this)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Mobile</button>
     </div>
   </div>
 
@@ -192,7 +274,9 @@ $modal_title_id = $instance_id . '-modal-title';
       const vp = document.getElementById('preview-viewport');
       vp.className = 'lmq-preview-viewport' + (type === 'desktop' ? '' : ' device-' + type);
       document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.device-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
       btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
     }
   </script>
 </body>
