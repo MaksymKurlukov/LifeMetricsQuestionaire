@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
-- Prochaine sous-étape à exécuter : PHASE 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
+- Prochaine sous-étape à exécuter : PHASE 14.5 — Sérialisation et transport des questions & drapeaux Safety
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -708,15 +708,20 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
-- Statut : À FAIRE / À MODIFIER
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Garantir qu'aucune valeur sensible (score, catégorie, dimensions, drapeaux) transmise par le client ne peut être falsifiée, sur l'ensemble des 10 questionnaires.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/tests/global-tamper-resistance.test.php`
   - `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`
-- État actuel : Seuls 7 questionnaires propriétaires + PSS-10 sont soumis au test de payload forgé.
-- Modification nécessaire : Inclure `risque-nutritionnel` et `bien-etre` dans la matrice de tamper-resistance et vérifier que le serveur recalcule tout depuis les réponses brutes.
-- Tests ciblés : `php lifemetrics-questionnaires/tests/global-tamper-resistance.test.php` et `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php`.
-- Critères d'acceptation : Rejet absolu des claims clients injectés (score 9999, fausses catégories, etc.) sur les 10 questionnaires.
+- Résultat :
+  1. Matrice de tamper-resistance étendue aux 10 questionnaires (PSS-10 + 9 propriétaires dont `risque-nutritionnel` et `bien-etre`).
+  2. Vérification du rejet catégorique de l'ensemble des claims clients falsifiés : scores injectés (9999), catégories forgées (`FORGED_MAX_CATEGORY`), dimensions ou drapeaux non autorisés, fausses feuilles de destination.
+  3. Garantie de l'autorité serveur absolue : le serveur recalcule tout indépendamment depuis les réponses brutes avant transmission sécurisée vers Google Apps Script / Google Sheets.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/global-tamper-resistance.test.php` : PASS (10/10 questionnaires)
+  - `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php` : PASS (10/10 questionnaires)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1, 14.3.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -980,6 +985,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `backend-routing.test.php` (BACK-001 à BACK-012c PASS), `backend-logic.test.js` (PASS), suite complète 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Résolution d'endpoints autoritaire validée pour l'ensemble des 10 questionnaires (PSS-10 vers endpoint dédié legacy, 9 questionnaires propriétaires dont `risque-nutritionnel` et `bien-etre` vers `LMQ_GOOGLE_ENDPOINT`), getTargetSheetName et getSchema validés en JS, tests de rejet SSRF/redirections malveillantes confirmés, et flux complets de soumission multi-destinations BACK-012/b/c certifiés.
 - Prochaine sous-étape : 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires).
+
+### 2026-09-15 — Sous-étape 14.4 : Résistance globale aux falsifications et autorité serveur (10 questionnaires)
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/global-tamper-resistance.test.php`, `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `global-tamper-resistance.test.php` (PASS 10/10), `rest-backend-submission.test.php` (PASS 10/10), suite complète 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Certification de l'autorité serveur et de la tamper-resistance sur les 10 questionnaires. Élimination garantie de toute tentative d'injection de score ou de catégorie cliente, isolation de PSS-10 et recalcul systématique à partir des réponses brutes.
+- Prochaine sous-étape : 14.5 — Sérialisation et transport des questions & drapeaux Safety.
 
 ---
 

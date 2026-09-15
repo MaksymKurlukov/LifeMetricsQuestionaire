@@ -107,6 +107,8 @@ $all_questionnaires = array(
     'nutrition' => 'nutrition/questionnaire.php',
     'activite-physique' => 'activite-physique/questionnaire.php',
     'pieds-confort-postural' => 'pieds-confort-postural/questionnaire.php',
+    'risque-nutritionnel' => 'risque-nutritionnel/questionnaire.php',
+    'bien-etre' => 'bien-etre/questionnaire.php',
 );
 
 $registry = new LifeMetrics_Questionnaire_Registry(
@@ -132,7 +134,9 @@ $proprietary_ids = array(
     'sommeil',
     'nutrition',
     'activite-physique',
-    'pieds-confort-postural'
+    'pieds-confort-postural',
+    'risque-nutritionnel',
+    'bien-etre'
 );
 
 foreach ($proprietary_ids as $qid) {
@@ -224,4 +228,4 @@ $pss10_posted = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'],
 tamper_assert($pss10_posted['final_score'] === 30, "[pss10] Authoritative score 30 enforced (client claim of 50 overridden)");
 tamper_assert($pss10_posted['category'] === 'Stress très élevé', "[pss10] Authoritative category enforced (client claim of 'Stress bas' overridden)");
 
-echo "Global Tamper-Resistance & Server Scoring Authority Tests (ALL 8 QUESTIONNAIRES): ALL PASSED.\n";
+echo "Global Tamper-Resistance & Server Scoring Authority Tests (ALL 10 QUESTIONNAIRES): ALL PASSED.\n";

@@ -114,6 +114,8 @@ $all_questionnaires = array(
     'nutrition' => 'nutrition/questionnaire.php',
     'activite-physique' => 'activite-physique/questionnaire.php',
     'pieds-confort-postural' => 'pieds-confort-postural/questionnaire.php',
+    'risque-nutritionnel' => 'risque-nutritionnel/questionnaire.php',
+    'bien-etre' => 'bien-etre/questionnaire.php',
 );
 
 $registry = new LifeMetrics_Questionnaire_Registry(
@@ -140,10 +142,11 @@ foreach (array_keys($all_questionnaires) as $id) {
     sub_assert($registry->get_internal($id) !== null, "get_internal('$id') returns valid configuration");
 }
 
-// 3. Test all 7 proprietary questionnaires submit cleanly via REST backend without tokens or wp-config constants
+// 3. Test all 9 proprietary questionnaires submit cleanly via REST backend without tokens or wp-config constants
 $proprietary_ids = array(
     'sedentarite', 'hydratation', 'fatigue-recuperation', 'sommeil',
-    'nutrition', 'activite-physique', 'pieds-confort-postural'
+    'nutrition', 'activite-physique', 'pieds-confort-postural',
+    'risque-nutritionnel', 'bien-etre'
 );
 
 foreach ($proprietary_ids as $q_idx => $q_id) {
