@@ -712,40 +712,48 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ##### Sous-étape 14.5 — Sérialisation et transport des questions & drapeaux Safety
 - Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
-- Objectif : Confirmer que les questions Safety (Sommeil, Hydratation, Fatigue, Nutrition, Pieds, Risque nutritionnel) sont sérialisées avec labels clairs, sans points, sans altération du score numérique, et avec calcul serveur rigoureux de la colonne `safety_attention`.
+- Objectif : Confirmer que les questions Safety des 6 questionnaires propriétaires concernés (Sommeil, Nutrition, Pieds & confort postural, Hydratation, Fatigue & récupération, Risque nutritionnel) sont sérialisées avec labels clairs, sans points, sans altération du score numérique, et avec calcul serveur rigoureux de la colonne `safety_attention`.
+  - 6 questionnaires propriétaires avec questions Safety : Sommeil (3 questions), Nutrition (3 questions), Pieds & confort postural (4 questions), Hydratation (3 questions), Fatigue & récupération (3 questions), Risque nutritionnel (4 questions).
+  - Absence stricte de bloc Safety sur : Bien-être (0), Activité physique (0), Sédentarité (0).
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
 - Modification nécessaire : Ajouter des tests de non-régression explicites vérifiant que `safety_attention` prend la valeur "Oui" si un trigger est actif et "Non" sinon, et qu'aucun point numérique n'est jamais attribué.
 - Tests ciblés : Tests PHP ciblés.
-- Critères d'acceptation : Écriture conforme et non-pollution du score certifiée sur les 5 questionnaires à volet Safety.
+- Critères d'acceptation : Écriture conforme et non-pollution du score certifiée sur les 6 questionnaires propriétaires à volet Safety. Absence de bloc Safety confirmée sur Bien-être, Activité physique et Sédentarité.
 - Dépendances : 14.1, 14.2.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.6 — Audit du transport N/A et normalisation du score
 - Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
-- Objectif : Confirmer que les options N/A d'Hydratation (HY05) et de Sédentarité (SD07, SD08) transmettent des chaînes vides `""` dans la colonne Points sans introduire de décalage de colonnes, et que le score est normalisé exactement sur la capacité réelle disponible.
+- Objectif : Confirmer que les options N/A d'Hydratation (HY05) et de Sédentarité (SD07, SD08) transmettent des chaînes vides `""` dans la colonne Points sans introduire de décalage de colonnes, et que le score est normalisé selon la formule méthodologique validée de référence :
+  `final_score = ROUND((raw_score / applicable_question_count) * 12)`
+  Ne pas la remplacer dans la documentation ou les critères de validation par `round((raw_score / available_max) * 60)`. Cette formule validée reste la source de vérité et doit être celle explicitement vérifiée.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
-- Modification nécessaire : Valider dans les tests de stockage que le cas N/A écrit le libellé dans la colonne texte et laisse la colonne de points vide (`""`).
-- Tests ciblés : Tests PHP / JS format de stockage.
-- Critères d'acceptation : Colonnes parfaitement synchronisées, pas de `0` ou `null` indésirable.
+- Modification nécessaire : Valider dans les tests de stockage que le cas N/A écrit le libellé dans la colonne texte et laisse la colonne de points vide (`""`), et vérifier explicitement que le calcul du score normalisé respecte strictement la formule de référence `final_score = ROUND((raw_score / applicable_question_count) * 12)`.
+- Tests ciblés : Tests PHP / JS format de stockage et scoring engine.
+- Critères d'acceptation : Formule méthodologique `final_score = ROUND((raw_score / applicable_question_count) * 12)` strictement confirmée ; colonnes parfaitement synchronisées, pas de `0` ou `null` indésirable.
 - Dépendances : 14.2.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.7 — Vérification du transport des guardrails et de la catégorie affichée
 - Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
-- Objectif : Valider que pour les 4 questionnaires avec guardrails (Pieds, Sédentarité, Risque nutritionnel, Bien-être), le transport transmet à la fois `calculated_category` et `displayed_category`, et que le tableur stocke la catégorie affichée sans altérer le score numérique.
+- Objectif : Valider que pour les 4 questionnaires avec guardrails (Pieds & confort postural, Sédentarité, Risque nutritionnel, Bien-être), le transport transmet à la fois `calculated_category` et `displayed_category`, et que le tableur stocke la catégorie affichée sans altérer le score numérique.
+  - **Sédentarité** : Le guardrail validé n'est PAS `SD01 >= 4`. La règle validée est : `D1 = SD01 + SD02`. Si `D1 >= 8` ET que `calculated_category` est verte (`HABITUDES_FAVORABLES`), alors `displayed_category` est plafonnée à la catégorie orange `SEDENTARITE_A_REDUIRE`. Le `final_score` reste inchangé. Le guardrail ne doit jamais forcer une catégorie rouge.
+  - **Pieds & confort postural** : Guardrail fonctionnel (PF09 ou PF10 >= 4 plafonne à `PIEDS_A_SURVEILLER` orange sans altérer le score brut).
+  - **Risque nutritionnel** : Guardrails RN03, RN04, RN05, RN08 >= 4 plafonnent à `RISQUE_A_SURVEILLER` orange sans altérer le score brut.
+  - **Bien-être** : Guardrail dimensionnel (moyenne dimension >= 4.00 plafonne le vert à `BIEN_ETRE_A_RENFORCER` orange sans altérer le score brut).
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
-- Modification nécessaire : Tester les cas de déclenchement des garde-fous et vérifier les valeurs écrites dans la colonne `category`.
+- Modification nécessaire : Tester les cas de déclenchement des garde-fous (dont spécifiquement `D1 = SD01 + SD02 >= 8` plafonnant à `SEDENTARITE_A_REDUIRE` pour Sédentarité) et vérifier les valeurs écrites dans la colonne `category`.
 - Tests ciblés : Tests PHP de soumission REST.
-- Critères d'acceptation : Score final intact + catégorie plafonnée enregistrée.
+- Critères d'acceptation : Score final intact + catégorie plafonnée enregistrée (Sédentarité plafonnée à orange `SEDENTARITE_A_REDUIRE` sans forcer le rouge lorsque D1 >= 8).
 - Dépendances : 14.4.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
