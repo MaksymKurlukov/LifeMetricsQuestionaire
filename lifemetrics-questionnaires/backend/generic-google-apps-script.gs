@@ -309,7 +309,7 @@ function validationError(message) {
 function safeSheetText(value) {
   if (value === null || value === undefined) return '';
   var text = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return /^[=+\-@]/.test(text) ? "'" + text : text;
+  return /^\s*[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 function isValidSessionId(value) {
@@ -488,8 +488,8 @@ function doPost(e) {
     }
 
     // Metric and score summary
-    row.push(data.raw_score !== undefined ? data.raw_score : '');
-    row.push(data.available_max !== undefined ? data.available_max : '');
+    row.push(typeof data.raw_score === 'number' ? data.raw_score : (data.raw_score !== undefined && data.raw_score !== null ? safeSheetText(data.raw_score) : ''));
+    row.push(typeof data.available_max === 'number' ? data.available_max : (data.available_max !== undefined && data.available_max !== null ? safeSheetText(data.available_max) : ''));
     row.push(data.final_score);
 
     // Human-facing category

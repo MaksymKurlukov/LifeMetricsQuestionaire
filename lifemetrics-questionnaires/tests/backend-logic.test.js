@@ -60,6 +60,43 @@ assert.equal(genericContext.safeSheetText('+12345'), "'+12345");
 assert.equal(genericContext.safeSheetText('-CMD("calc")'), "'-CMD(\"calc\")");
 assert.equal(genericContext.safeSheetText('@SUM(A1:A10)'), "'@SUM(A1:A10)");
 assert.equal(genericContext.safeSheetText('=IMAGE("https://example.com/bad.png")'), "'=IMAGE(\"https://example.com/bad.png\")");
+assert.equal(genericContext.safeSheetText('=HYPERLINK("https://evil.com","Click")'), "'=HYPERLINK(\"https://evil.com\",\"Click\")");
+assert.equal(genericContext.safeSheetText('=IMPORTXML("https://attacker.com","//a")'), "'=IMPORTXML(\"https://attacker.com\",\"//a\")");
+assert.equal(genericContext.safeSheetText('=cmd|\' /C calc\'!A0'), "'=cmd|' /C calc'!A0");
+assert.equal(genericContext.safeSheetText('+cmd|\' /C calc\'!A0'), "'+cmd|' /C calc'!A0");
+assert.equal(genericContext.safeSheetText('-2+3+cmd|\' /C calc\'!A0'), "'-2+3+cmd|' /C calc'!A0");
+assert.equal(genericContext.safeSheetText('@SUM(A1:A100)'), "'@SUM(A1:A100)");
+
+// Formula injection with leading whitespace, spaces, tabs and newlines
+assert.equal(genericContext.safeSheetText('  =SUM(1,2)'), "'  =SUM(1,2)");
+assert.equal(genericContext.safeSheetText('   +12345'), "'   +12345");
+assert.equal(genericContext.safeSheetText(' -CMD("calc")'), "' -CMD(\"calc\")");
+assert.equal(genericContext.safeSheetText('  @SUM(A1:A10)'), "'  @SUM(A1:A10)");
+assert.equal(genericContext.safeSheetText('\t=IMPORTXML("x")'), "'\t=IMPORTXML(\"x\")");
+assert.equal(genericContext.safeSheetText('\n-12345'), "'\n-12345");
+assert.equal(genericContext.safeSheetText('\r+99999'), "'\r+99999");
+assert.equal(genericContext.safeSheetText('\r\n@ALERT()'), "'\r\n@ALERT()");
+
+// Safe texts that must NOT be prefixed
+assert.equal(genericContext.safeSheetText('Option 1 - description standard'), 'Option 1 - description standard');
+assert.equal(genericContext.safeSheetText('Score : 12 points'), 'Score : 12 points');
+assert.equal(genericContext.safeSheetText('Stress bas'), 'Stress bas');
+assert.equal(genericContext.safeSheetText('Bien-être satisfaisant'), 'Bien-être satisfaisant');
+assert.equal(genericContext.safeSheetText('Oui'), 'Oui');
+assert.equal(genericContext.safeSheetText('Non'), 'Non');
+assert.equal(genericContext.safeSheetText('7 à 9 heures'), '7 à 9 heures');
+
+// Already escaped texts must not be double escaped
+assert.equal(genericContext.safeSheetText("'=ALREADY_ESCAPED"), "'=ALREADY_ESCAPED");
+assert.equal(genericContext.safeSheetText("'+ALREADY_ESCAPED"), "'+ALREADY_ESCAPED");
+assert.equal(genericContext.safeSheetText("'-ALREADY_ESCAPED"), "'-ALREADY_ESCAPED");
+assert.equal(genericContext.safeSheetText("'@ALREADY_ESCAPED"), "'@ALREADY_ESCAPED");
+
+// Null, undefined, empty, numbers, objects
+assert.equal(genericContext.safeSheetText(null), '');
+assert.equal(genericContext.safeSheetText(undefined), '');
+assert.equal(genericContext.safeSheetText(''), '');
+assert.equal(genericContext.safeSheetText(123), '123');
 assert.equal(genericContext.safeSheetText({ Q1: '2', Q2: '3' }), '{"Q1":"2","Q2":"3"}');
 
 // Session ID and timestamp validations

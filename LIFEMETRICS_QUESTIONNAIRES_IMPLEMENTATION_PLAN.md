@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
-- Prochaine sous-étape à exécuter : PHASE 14.9 — Neutralisation systématique des injections de formules
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.9 — Neutralisation systématique des injections de formules
+- Prochaine sous-étape à exécuter : PHASE 14.10 — Isolation du transport PSS-10 legacy et certification globale
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -807,14 +807,19 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.9 — Neutralisation systématique des injections de formules
-- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Valider la neutralisation systématique des caractères de formules Google Sheets (`=`, `+`, `-`, `@`) sur tous les champs textuels des payloads.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
   - `lifemetrics-questionnaires/tests/backend-logic.test.js`
-- Modification nécessaire : S'assurer que chaque valeur textuelle insérée dans une cellule passe par `safeSheetText()` et est préfixée d'une apostrophe si elle commence par un caractère de formule.
-- Tests ciblés : `node lifemetrics-questionnaires/tests/backend-logic.test.js`.
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
+- Modification nécessaire : S'assurer que chaque valeur textuelle insérée dans une cellule passe par `safeSheetText()` et est préfixée d'une apostrophe si elle commence par un caractère de formule (y compris avec espaces ou retours à la ligne initiaux).
+- Tests exécutés :
+  - `node lifemetrics-questionnaires/tests/backend-logic.test.js` : PASS (Validation unitaire exhaustive de `safeSheetText` sur l'ensemble des déclencheurs `=+-@`, espaces initiaux, tabulations, retours à la ligne, vecteurs d'attaque `IMPORTXML`, `HYPERLINK`, `cmd|calc`, textes sûrs préservés sans apostrophe, et préservation des textes déjà échappés sans double échappement)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : Test M PASS (Validation d'injection de payload complet sur `sommeil` avec formules sur version, libellés de questions scorées et de sécurité, catégorie et scores non numériques : neutralisation systématique confirmée sur chaque cellule de la ligne physique sans altérer la structure des 35 colonnes)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
 - Critères d'acceptation : Aucun texte commençant par `=+-@` ne peut s'exécuter comme formule dans Google Sheets.
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -1042,6 +1047,17 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   3. Expiration de verrouillage (Lock timeout) : Détection de lock saturé via `LockService.tryLock(30000)` renvoyant `{ ok: false, code: 'lock_timeout' }` avec 0 ligne insérée, mappé en `lmq_upstream_rejected` (HTTP 502).
   4. Timeouts réseau et corps de réponse malformés non-JSON : Mappés de façon étanche en HTTP 502 avec codes d'erreur explicites.
 - Prochaine sous-étape : 14.9 — Neutralisation systématique des injections de formules.
+
+### 2026-09-15 — Sous-étape 14.9 : Neutralisation systématique des injections de formules
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`, `lifemetrics-questionnaires/tests/backend-logic.test.js`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `backend-logic.test.js` (PASS), `google-sheets-storage-format.test.js` (Test M PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Neutralisation systématique et étanche des injections de formules Google Sheets :
+  1. Regex `safeSheetText` renforcée : `/^\s*[=+\-@]/` neutralise tout caractère déclencheur de formule (`=`, `+`, `-`, `@`), y compris lorsqu'il est précédé d'espaces, de tabulations ou de sauts de ligne, en le préfixant d'une apostrophe simple `'`.
+  2. Préservation des données textuelles légitimes : Les libellés légitimes contenant des tirets ou ponctuations internes (ex: `'Option 1 - description'`, `'Score : 12 points'`, `'7 à 9 heures'`) ne sont pas altérés et restent sans apostrophe. Les textes déjà échappés ne subissent aucun double échappement.
+  3. Sécurisation complète des colonnes numériques : `raw_score` et `available_max` passent par `safeSheetText` s'ils sont transmis sous forme de chaînes textuelles pour éviter toute injection dans les colonnes métriques.
+  4. Test physique d'injection complet : Validation sur le schéma `sommeil` avec des payloads hostiles (`=HYPERLINK(...)`, `-CMD(...)`, `\t=IMPORTXML(...)`, `@SUM(...)`, `\n+DANGEROUS_CATEGORY`) : aucune cellule de la ligne insérée ne peut s'exécuter comme formule dans Google Sheets.
+- Prochaine sous-étape : 14.10 — Isolation du transport PSS-10 legacy et certification globale.
 
 ---
 

