@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.7 — Vérification du transport des guardrails et de la catégorie affichée
-- Prochaine sous-étape à exécuter : PHASE 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
+- Prochaine sous-étape à exécuter : PHASE 14.9 — Neutralisation systématique des injections de formules
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -788,15 +788,20 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
-- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Valider le mécanisme anti-doublon (idempotence) sur requêtes répétées, doubles-clics, retries réseau, et expiration de lock.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-google-apps-script-adapter.php`
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
   - `lifemetrics-questionnaires/tests/backend-routing.test.php`
-- Modification nécessaire : Ajouter des cas de tests reproduisant l'envoi répété d'un même `session_id` pour confirmer la réponse `{ success: true, duplicate: true }` sans écriture redondante.
-- Tests ciblés : `php lifemetrics-questionnaires/tests/backend-routing.test.php`.
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
+- Modification nécessaire : Ajouter des cas de tests reproduisant l'envoi répété d'un même `session_id` pour confirmer la réponse `{ success: true, duplicate: true }` sans écriture redondante, tester le rate limiting et l'expiration de lock.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/backend-routing.test.php` : BACK-013 à BACK-017 PASS (Soumission répétée avec `session_id` identique renvoie `{ success: true, duplicate: true }` ; erreur amont `rate_limited` renvoie `lmq_upstream_rejected` 502 ; erreur `lock_timeout` renvoie `lmq_upstream_rejected` 502 ; timeout réseau renvoie `lmq_upstream_network_error` 502 ; réponse amont non-JSON renvoie `lmq_upstream_rejected` 502)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : Test L PASS (Idempotence multi-réémissions : 5 appels avec `session_id` identique insèrent exactement 1 ligne, les appels 2 à 5 renvoient `{ ok: true, duplicate: true }` avec 0 ligne dupliquée ajoutée ; rate limiting `CacheService` renvoie `{ ok: false, code: 'rate_limited' }` avec 0 ligne insérée ; expiration de lock `LockService` renvoie `{ ok: false, code: 'lock_timeout' }` avec 0 ligne insérée)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
 - Critères d'acceptation : Zéro ligne dupliquée dans le tableur lors de réémissions du même `session_id`.
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -1026,6 +1031,17 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `rest-backend-submission.test.php` (Section 8 PASS), `google-sheets-storage-format.test.js` (Test K PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Validation complète du transport des 4 questionnaires comportant des garde-fous (Sédentarité, Pieds & confort postural, Risque nutritionnel, Bien-être). Transmission certifiée dans le payload de `calculated_category`, `displayed_category` et `applied_classification_rules`. Confirmation de la règle validée pour Sédentarité : `D1 = SD01 + SD02 >= 8` plafonne la catégorie affichée à l'orange `SEDENTARITE_A_REDUIRE` sans forcer le rouge et sans altérer les scores bruts ou finaux (qui restent intacts à 18). Confirmation du stockage dans la colonne `category` du tableur de la catégorie plafonnée pour l'ensemble des 4 questionnaires avec préservation stricte de l'intégrité des scores numériques.
 - Prochaine sous-étape : 14.8 — Vérification de l'idempotence, du session_id et du rate limiting.
+
+### 2026-09-15 — Sous-étape 14.8 : Vérification de l'idempotence, du session_id et du rate limiting
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/backend-routing.test.php`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `backend-routing.test.php` (BACK-013 à BACK-017 PASS), `google-sheets-storage-format.test.js` (Test L PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Validation complète de l'idempotence et de la résilience transport :
+  1. Idempotence bout-en-bout : Répétition de soumissions avec le même `session_id` (simulant double-clics ou retries réseau) renvoie `{ success: true, duplicate: true }` côté WordPress REST, et `{ ok: true, duplicate: true }` côté Google Apps Script avec 0 ligne dupliquée dans le tableur.
+  2. Rate limiting amont : Détection du seuil limite dans `CacheService` renvoyant `{ ok: false, code: 'rate_limited' }` avec 0 ligne insérée, mappé en `lmq_upstream_rejected` (HTTP 502) côté WordPress.
+  3. Expiration de verrouillage (Lock timeout) : Détection de lock saturé via `LockService.tryLock(30000)` renvoyant `{ ok: false, code: 'lock_timeout' }` avec 0 ligne insérée, mappé en `lmq_upstream_rejected` (HTTP 502).
+  4. Timeouts réseau et corps de réponse malformés non-JSON : Mappés de façon étanche en HTTP 502 avec codes d'erreur explicites.
+- Prochaine sous-étape : 14.9 — Neutralisation systématique des injections de formules.
 
 ---
 

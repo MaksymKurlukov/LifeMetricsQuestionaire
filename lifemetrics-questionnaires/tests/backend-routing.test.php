@@ -334,4 +334,62 @@ $posted_be_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'
 expect_true($posted_be_body['questionnaire_id'] === 'bien-etre', 'BACK-012c: Questionnaire ID matches');
 expect_true($posted_be_body['final_score'] === 12, 'BACK-012c: Final score is 12');
 
-echo "All Backend Multi-Destination Routing Tests (BACK-001 to BACK-012): ALL PASSED.\n";
+// ----------------------------------------------------
+// BACK-013: Submission Service Idempotent Duplicate Handling (Phase 14.8)
+// ----------------------------------------------------
+// First submission returns duplicate: false
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => true, 'duplicate' => false)));
+$dup_test_sid = 'f1e2d3c4-b5a6-4789-8012-feebdaed0001';
+$dup_answers = array();
+for ($i = 1; $i <= 12; $i++) {
+    $dup_answers['BE' . sprintf('%02d', $i)] = '1';
+}
+$req_dup1 = new WP_REST_Request(array('answers' => $dup_answers, 'session_id' => $dup_test_sid));
+$res_dup1 = $service->submit('bien-etre', $req_dup1);
+expect_true(is_array($res_dup1) && $res_dup1['success'] === true && $res_dup1['duplicate'] === false, 'BACK-013: Initial submission returns success:true, duplicate:false');
+
+// Second submission with exact same session_id simulated as already present upstream
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => true, 'duplicate' => true)));
+$req_dup2 = new WP_REST_Request(array('answers' => $dup_answers, 'session_id' => $dup_test_sid));
+$res_dup2 = $service->submit('bien-etre', $req_dup2);
+expect_true(is_array($res_dup2) && $res_dup2['success'] === true && $res_dup2['duplicate'] === true, 'BACK-013: Resubmission of same session_id returns success:true, duplicate:true');
+
+// ----------------------------------------------------
+// BACK-014: Upstream Rate Limiting Error Handling (Phase 14.8)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => false, 'code' => 'rate_limited', 'error' => 'Too many requests')));
+$res_rl = $service->submit('bien-etre', $req_dup1);
+expect_error_code('lmq_upstream_rejected', $res_rl, 'BACK-014: Upstream rate_limited error returns lmq_upstream_rejected (502)');
+expect_true($res_rl->get_error_data()['status'] === 502, 'BACK-014: HTTP status code is 502');
+
+// ----------------------------------------------------
+// BACK-015: Upstream Lock Timeout Error Handling (Phase 14.8)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => json_encode(array('ok' => false, 'code' => 'lock_timeout', 'error' => 'Storage is busy')));
+$res_lock = $service->submit('bien-etre', $req_dup1);
+expect_error_code('lmq_upstream_rejected', $res_lock, 'BACK-015: Upstream lock_timeout returns lmq_upstream_rejected (502)');
+expect_true($res_lock->get_error_data()['status'] === 502, 'BACK-015: HTTP status code is 502');
+
+// ----------------------------------------------------
+// BACK-016: Upstream Network / Transport Timeout Handling (Phase 14.8)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = new WP_Error('http_request_failed', 'cURL error 28: Operation timed out');
+$res_net = $service->submit('bien-etre', $req_dup1);
+expect_error_code('lmq_upstream_network_error', $res_net, 'BACK-016: Network timeout returns lmq_upstream_network_error (502)');
+expect_true($res_net->get_error_data()['status'] === 502, 'BACK-016: HTTP status code is 502');
+
+// ----------------------------------------------------
+// BACK-017: Malformed Upstream Non-JSON Response Handling (Phase 14.8)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$GLOBALS['mock_remote_post_response'] = array('status' => 200, 'body' => '<html><body>Service Unavailable</body></html>');
+$res_malformed = $service->submit('bien-etre', $req_dup1);
+expect_error_code('lmq_upstream_rejected', $res_malformed, 'BACK-017: Malformed upstream body returns lmq_upstream_rejected (502)');
+expect_true($res_malformed->get_error_data()['status'] === 502, 'BACK-017: HTTP status code is 502');
+
+echo "All Backend Multi-Destination Routing & Idempotence Tests (BACK-001 to BACK-017): ALL PASSED.\n";

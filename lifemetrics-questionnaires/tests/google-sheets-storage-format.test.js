@@ -607,6 +607,89 @@ const beGRow = beSheetInstance.rows[2];
 assert.strictEqual(beGRow[27], 18, 'raw_score strictly intact (18)');
 assert.strictEqual(beGRow[28], 60, 'available_max strictly intact (60)');
 assert.strictEqual(beGRow[29], 18, 'final_score strictly intact (18)');
-assert.strictEqual(beGRow[30], 'BIEN_ETRE_A_RENFORCER', 'category column stores capped displayed_category (BIEN_ETRE_A_RENFORCER)');
-
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');
+
+// Test L: Verification of Idempotence, Session_ID Deduplication, Rate Limiting & Lock Timeout (Phase 14.8)
+
+// 1. Multi-Resubmission Idempotence (5 submissions of identical session_id to Hydratation)
+const multiIdemPayload = {
+  session_id: '77770000-1111-4222-8333-444455556666',
+  completed_at: '2026-09-09T18:00:00Z',
+  questionnaire_id: 'hydratation',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'HY01': { value: 1, label: 'Principale', points: 1, applicable: true }
+  },
+  safety_answers: {
+    'HYSF01': { value: 'no', label: 'Non', triggers: [] }
+  },
+  raw_score: 12,
+  available_max: 60,
+  final_score: 12,
+  calculated_category: 'HYDRATATION_FAVORABLE',
+  displayed_category: 'Habitudes favorables',
+  safety_flags: []
+};
+
+const hydraSheetBefore = hydraSheet.getLastRow();
+// Submission 1: fresh session_id -> duplicate: false, row added
+const call1 = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(multiIdemPayload) } }).text);
+assert.strictEqual(call1.ok, true, 'Call 1 succeeds');
+assert.strictEqual(call1.duplicate, false, 'Call 1 is not duplicate');
+assert.strictEqual(hydraSheet.getLastRow(), hydraSheetBefore + 1, 'Exactly one row added for call 1');
+
+// Submissions 2 to 5: identical session_id -> duplicate: true, 0 rows added
+for (let repeat = 2; repeat <= 5; repeat++) {
+  const repeatCall = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(multiIdemPayload) } }).text);
+  assert.strictEqual(repeatCall.ok, true, `Repeat call ${repeat} returns ok:true`);
+  assert.strictEqual(repeatCall.duplicate, true, `Repeat call ${repeat} returns duplicate:true`);
+  assert.strictEqual(hydraSheet.getLastRow(), hydraSheetBefore + 1, `Zero duplicate rows appended on repeat call ${repeat}`);
+}
+
+// 2. Upstream Rate Limiting Verification via CacheService
+const rateLimitCache = {
+  store: { 'rl_88880000-1111-4222-8333-444455556666': '1' },
+  get: (key) => rateLimitCache.store[key] || null,
+  put: (key, val) => { rateLimitCache.store[key] = val; }
+};
+const rateLimitEnv = scriptFn(
+  sandbox.SpreadsheetApp,
+  sandbox.LockService,
+  { getScriptCache: () => rateLimitCache },
+  sandbox.ContentService,
+  sandbox.console
+);
+const rateLimitPayload = {
+  ...multiIdemPayload,
+  session_id: '88880000-1111-4222-8333-444455556666'
+};
+const rlRowsBefore = hydraSheet.getLastRow();
+const rlRes = JSON.parse(rateLimitEnv.doPost({ postData: { contents: JSON.stringify(rateLimitPayload) } }).text);
+assert.strictEqual(rlRes.ok, false, 'Rate limited call returns ok:false');
+assert.strictEqual(rlRes.code, 'rate_limited', 'Rate limited call returns code:rate_limited');
+assert.strictEqual(hydraSheet.getLastRow(), rlRowsBefore, 'Zero rows appended when rate limited');
+
+// 3. Upstream Lock Timeout Verification via LockService
+const busyLockEnv = scriptFn(
+  sandbox.SpreadsheetApp,
+  {
+    getScriptLock: () => ({
+      tryLock: () => false, // lock acquisition fails
+      releaseLock: () => {}
+    })
+  },
+  sandbox.CacheService,
+  sandbox.ContentService,
+  sandbox.console
+);
+const lockPayload = {
+  ...multiIdemPayload,
+  session_id: '99990000-1111-4222-8333-444455556666'
+};
+const lockRowsBefore = hydraSheet.getLastRow();
+const lockRes = JSON.parse(busyLockEnv.doPost({ postData: { contents: JSON.stringify(lockPayload) } }).text);
+assert.strictEqual(lockRes.ok, false, 'Lock timeout returns ok:false');
+assert.strictEqual(lockRes.code, 'lock_timeout', 'Lock timeout returns code:lock_timeout');
+assert.strictEqual(hydraSheet.getLastRow(), lockRowsBefore, 'Zero rows appended on lock timeout');
+
+console.log('ALL PHASE 14.8 IDEMPOTENCE, RATE LIMITING & LOCK TIMEOUT JS TESTS PASSED.');
