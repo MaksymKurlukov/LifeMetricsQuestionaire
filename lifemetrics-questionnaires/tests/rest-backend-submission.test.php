@@ -278,4 +278,112 @@ sub_assert(
     'PSS10 and proprietary questionnaires resolve their respective endpoints'
 );
 
+// 8. Explicit Verification of Guardrails Transport and Displayed Category across the 4 Questionnaires (Phase 14.7)
+
+// A. Sédentarité: D1 = SD01 + SD02 >= 8 caps green HABITUDES_FAVORABLES to orange SEDENTARITE_A_REDUIRE without altering final_score
+$sed_guardrail_fixture = array(
+    'session_id' => '11112222-3333-4444-8555-666677778888',
+    'completed_at' => '2026-09-09T17:00:00Z',
+    'answers' => array(
+        'SD01' => '4', // 4 points
+        'SD02' => '4', // 4 points -> D1 = 8 >= 8
+        'SD03' => '1', 'SD04' => '1', 'SD05' => '1', 'SD06' => '1',
+        'SD07' => '1', 'SD08' => '1', 'SD09' => '1', 'SD10' => '1',
+        'SD11' => '1', 'SD12' => '1',
+    ),
+);
+$req_sed = new WP_REST_Request(json_encode($sed_guardrail_fixture), $sed_guardrail_fixture, array());
+$res_sed = $service->submit('sedentarite', $req_sed);
+sub_assert(!is_wp_error($res_sed), 'Sedentarite guardrail submission succeeds');
+$sent_sed = json_decode($last_http_post['args']['body'], true);
+
+// Strict assertions on Sédentarité guardrail
+sub_assert($sent_sed['raw_score'] === 18, 'Sedentarite raw_score is 18 (unchanged)');
+sub_assert($sent_sed['available_max'] === 60, 'Sedentarite available_max is 60');
+sub_assert($sent_sed['final_score'] === 18, 'Sedentarite final_score is 18 (unchanged)');
+sub_assert($sent_sed['calculated_category'] === 'HABITUDES_FAVORABLES', 'Calculated category is green HABITUDES_FAVORABLES');
+sub_assert($sent_sed['displayed_category'] === 'SEDENTARITE_A_REDUIRE', 'Displayed category is capped to orange SEDENTARITE_A_REDUIRE');
+sub_assert($sent_sed['displayed_category'] !== 'SEDENTARITE_ELEVEE', 'Guardrail never forces red SEDENTARITE_ELEVEE');
+sub_assert(in_array('GUARDRAIL_TEMPS_SEDENTAIRE_D1', $sent_sed['applied_classification_rules'], true), 'GUARDRAIL_TEMPS_SEDENTAIRE_D1 rule transmitted in payload');
+
+// Also test Sédentarité case when D1 = 7 < 8: guardrail NOT triggered
+$sed_safe_fixture = $sed_guardrail_fixture;
+$sed_safe_fixture['session_id'] = '11112222-3333-4444-8555-666677778889';
+$sed_safe_fixture['answers']['SD02'] = '3'; // D1 = 4 + 3 = 7 < 8
+$req_sed_safe = new WP_REST_Request(json_encode($sed_safe_fixture), $sed_safe_fixture, array());
+$res_sed_safe = $service->submit('sedentarite', $req_sed_safe);
+sub_assert(!is_wp_error($res_sed_safe), 'Sedentarite safe submission succeeds');
+$sent_sed_safe = json_decode($last_http_post['args']['body'], true);
+sub_assert($sent_sed_safe['raw_score'] === 17, 'Safe raw_score is 17');
+sub_assert($sent_sed_safe['final_score'] === 17, 'Safe final_score is 17');
+sub_assert($sent_sed_safe['calculated_category'] === 'HABITUDES_FAVORABLES', 'Safe calculated is green');
+sub_assert($sent_sed_safe['displayed_category'] === 'HABITUDES_FAVORABLES', 'Safe displayed remains green');
+sub_assert(empty($sent_sed_safe['applied_classification_rules']), 'No rule applied when D1 < 8');
+
+// B. Pieds & confort postural: PF09 >= 4 or PF10 >= 4 caps favorable to CONFORT_A_AMELIORER
+$pieds_guardrail_fixture = array(
+    'session_id' => '22223333-4444-4555-8666-777788889999',
+    'completed_at' => '2026-09-09T17:05:00Z',
+    'answers' => array(
+        'PF01' => '1', 'PF02' => '1', 'PF03' => '1', 'PF04' => '1',
+        'PF05' => '1', 'PF06' => '1', 'PF07' => '1', 'PF08' => '1',
+        'PF09' => '4', // 4 points -> triggers GUARDRAIL_PF09_LIMITATION
+        'PF10' => '1', 'PF11' => '1', 'PF12' => '1',
+        'PFSF01' => 'no', 'PFSF02' => 'no', 'PFSF03' => 'no', 'PFSF04' => 'no'
+    )
+);
+$req_pieds = new WP_REST_Request(json_encode($pieds_guardrail_fixture), $pieds_guardrail_fixture, array());
+$res_pieds = $service->submit('pieds-confort-postural', $req_pieds);
+sub_assert(!is_wp_error($res_pieds), 'Pieds guardrail submission succeeds');
+$sent_pieds = json_decode($last_http_post['args']['body'], true);
+sub_assert($sent_pieds['raw_score'] === 15, 'Pieds raw_score is 15 (unchanged)');
+sub_assert($sent_pieds['final_score'] === 15, 'Pieds final_score is 15 (unchanged)');
+sub_assert($sent_pieds['calculated_category'] === 'CONFORT_FAVORABLE', 'Pieds calculated is favorable');
+sub_assert($sent_pieds['displayed_category'] === 'CONFORT_A_AMELIORER', 'Pieds displayed is capped to orange CONFORT_A_AMELIORER');
+sub_assert(in_array('GUARDRAIL_PF09_LIMITATION', $sent_pieds['applied_classification_rules'], true), 'GUARDRAIL_PF09_LIMITATION transmitted');
+
+// C. Risque nutritionnel: RN03 >= 4 caps RISQUE_FAIBLE to RISQUE_A_SURVEILLER
+$rn_guardrail_fixture = array(
+    'session_id' => '33334444-5555-4666-8777-888899990000',
+    'completed_at' => '2026-09-09T17:10:00Z',
+    'answers' => array(
+        'RN01' => '1', 'RN02' => '1',
+        'RN03' => '4', // 4 points -> triggers RN_GUARDRAIL_RN03
+        'RN04' => '1', 'RN05' => '1', 'RN06' => '1', 'RN07' => '1',
+        'RN08' => '1', 'RN09' => '1', 'RN10' => '1', 'RN11' => '1', 'RN12' => '1',
+        'RNSF01' => 'no', 'RNSF02' => 'no', 'RNSF03' => 'no', 'RNSF04' => 'no'
+    )
+);
+$req_rn = new WP_REST_Request(json_encode($rn_guardrail_fixture), $rn_guardrail_fixture, array());
+$res_rn = $service->submit('risque-nutritionnel', $req_rn);
+sub_assert(!is_wp_error($res_rn), 'RN guardrail submission succeeds');
+$sent_rn = json_decode($last_http_post['args']['body'], true);
+sub_assert($sent_rn['raw_score'] === 15, 'RN raw_score is 15 (unchanged)');
+sub_assert($sent_rn['final_score'] === 15, 'RN final_score is 15 (unchanged)');
+sub_assert($sent_rn['calculated_category'] === 'RISQUE_FAIBLE', 'RN calculated is RISQUE_FAIBLE');
+sub_assert($sent_rn['displayed_category'] === 'RISQUE_A_SURVEILLER', 'RN displayed is capped to orange RISQUE_A_SURVEILLER');
+sub_assert(in_array('RN_GUARDRAIL_RN03', $sent_rn['applied_classification_rules'], true), 'RN_GUARDRAIL_RN03 transmitted');
+
+// D. Bien-être: Dimension score >= 8 (mean >= 4.00) caps BIEN_ETRE_FAVORABLE to BIEN_ETRE_A_RENFORCER
+$be_guardrail_fixture = array(
+    'session_id' => '44445555-6666-4777-8888-999900001111',
+    'completed_at' => '2026-09-09T17:15:00Z',
+    'answers' => array(
+        'BE01' => '4', // 4 points
+        'BE02' => '4', // 4 points -> satisfaction-globale-quotidien raw = 8 >= 8 (mean >= 4.00)
+        'BE03' => '1', 'BE04' => '1', 'BE05' => '1', 'BE06' => '1',
+        'BE07' => '1', 'BE08' => '1', 'BE09' => '1', 'BE10' => '1',
+        'BE11' => '1', 'BE12' => '1',
+    )
+);
+$req_be = new WP_REST_Request(json_encode($be_guardrail_fixture), $be_guardrail_fixture, array());
+$res_be = $service->submit('bien-etre', $req_be);
+sub_assert(!is_wp_error($res_be), 'BE guardrail submission succeeds');
+$sent_be = json_decode($last_http_post['args']['body'], true);
+sub_assert($sent_be['raw_score'] === 18, 'BE raw_score is 18 (unchanged)');
+sub_assert($sent_be['final_score'] === 18, 'BE final_score is 18 (unchanged)');
+sub_assert($sent_be['calculated_category'] === 'BIEN_ETRE_FAVORABLE', 'BE calculated is BIEN_ETRE_FAVORABLE');
+sub_assert($sent_be['displayed_category'] === 'BIEN_ETRE_A_RENFORCER', 'BE displayed is capped to orange BIEN_ETRE_A_RENFORCER');
+sub_assert(in_array('BE_GUARDRAIL_SATISFACTION', $sent_be['applied_classification_rules'], true), 'BE_GUARDRAIL_SATISFACTION transmitted');
+
 echo "ALL REST BACKEND SUBMISSION TESTS PASSED." . PHP_EOL;

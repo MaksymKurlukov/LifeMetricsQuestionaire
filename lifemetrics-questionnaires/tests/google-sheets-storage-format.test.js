@@ -503,4 +503,110 @@ for (const applicableCount of [10, 11, 12]) {
   }
 }
 
+// Test K: Storage of Guardrail-Capped Displayed Category (Phase 14.7)
+// Verifies that displayed_category overrides calculated_category in physical storage while leaving scores intact
+
+// 1. Sédentarité with D1 >= 8: displayed_category capped to SEDENTARITE_A_REDUIRE
+const testSedGuardrail = {
+  session_id: 'bbbb1111-2222-4333-8444-555566667777',
+  completed_at: '2026-09-09T17:00:00Z',
+  questionnaire_id: 'sedentarite',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'SD01': { value: '4', label: 'Entre 7 et 9 heures', points: 4, applicable: true },
+    'SD02': { value: '4', label: '5-6 jours', points: 4, applicable: true },
+    'SD03': { value: '1', label: 'Très rarement', points: 1, applicable: true }
+  },
+  raw_score: 18,
+  available_max: 60,
+  final_score: 18,
+  calculated_category: 'HABITUDES_FAVORABLES',
+  displayed_category: 'SEDENTARITE_A_REDUIRE'
+};
+let sedGuardrailRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testSedGuardrail) } }).text);
+assert.strictEqual(sedGuardrailRes.ok, true);
+assert.strictEqual(sedSheet.getLastRow(), 4, 'Data row 3 appended to Sedentarite');
+const sedGRow = sedSheet.rows[3];
+assert.strictEqual(sedGRow[27], 18, 'raw_score strictly intact (18)');
+assert.strictEqual(sedGRow[28], 60, 'available_max strictly intact (60)');
+assert.strictEqual(sedGRow[29], 18, 'final_score strictly intact (18)');
+assert.strictEqual(sedGRow[30], 'SEDENTARITE_A_REDUIRE', 'category column stores capped displayed_category (SEDENTARITE_A_REDUIRE)');
+
+// 2. Pieds & confort postural: displayed_category capped to CONFORT_A_AMELIORER
+const piedsSheet = mockSpreadsheet.getSheetByName('Pieds_Confort');
+const testPiedsGuardrail = {
+  session_id: 'cccc1111-2222-4333-8444-555566667777',
+  completed_at: '2026-09-09T17:05:00Z',
+  questionnaire_id: 'pieds-confort-postural',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'PF09': { value: '4', label: 'Fréquemment', points: 4, applicable: true }
+  },
+  raw_score: 15,
+  available_max: 60,
+  final_score: 15,
+  calculated_category: 'CONFORT_FAVORABLE',
+  displayed_category: 'CONFORT_A_AMELIORER',
+  safety_flags: []
+};
+let piedsGuardrailRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testPiedsGuardrail) } }).text);
+assert.strictEqual(piedsGuardrailRes.ok, true);
+assert.strictEqual(piedsSheet.getLastRow(), 2, 'Header row + 1 data row created for Pieds');
+const piedsGRow = piedsSheet.rows[1];
+assert.strictEqual(piedsGRow[31], 15, 'raw_score strictly intact (15)');
+assert.strictEqual(piedsGRow[32], 60, 'available_max strictly intact (60)');
+assert.strictEqual(piedsGRow[33], 15, 'final_score strictly intact (15)');
+assert.strictEqual(piedsGRow[34], 'CONFORT_A_AMELIORER', 'category column stores capped displayed_category (CONFORT_A_AMELIORER)');
+
+// 3. Risque nutritionnel: displayed_category capped to RISQUE_A_SURVEILLER
+const testRNGuardrail = {
+  session_id: 'dddd1111-2222-4333-8444-555566667777',
+  completed_at: '2026-09-09T17:10:00Z',
+  questionnaire_id: 'risque-nutritionnel',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'RN03': { value: '4', label: 'Diminution nette', points: 4, applicable: true }
+  },
+  raw_score: 15,
+  available_max: 60,
+  final_score: 15,
+  calculated_category: 'RISQUE_FAIBLE',
+  displayed_category: 'RISQUE_A_SURVEILLER',
+  safety_flags: []
+};
+let rnGuardrailRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testRNGuardrail) } }).text);
+assert.strictEqual(rnGuardrailRes.ok, true);
+assert.strictEqual(rnSheet.getLastRow(), 3, 'Data row 2 appended to Risque_Nutritionnel');
+const rnGRow = rnSheet.rows[2];
+assert.strictEqual(rnGRow[31], 15, 'raw_score strictly intact (15)');
+assert.strictEqual(rnGRow[32], 60, 'available_max strictly intact (60)');
+assert.strictEqual(rnGRow[33], 15, 'final_score strictly intact (15)');
+assert.strictEqual(rnGRow[34], 'RISQUE_A_SURVEILLER', 'category column stores capped displayed_category (RISQUE_A_SURVEILLER)');
+
+// 4. Bien-être: displayed_category capped to BIEN_ETRE_A_RENFORCER
+const beSheetInstance = mockSpreadsheet.getSheetByName('Bien_Etre');
+const testBEGuardrail = {
+  session_id: 'eeee1111-2222-4333-8444-555566667777',
+  completed_at: '2026-09-09T17:15:00Z',
+  questionnaire_id: 'bien-etre',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'BE01': { value: '4', label: 'Plutôt insatisfait', points: 4, applicable: true },
+    'BE02': { value: '4', label: 'Rarement', points: 4, applicable: true }
+  },
+  raw_score: 18,
+  available_max: 60,
+  final_score: 18,
+  calculated_category: 'BIEN_ETRE_FAVORABLE',
+  displayed_category: 'BIEN_ETRE_A_RENFORCER'
+};
+let beGuardrailRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testBEGuardrail) } }).text);
+assert.strictEqual(beGuardrailRes.ok, true);
+assert.strictEqual(beSheetInstance.getLastRow(), 3, 'Data row 2 appended to Bien_Etre');
+const beGRow = beSheetInstance.rows[2];
+assert.strictEqual(beGRow[27], 18, 'raw_score strictly intact (18)');
+assert.strictEqual(beGRow[28], 60, 'available_max strictly intact (60)');
+assert.strictEqual(beGRow[29], 18, 'final_score strictly intact (18)');
+assert.strictEqual(beGRow[30], 'BIEN_ETRE_A_RENFORCER', 'category column stores capped displayed_category (BIEN_ETRE_A_RENFORCER)');
+
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');

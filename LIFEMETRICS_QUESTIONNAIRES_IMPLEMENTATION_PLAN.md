@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.6 — Audit du transport N/A et normalisation du score
-- Prochaine sous-étape à exécuter : PHASE 14.7 — Vérification du transport des guardrails et de la catégorie affichée
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.7 — Vérification du transport des guardrails et de la catégorie affichée
+- Prochaine sous-étape à exécuter : PHASE 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -766,18 +766,23 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.7 — Vérification du transport des guardrails et de la catégorie affichée
-- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Valider que pour les 4 questionnaires avec guardrails (Pieds & confort postural, Sédentarité, Risque nutritionnel, Bien-être), le transport transmet à la fois `calculated_category` et `displayed_category`, et que le tableur stocke la catégorie affichée sans altérer le score numérique.
   - **Sédentarité** : Le guardrail validé n'est PAS `SD01 >= 4`. La règle validée est : `D1 = SD01 + SD02`. Si `D1 >= 8` ET que `calculated_category` est verte (`HABITUDES_FAVORABLES`), alors `displayed_category` est plafonnée à la catégorie orange `SEDENTARITE_A_REDUIRE`. Le `final_score` reste inchangé. Le guardrail ne doit jamais forcer une catégorie rouge.
-  - **Pieds & confort postural** : Guardrail fonctionnel (PF09 ou PF10 >= 4 plafonne à `PIEDS_A_SURVEILLER` orange sans altérer le score brut).
+  - **Pieds & confort postural** : Guardrail fonctionnel (PF09 ou PF10 >= 4 plafonne à `CONFORT_A_AMELIORER` orange sans altérer le score brut).
   - **Risque nutritionnel** : Guardrails RN03, RN04, RN05, RN08 >= 4 plafonnent à `RISQUE_A_SURVEILLER` orange sans altérer le score brut.
   - **Bien-être** : Guardrail dimensionnel (moyenne dimension >= 4.00 plafonne le vert à `BIEN_ETRE_A_RENFORCER` orange sans altérer le score brut).
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+  - `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
 - Modification nécessaire : Tester les cas de déclenchement des garde-fous (dont spécifiquement `D1 = SD01 + SD02 >= 8` plafonnant à `SEDENTARITE_A_REDUIRE` pour Sédentarité) et vérifier les valeurs écrites dans la colonne `category`.
-- Tests ciblés : Tests PHP de soumission REST.
-- Critères d'acceptation : Score final intact + catégorie plafonnée enregistrée (Sédentarité plafonnée à orange `SEDENTARITE_A_REDUIRE` sans forcer le rouge lorsque D1 >= 8).
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php` : Section 8 PASS (Validation des 4 questionnaires à guardrails : Sédentarité `D1 = SD01 + SD02 >= 8` plafonne à `SEDENTARITE_A_REDUIRE` sans forcer le rouge et sans altérer raw/final score 18 ; Pieds PF09 >= 4 plafonne à `CONFORT_A_AMELIORER` score 15 intact ; RN03 >= 4 plafonne à `RISQUE_A_SURVEILLER` score 15 intact ; Bien-être dimension raw >= 8 plafonne à `BIEN_ETRE_A_RENFORCER` score 18 intact ; transmission conjointe de `calculated_category`, `displayed_category` et `applied_classification_rules`)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : Test K PASS (Vérification physique dans Google Sheets : stockage effectif de la catégorie plafonnée dans la colonne `category` pour les 4 questionnaires avec préservation stricte des scores numériques et sans altération des métriques)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.4.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -1014,6 +1019,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `google-sheets-storage-format.test.php` (Section 9 PASS), `google-sheets-storage-format.test.js` (Test J PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Audit exhaustif du transport des options N/A : confirmation que seuls Hydratation (HY05) et Sédentarité (SD07, SD08) possèdent des options N/A (`applicable: false`). Validation physique dans le tableur de l'écriture des libellés exacts dans la colonne texte et de chaînes vides `""` dans la colonne Points, sans aucun décalage de colonnes (total colonnes 35 pour Hydratation, 31 pour Sédentarité). Validation rigoureuse de la formule méthodologique de référence `final_score = ROUND((raw_score / applicable_question_count) * 12)` tant en PHP qu'en JS sur l'intégralité des combinaisons et plages de scores.
 - Prochaine sous-étape : 14.7 — Vérification du transport des guardrails et de la catégorie affichée.
+
+### 2026-09-15 — Sous-étape 14.7 : Vérification du transport des guardrails et de la catégorie affichée
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `rest-backend-submission.test.php` (Section 8 PASS), `google-sheets-storage-format.test.js` (Test K PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Validation complète du transport des 4 questionnaires comportant des garde-fous (Sédentarité, Pieds & confort postural, Risque nutritionnel, Bien-être). Transmission certifiée dans le payload de `calculated_category`, `displayed_category` et `applied_classification_rules`. Confirmation de la règle validée pour Sédentarité : `D1 = SD01 + SD02 >= 8` plafonne la catégorie affichée à l'orange `SEDENTARITE_A_REDUIRE` sans forcer le rouge et sans altérer les scores bruts ou finaux (qui restent intacts à 18). Confirmation du stockage dans la colonne `category` du tableur de la catégorie plafonnée pour l'ensemble des 4 questionnaires avec préservation stricte de l'intégrité des scores numériques.
+- Prochaine sous-étape : 14.8 — Vérification de l'idempotence, du session_id et du rate limiting.
 
 ---
 
