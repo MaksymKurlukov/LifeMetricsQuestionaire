@@ -19,7 +19,7 @@
 | 11 | Risque nutritionnel V1 | TERMINÉ |
 | 12 | Bien-être V1 | TERMINÉ |
 | 13 | Restitution frontend finale | TERMINÉ |
-| 14 | Vérification transport et Google Sheets | EN COURS |
+| 14 | Vérification transport et Google Sheets | TERMINÉ |
 | 15 | Full Regression Test | À FAIRE |
 | 16 | WordPress Release ZIP | À FAIRE |
 
@@ -27,14 +27,15 @@
 
 ## État actuel du projet
 
-- Phase actuelle : PHASE 14 — Transport et Google Sheets (TERMINÉE)
+- Phase actuelle : Aucune phase EN COURS — PHASE 14 terminée
 - Dernière sous-étape terminée : SOUS-ÉTAPE 14.10 — Isolation du transport PSS-10 legacy et certification globale (Phase 14 clôturée)
-- Prochaine phase à exécuter : PHASE 15 — Script de build et packaging ZIP
+- Prochaine phase à exécuter : PHASE 15 — Full Regression Test
 - Blocages : Aucun
 - Nombre de phases terminées : 14 / 16
 - Nombre de phases restantes : 2
-- Dernier commit de phase : 75dc058 (fix(ui): finalize questionnaire visual corrections)
+- Dernier commit de phase : 8d3d9ee (lifemetrics: phase 14 - transport et google sheets (certified))
 - Livrable final : lifemetrics-questionnaires.zip
+- Tableau Notion synchronisé : https://app.notion.com/p/3da507fddb678146b412ffe3a733ea0f
 
 ---
 
@@ -1074,7 +1075,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   2. Couverture de test intégrale : Les 23 suites PHP et 19 suites JavaScript s'exécutent avec 100% de succès.
   3. UI Freeze respecté : Aucune modification des templates, CSS, HTML, balises, scripts visuels ou textes de l'interface utilisateur depuis le commit validé `75dc058`.
   4. Phase 14 clôturée : Les 10 sous-étapes (14.1 à 14.10) sont terminées.
-- Prochaine phase : PHASE 15 — Script de build et packaging ZIP.
+- Prochaine phase : PHASE 15 — Full Regression Test.
 
 ---
 
@@ -1137,4 +1138,3 @@ Si la phase est déjà entièrement satisfaite par le code existant :
 - Commit :
 - Prochaine phase :
 - Confirmation qu'aucune phase supplémentaire n'a été commencée.
-
