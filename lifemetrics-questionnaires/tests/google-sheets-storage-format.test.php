@@ -250,4 +250,104 @@ foreach ($safety_questionnaires as $sid => $sq_count) {
     }
 }
 
+// 9. Strict Audit of N/A Serialization, Transport & Reference Normalization Formula (Phase 14.6)
+// Reference formula: final_score = ROUND((raw_score / applicable_question_count) * 12)
+
+// A. Global inventory check: ONLY Hydratation (HY05) and Sédentarité (SD07, SD08) have N/A options
+$all_ids = array('sommeil', 'nutrition', 'pieds-confort-postural', 'hydratation', 'fatigue-recuperation', 'sedentarite', 'activite-physique', 'risque-nutritionnel', 'bien-etre');
+$na_inventory = array();
+foreach ($all_ids as $qid) {
+    $cfg = require __DIR__ . '/../questionnaires/' . $qid . '/questionnaire.php';
+    foreach ($cfg['questions'] as $q) {
+        foreach ($q['answers'] as $ans) {
+            if (isset($ans['applicable']) && $ans['applicable'] === false) {
+                $na_inventory[$qid][] = array(
+                    'question_id' => $q['id'],
+                    'value' => $ans['value'],
+                    'label' => $ans['label'],
+                    'points' => $ans['points'],
+                );
+            }
+        }
+    }
+}
+assert_same(array('hydratation', 'sedentarite'), array_keys($na_inventory), 'Only hydratation and sedentarite have N/A options');
+assert_same(1, count($na_inventory['hydratation']), 'Hydratation has exactly 1 N/A question');
+assert_same('HY05', $na_inventory['hydratation'][0]['question_id'], 'Hydratation N/A question is HY05');
+assert_same('Non concerné actuellement', $na_inventory['hydratation'][0]['label'], 'Hydratation HY05 N/A label matches');
+assert_same(null, $na_inventory['hydratation'][0]['points'], 'Hydratation HY05 N/A points is null');
+
+assert_same(2, count($na_inventory['sedentarite']), 'Sedentarite has exactly 2 N/A questions');
+assert_same('SD07', $na_inventory['sedentarite'][0]['question_id'], 'Sedentarite first N/A question is SD07');
+assert_same('Non concerné actuellement', $na_inventory['sedentarite'][0]['label'], 'Sedentarite SD07 N/A label matches');
+assert_same(null, $na_inventory['sedentarite'][0]['points'], 'Sedentarite SD07 N/A points is null');
+
+assert_same('SD08', $na_inventory['sedentarite'][1]['question_id'], 'Sedentarite second N/A question is SD08');
+assert_same('Très peu de déplacements actuellement', $na_inventory['sedentarite'][1]['label'], 'Sedentarite SD08 N/A label matches');
+assert_same(null, $na_inventory['sedentarite'][1]['points'], 'Sedentarite SD08 N/A points is null');
+
+// B. Strict verification of reference normalization formula for Hydratation:
+// final_score = ROUND((raw_score / applicable_question_count) * 12)
+$hydra_cfg = require __DIR__ . '/../questionnaires/hydratation/questionnaire.php';
+$hydra_base_safety = array('HYSF01' => 'no', 'HYSF02' => 'no', 'HYSF03' => 'no');
+
+// Test all uniform values (1 to 5) with HY05 = 'na' (11 applicable questions)
+for ($v = 1; $v <= 5; $v++) {
+    $answers = array_merge(array_fill_keys(array('HY01','HY02','HY03','HY04','HY06','HY07','HY08','HY09','HY10','HY11','HY12'), (string)$v), array('HY05' => 'na'), $hydra_base_safety);
+    $scored = $engine->score($hydra_cfg, $answers);
+    $raw = $scored['raw_score'];
+    $applicable_count = 11;
+    assert_same($v * 11, $raw, "Hydratation uniform $v raw score is 11 * $v");
+    $expected_formula_score = (int) round(($raw / $applicable_count) * 12, 0, PHP_ROUND_HALF_UP);
+    assert_same($expected_formula_score, $scored['final_score'], "Hydratation final_score must strictly match ROUND((raw_score / applicable_question_count) * 12)");
+    // Also verify serialization format
+    assert_same(false, $scored['selected_answers']['HY05']['applicable'], "HY05 applicable is false");
+    assert_same(null, $scored['selected_answers']['HY05']['points'], "HY05 points is null");
+    assert_same('Non concerné actuellement', $scored['selected_answers']['HY05']['label'], "HY05 label matches");
+}
+
+// C. Strict verification of reference normalization formula for Sédentarité:
+// final_score = ROUND((raw_score / applicable_question_count) * 12)
+$sed_cfg = require __DIR__ . '/../questionnaires/sedentarite/questionnaire.php';
+
+// Case C1: SD07 is 'na', SD08 applicable (11 applicable questions)
+for ($v = 1; $v <= 5; $v++) {
+    $answers = array_merge(array_fill_keys(array('SD01','SD02','SD03','SD04','SD05','SD06','SD08','SD09','SD10','SD11','SD12'), (string)$v), array('SD07' => 'na'));
+    $scored = $engine->score($sed_cfg, $answers);
+    $raw = $scored['raw_score'];
+    $applicable_count = 11;
+    $expected_formula_score = (int) round(($raw / $applicable_count) * 12, 0, PHP_ROUND_HALF_UP);
+    assert_same($expected_formula_score, $scored['final_score'], "Sedentarite SD07 na final_score must match ROUND((raw_score / 11) * 12)");
+    assert_same(false, $scored['selected_answers']['SD07']['applicable'], "SD07 applicable is false");
+    assert_same(null, $scored['selected_answers']['SD07']['points'], "SD07 points is null");
+    assert_same('Non concerné actuellement', $scored['selected_answers']['SD07']['label'], "SD07 label matches");
+}
+
+// Case C2: SD08 is 'na', SD07 applicable (11 applicable questions)
+for ($v = 1; $v <= 5; $v++) {
+    $answers = array_merge(array_fill_keys(array('SD01','SD02','SD03','SD04','SD05','SD06','SD07','SD09','SD10','SD11','SD12'), (string)$v), array('SD08' => 'na'));
+    $scored = $engine->score($sed_cfg, $answers);
+    $raw = $scored['raw_score'];
+    $applicable_count = 11;
+    $expected_formula_score = (int) round(($raw / $applicable_count) * 12, 0, PHP_ROUND_HALF_UP);
+    assert_same($expected_formula_score, $scored['final_score'], "Sedentarite SD08 na final_score must match ROUND((raw_score / 11) * 12)");
+    assert_same(false, $scored['selected_answers']['SD08']['applicable'], "SD08 applicable is false");
+    assert_same(null, $scored['selected_answers']['SD08']['points'], "SD08 points is null");
+    assert_same('Très peu de déplacements actuellement', $scored['selected_answers']['SD08']['label'], "SD08 label matches");
+}
+
+// Case C3: BOTH SD07 and SD08 are 'na' (10 applicable questions)
+for ($v = 1; $v <= 5; $v++) {
+    $answers = array_merge(array_fill_keys(array('SD01','SD02','SD03','SD04','SD05','SD06','SD09','SD10','SD11','SD12'), (string)$v), array('SD07' => 'na', 'SD08' => 'na'));
+    $scored = $engine->score($sed_cfg, $answers);
+    $raw = $scored['raw_score'];
+    $applicable_count = 10;
+    $expected_formula_score = (int) round(($raw / $applicable_count) * 12, 0, PHP_ROUND_HALF_UP);
+    assert_same($expected_formula_score, $scored['final_score'], "Sedentarite both na final_score must match ROUND((raw_score / 10) * 12)");
+    assert_same(false, $scored['selected_answers']['SD07']['applicable'], "SD07 applicable is false");
+    assert_same(null, $scored['selected_answers']['SD07']['points'], "SD07 points is null");
+    assert_same(false, $scored['selected_answers']['SD08']['applicable'], "SD08 applicable is false");
+    assert_same(null, $scored['selected_answers']['SD08']['points'], "SD08 points is null");
+}
+
 echo "ALL 9 PROPRIETARY QUESTIONNAIRES PASSED PHYSICAL GOOGLE SHEETS STORAGE FORMAT AUDIT." . PHP_EOL;

@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.5 — Sérialisation et transport des questions & drapeaux Safety
-- Prochaine sous-étape à exécuter : PHASE 14.6 — Audit du transport N/A et normalisation du score
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.6 — Audit du transport N/A et normalisation du score
+- Prochaine sous-étape à exécuter : PHASE 14.7 — Vérification du transport des guardrails et de la catégorie affichée
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -746,7 +746,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.6 — Audit du transport N/A et normalisation du score
-- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Confirmer que les options N/A d'Hydratation (HY05) et de Sédentarité (SD07, SD08) transmettent des chaînes vides `""` dans la colonne Points sans introduire de décalage de colonnes, et que le score est normalisé selon la formule méthodologique validée de référence :
   `final_score = ROUND((raw_score / applicable_question_count) * 12)`
   Ne pas la remplacer dans la documentation ou les critères de validation par `round((raw_score / available_max) * 60)`. Cette formule validée reste la source de vérité et doit être celle explicitement vérifiée.
@@ -754,9 +754,13 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
 - Modification nécessaire : Valider dans les tests de stockage que le cas N/A écrit le libellé dans la colonne texte et laisse la colonne de points vide (`""`), et vérifier explicitement que le calcul du score normalisé respecte strictement la formule de référence `final_score = ROUND((raw_score / applicable_question_count) * 12)`.
-- Tests ciblés : Tests PHP / JS format de stockage et scoring engine.
-- Critères d'acceptation : Formule méthodologique `final_score = ROUND((raw_score / applicable_question_count) * 12)` strictement confirmée ; colonnes parfaitement synchronisées, pas de `0` ou `null` indésirable.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php` : Section 9 PASS (Audit inventaire global N/A : HY05, SD07, SD08 uniquement ; formule de normalisation de référence `final_score = ROUND((raw_score / applicable_question_count) * 12)` rigoureusement confirmée pour Hydratation et Sédentarité sur toutes les valeurs uniformes et combinées ; sérialisation N/A `applicable: false`, `points: null`, labels conformes)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : Test J PASS (Vérification physique des lignes Google Sheets : Col 12 HY05 = `""`, Col 16 SD07 = `""`, Col 18 SD08 = `""`, zéro décalage de colonnes, total 35 colonnes Hydratation, total 31 colonnes Sédentarité ; validation mathématique de l'équivalence universelle avec `Math.round((raw / count) * 12)`)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.2.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -1003,6 +1007,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `google-sheets-storage-format.test.php` (Section 8 PASS), `google-sheets-storage-format.test.js` (Tests H & I PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Confirmation formelle de l'inventaire Safety (exactement 6 questionnaires propriétaires avec questions Safety : Sommeil [3], Nutrition [3], Pieds & confort postural [4], Hydratation [3], Fatigue & récupération [3], Risque nutritionnel [4] ; et absence stricte de volet Safety sur Bien-être [0], Activité physique [0], Sédentarité [0]). Validation de la non-pollution stricte du score (scores bruts, max disponibles, finaux et par dimensions 100% identiques avec ou sans trigger actif), absence de points sur les réponses Safety, et transmission conforme de `safety_attention` ("Oui" ou "Non").
 - Prochaine sous-étape : 14.6 — Audit du transport N/A et normalisation du score.
+
+### 2026-09-15 — Sous-étape 14.6 : Audit du transport N/A et normalisation du score
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `google-sheets-storage-format.test.php` (Section 9 PASS), `google-sheets-storage-format.test.js` (Test J PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Audit exhaustif du transport des options N/A : confirmation que seuls Hydratation (HY05) et Sédentarité (SD07, SD08) possèdent des options N/A (`applicable: false`). Validation physique dans le tableur de l'écriture des libellés exacts dans la colonne texte et de chaînes vides `""` dans la colonne Points, sans aucun décalage de colonnes (total colonnes 35 pour Hydratation, 31 pour Sédentarité). Validation rigoureuse de la formule méthodologique de référence `final_score = ROUND((raw_score / applicable_question_count) * 12)` tant en PHP qu'en JS sur l'intégralité des combinaisons et plages de scores.
+- Prochaine sous-étape : 14.7 — Vérification du transport des guardrails et de la catégorie affichée.
 
 ---
 

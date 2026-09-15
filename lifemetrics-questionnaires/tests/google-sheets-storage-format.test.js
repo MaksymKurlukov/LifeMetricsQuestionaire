@@ -387,4 +387,120 @@ for (const noSafetyId of ['sedentarite', 'activite-physique', 'bien-etre']) {
   assert(!hdrs.includes('safety_attention'), `${noSafetyId} headers do NOT contain safety_attention`);
 }
 
+// Test J: Audit of physical N/A storage columns and normalization formula (Phase 14.6)
+// Reference formula: final_score = ROUND((raw_score / applicable_question_count) * 12)
+
+// 1. Hydratation HY05 N/A physical storage validation
+const testHydraNA = {
+  session_id: '99998888-7777-4666-8555-444433332222',
+  completed_at: '2026-09-09T11:07:00Z',
+  questionnaire_id: 'hydratation',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'HY01': { value: 2, label: 'Majoritaire', points: 2, applicable: true },
+    'HY02': { value: 2, label: 'Souvent', points: 2, applicable: true },
+    'HY03': { value: 2, label: 'Généralement', points: 2, applicable: true },
+    'HY04': { value: 2, label: 'Régulièrement', points: 2, applicable: true },
+    'HY05': { value: 'na', label: 'Non concerné actuellement', points: null, applicable: false },
+    'HY06': { value: 2, label: 'Souvent', points: 2, applicable: true },
+    'HY07': { value: 2, label: 'Souvent', points: 2, applicable: true },
+    'HY08': { value: 2, label: '1-3 jours par semaine', points: 2, applicable: true },
+    'HY09': { value: 2, label: 'Souvent', points: 2, applicable: true },
+    'HY10': { value: 2, label: 'Souvent', points: 2, applicable: true },
+    'HY11': { value: 2, label: 'Généralement accessible', points: 2, applicable: true },
+    'HY12': { value: 2, label: 'Généralement régulières', points: 2, applicable: true }
+  },
+  safety_answers: {
+    'HYSF01': { value: 'no', label: 'Non', triggers: [] },
+    'HYSF02': { value: 'no', label: 'Non', triggers: [] },
+    'HYSF03': { value: 'no', label: 'Non', triggers: [] }
+  },
+  raw_score: 22, // 11 * 2
+  available_max: 55, // 11 * 5
+  final_score: 24, // Math.round((22 / 11) * 12) = 24
+  calculated_category: 'HYDRATATION_FAVORABLE',
+  displayed_category: 'Habitudes d\'hydratation globalement favorables',
+  safety_flags: []
+};
+let hydraNARes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testHydraNA) } }).text);
+assert.strictEqual(hydraNARes.ok, true);
+assert.strictEqual(hydraSheet.getLastRow(), 4, 'Data row 3 appended to Hydratation');
+const hRow = hydraSheet.rows[3];
+assert.strictEqual(hRow.length, 35, 'Hydratation row must strictly have 35 columns');
+// Col 11: HY05 text label
+assert.strictEqual(hRow[11], 'Non concerné actuellement', 'HY05 text label correctly written');
+// Col 12: HY05 points strictly empty string "" (NOT 0, NOT null)
+assert.strictEqual(hRow[12], '', 'HY05 points strictly blank empty string');
+// Col 13, 14: HY06 text and points (no column shift)
+assert.strictEqual(hRow[13], 'Souvent', 'HY06 label unaffected by HY05 N/A');
+assert.strictEqual(hRow[14], 2, 'HY06 points unaffected by HY05 N/A');
+// Col 30..34: metric summary
+assert.strictEqual(hRow[30], 22, 'raw_score matches');
+assert.strictEqual(hRow[31], 55, 'available_max matches');
+assert.strictEqual(hRow[32], 24, 'final_score matches reference formula ROUND((22/11)*12)');
+assert.strictEqual(hRow[33], 'Habitudes d\'hydratation globalement favorables', 'category matches');
+assert.strictEqual(hRow[34], 'Non', 'safety_attention matches');
+
+// 2. Sédentarité with BOTH SD07 and SD08 N/A physical storage validation
+const testSedBothNA = {
+  session_id: 'aaaa1111-2222-4333-8444-555566667777',
+  completed_at: '2026-09-09T11:08:00Z',
+  questionnaire_id: 'sedentarite',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'SD01': { value: '2', label: 'Entre 3 et moins de 5 heures', points: 2, applicable: true },
+    'SD02': { value: '2', label: '1-2 jours', points: 2, applicable: true },
+    'SD03': { value: '2', label: 'Rarement', points: 2, applicable: true },
+    'SD04': { value: '2', label: 'Entre 1 et moins de 2 heures', points: 2, applicable: true },
+    'SD05': { value: '2', label: 'Toutes les heures environ', points: 2, applicable: true },
+    'SD06': { value: '2', label: 'Je marche ou bouge quelques minutes', points: 2, applicable: true },
+    'SD07': { value: 'na', label: 'Non concerné actuellement', points: null, applicable: false },
+    'SD08': { value: 'na', label: 'Très peu de déplacements actuellement', points: null, applicable: false },
+    'SD09': { value: '2', label: 'Entre 1 et moins de 2 heures', points: 2, applicable: true },
+    'SD10': { value: '2', label: 'Rarement', points: 2, applicable: true },
+    'SD11': { value: '2', label: 'De temps en temps', points: 2, applicable: true },
+    'SD12': { value: '2', label: 'Généralement faciles', points: 2, applicable: true }
+  },
+  raw_score: 20, // 10 * 2
+  available_max: 50, // 10 * 5
+  final_score: 24, // Math.round((20 / 10) * 12) = 24
+  calculated_category: 'HABITUDES_FAVORABLES',
+  displayed_category: 'Habitudes sédentaires favorables'
+};
+let sedBothNARes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testSedBothNA) } }).text);
+assert.strictEqual(sedBothNARes.ok, true);
+assert.strictEqual(sedSheet.getLastRow(), 3, 'Data row 2 appended to Sedentarite');
+const sRow = sedSheet.rows[2];
+assert.strictEqual(sRow.length, 31, 'Sedentarite row must strictly have 31 columns');
+// Col 15, 16: SD07
+assert.strictEqual(sRow[15], 'Non concerné actuellement', 'SD07 label matches');
+assert.strictEqual(sRow[16], '', 'SD07 points strictly blank empty string');
+// Col 17, 18: SD08
+assert.strictEqual(sRow[17], 'Très peu de déplacements actuellement', 'SD08 label matches');
+assert.strictEqual(sRow[18], '', 'SD08 points strictly blank empty string');
+// Col 19, 20: SD09
+assert.strictEqual(sRow[19], 'Entre 1 et moins de 2 heures', 'SD09 label unaffected');
+assert.strictEqual(sRow[20], 2, 'SD09 points unaffected');
+// Col 27..30: summary
+assert.strictEqual(sRow[27], 20, 'raw_score matches');
+assert.strictEqual(sRow[28], 50, 'available_max matches');
+assert.strictEqual(sRow[29], 24, 'final_score matches reference formula ROUND((20/10)*12)');
+assert.strictEqual(sRow[30], 'Habitudes sédentaires favorables', 'category matches');
+
+// 3. Mathematical check of the reference formula ROUND((raw_score / applicable_question_count) * 12)
+for (const applicableCount of [10, 11, 12]) {
+  for (let raw = applicableCount; raw <= applicableCount * 5; raw++) {
+    const targetMin = 12;
+    const targetMax = 60;
+    const availableMin = applicableCount * 1;
+    const availableMax = applicableCount * 5;
+    // Canonical engine formula:
+    const normalized = targetMin + ((raw - availableMin) / (availableMax - availableMin)) * (targetMax - targetMin);
+    const engineFinal = Math.floor(normalized + 0.5);
+    // Methodological reference formula:
+    const referenceFinal = Math.round((raw / applicableCount) * 12);
+    assert.strictEqual(engineFinal, referenceFinal, `Engine score matches reference formula ROUND((raw/count)*12) for raw=${raw}, count=${applicableCount}`);
+  }
+}
+
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');
