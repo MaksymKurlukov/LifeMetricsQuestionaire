@@ -136,4 +136,118 @@ $pss10_config = require __DIR__ . '/../questionnaires/pss10/questionnaire.php';
 assert_same('pss10', $pss10_config['id'], 'PSS10 config ID');
 assert_true(count($pss10_config['questions']) === 10, 'PSS10 has 10 questions');
 
+// 8. Explicit Non-Regression Suite for Safety Serialization, Transport & Zero-Score Pollution (Phase 14.5)
+$safety_questionnaires = array(
+    'sommeil' => 3,
+    'nutrition' => 3,
+    'pieds-confort-postural' => 4,
+    'hydratation' => 3,
+    'fatigue-recuperation' => 3,
+    'risque-nutritionnel' => 4,
+);
+$no_safety_questionnaires = array(
+    'bien-etre' => 0,
+    'activite-physique' => 0,
+    'sedentarite' => 0,
+);
+
+// A. Strict inventory assertion: exactly 6 proprietary questionnaires have safety questions
+assert_same(6, count($safety_questionnaires), 'Exactly 6 proprietary questionnaires have safety questions');
+assert_same(3, count($no_safety_questionnaires), 'Exactly 3 proprietary questionnaires have NO safety questions');
+
+foreach ($safety_questionnaires as $sid => $expected_sq_count) {
+    $cfg = require __DIR__ . '/../questionnaires/' . $sid . '/questionnaire.php';
+    assert_same($expected_sq_count, count($cfg['safety_questions']), "Safety count for $sid must be $expected_sq_count");
+    assert_true(!empty($cfg['safety_questions']), "Safety questions non-empty for $sid");
+    assert_true(!empty($cfg['safety_messages']), "Safety messages non-empty for $sid");
+}
+
+foreach ($no_safety_questionnaires as $nid => $expected_zero) {
+    $cfg = require __DIR__ . '/../questionnaires/' . $nid . '/questionnaire.php';
+    assert_same(0, count($cfg['safety_questions']), "Strict absence of safety questions for $nid");
+    assert_same(0, count($cfg['safety_messages']), "Strict absence of safety messages for $nid");
+}
+
+// B. Rigorous test of zero-score pollution and safety_attention trigger behavior for the 6 safety questionnaires
+foreach ($safety_questionnaires as $sid => $sq_count) {
+    $cfg = require __DIR__ . '/../questionnaires/' . $sid . '/questionnaire.php';
+    
+    // Base scored answers (first option for each scored question)
+    $base_answers = array();
+    foreach ($cfg['questions'] as $q) {
+        $base_answers[$q['id']] = $q['answers'][0]['value'];
+    }
+
+    // Case 1: All safety answers non-triggering
+    $safe_answers = $base_answers;
+    foreach ($cfg['safety_questions'] as $sq) {
+        $non_trig = null;
+        foreach ($sq['answers'] as $ans) {
+            if (empty($ans['triggers'])) {
+                $non_trig = $ans['value'];
+                break;
+            }
+        }
+        assert_true($non_trig !== null, "Non-triggering answer found for {$sq['id']} in $sid");
+        $safe_answers[$sq['id']] = $non_trig;
+    }
+
+    $safe_scored = $engine->score($cfg, $safe_answers);
+    assert_same(0, count($safe_scored['safety_flag_codes']), "No safety flags triggered in safe case for $sid");
+
+    // Case 2: At least one safety answer triggering
+    $trigger_answers = $base_answers;
+    $has_trigger_tested = false;
+    foreach ($cfg['safety_questions'] as $sq_idx => $sq) {
+        if ($sq_idx === 0) {
+            $trig_val = null;
+            foreach ($sq['answers'] as $ans) {
+                if (!empty($ans['triggers'])) {
+                    $trig_val = $ans['value'];
+                    break;
+                }
+            }
+            assert_true($trig_val !== null, "Triggering answer found for {$sq['id']} in $sid");
+            $trigger_answers[$sq['id']] = $trig_val;
+            $has_trigger_tested = true;
+        } else {
+            foreach ($sq['answers'] as $ans) {
+                if (empty($ans['triggers'])) {
+                    $trigger_answers[$sq['id']] = $ans['value'];
+                    break;
+                }
+            }
+        }
+    }
+    assert_true($has_trigger_tested, "Trigger tested for $sid");
+
+    $trigger_scored = $engine->score($cfg, $trigger_answers);
+    assert_true(count($trigger_scored['safety_flag_codes']) > 0, "Safety flag triggered in trigger case for $sid");
+
+    // ZERO SCORE POLLUTION ASSERTION:
+    // Numerical scores MUST be 100% identical between safe and trigger cases
+    assert_same($safe_scored['raw_score'], $trigger_scored['raw_score'], "raw_score identical regardless of safety trigger in $sid");
+    assert_same($safe_scored['available_max'], $trigger_scored['available_max'], "available_max identical regardless of safety trigger in $sid");
+    assert_same($safe_scored['final_score'], $trigger_scored['final_score'], "final_score identical regardless of safety trigger in $sid");
+    assert_same($safe_scored['calculated_category'], $trigger_scored['calculated_category'], "calculated_category identical regardless of safety trigger in $sid");
+
+    // Dimension scores MUST be 100% identical
+    assert_same(count($safe_scored['dimensions']), count($trigger_scored['dimensions']), "Dimension count matches for $sid");
+    foreach ($safe_scored['dimensions'] as $d_idx => $s_dim) {
+        $t_dim = $trigger_scored['dimensions'][$d_idx];
+        assert_same($s_dim['id'], $t_dim['id'], "Dimension id matches for $sid");
+        assert_same($s_dim['raw_score'], $t_dim['raw_score'], "Dimension raw_score unaffected by safety in $sid");
+        assert_same($s_dim['mean_score'], $t_dim['mean_score'], "Dimension mean_score unaffected by safety in $sid");
+    }
+
+    // Verify safety answers have clear canonical labels and NO points
+    foreach ($cfg['safety_questions'] as $sq) {
+        $sq_id = $sq['id'];
+        assert_true(!isset($safe_scored['safety_answers'][$sq_id]['points']), "No points on safe answer {$sq_id} in $sid");
+        assert_true(!isset($trigger_scored['safety_answers'][$sq_id]['points']), "No points on triggered answer {$sq_id} in $sid");
+        assert_true(!empty($safe_scored['safety_answers'][$sq_id]['label']), "Label present on safe answer {$sq_id} in $sid");
+        assert_true(!empty($trigger_scored['safety_answers'][$sq_id]['label']), "Label present on triggered answer {$sq_id} in $sid");
+    }
+}
+
 echo "ALL 9 PROPRIETARY QUESTIONNAIRES PASSED PHYSICAL GOOGLE SHEETS STORAGE FORMAT AUDIT." . PHP_EOL;

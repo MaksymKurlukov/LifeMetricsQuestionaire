@@ -354,4 +354,37 @@ assert.strictEqual(beSheet.rows[1].length, 31, 'BE Data row has 31 columns');
 assert.strictEqual(beSheet.rows[0][30], 'category');
 assert.strictEqual(beSheet.rows[1][30], 'Bien-être satisfaisant');
 
+// Test H: Verify safety_attention takes 'Non' when safety_flags is empty
+const testHydraNoSafety = {
+  session_id: '77776666-5555-4444-8333-222211110000',
+  completed_at: '2026-09-09T11:06:00Z',
+  questionnaire_id: 'hydratation',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'HY01': { value: 3, label: 'Principale boisson', points: 3, applicable: true }
+  },
+  safety_answers: {
+    'HYSF01': { value: 'non', label: 'Non', triggers: [] }
+  },
+  raw_score: 30,
+  available_max: 48,
+  final_score: 30,
+  calculated_category: 'Bon',
+  displayed_category: 'Bonne hydratation',
+  safety_flags: []
+};
+let hydraNoSafetyRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testHydraNoSafety) } }).text);
+assert.strictEqual(hydraNoSafetyRes.ok, true);
+assert.strictEqual(hydraSheet.getLastRow(), 3, 'Data row 2 appended to Hydratation');
+assert.strictEqual(hydraSheet.rows[2][34], 'Non', 'safety_attention is Non when safety_flags is empty');
+
+// Test I: Verify strict absence of safety_attention column for the 3 questionnaires without safety block
+for (const noSafetyId of ['sedentarite', 'activite-physique', 'bien-etre']) {
+  const s = schemas[noSafetyId];
+  assert.strictEqual(s.hasSafety, false, `${noSafetyId} hasSafety is false`);
+  assert.strictEqual(s.safetyQuestions.length, 0, `${noSafetyId} has 0 safety questions`);
+  const hdrs = gasEnv.getHeaderList(s);
+  assert(!hdrs.includes('safety_attention'), `${noSafetyId} headers do NOT contain safety_attention`);
+}
+
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');

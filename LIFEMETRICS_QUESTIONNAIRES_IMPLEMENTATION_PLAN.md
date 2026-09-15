@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
-- Prochaine sous-étape à exécuter : PHASE 14.5 — Sérialisation et transport des questions & drapeaux Safety
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.5 — Sérialisation et transport des questions & drapeaux Safety
+- Prochaine sous-étape à exécuter : PHASE 14.6 — Audit du transport N/A et normalisation du score
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -727,16 +727,20 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.5 — Sérialisation et transport des questions & drapeaux Safety
-- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Confirmer que les questions Safety des 6 questionnaires propriétaires concernés (Sommeil, Nutrition, Pieds & confort postural, Hydratation, Fatigue & récupération, Risque nutritionnel) sont sérialisées avec labels clairs, sans points, sans altération du score numérique, et avec calcul serveur rigoureux de la colonne `safety_attention`.
   - 6 questionnaires propriétaires avec questions Safety : Sommeil (3 questions), Nutrition (3 questions), Pieds & confort postural (4 questions), Hydratation (3 questions), Fatigue & récupération (3 questions), Risque nutritionnel (4 questions).
   - Absence stricte de bloc Safety sur : Bien-être (0), Activité physique (0), Sédentarité (0).
 - Fichiers concernés :
   - `lifemetrics-questionnaires/includes/class-submission-service.php`
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
 - Modification nécessaire : Ajouter des tests de non-régression explicites vérifiant que `safety_attention` prend la valeur "Oui" si un trigger est actif et "Non" sinon, et qu'aucun point numérique n'est jamais attribué.
-- Tests ciblés : Tests PHP ciblés.
-- Critères d'acceptation : Écriture conforme et non-pollution du score certifiée sur les 6 questionnaires propriétaires à volet Safety. Absence de bloc Safety confirmée sur Bien-être, Activité physique et Sédentarité.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php` : Section 8 PASS (6 questionnaires safety testés sans pollution, 3 questionnaires sans safety vérifiés à 0 question/message, zero-score-pollution certifiée)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : Tests H & I PASS (`safety_attention` = "Non" quand flags vides, absence stricte de colonne `safety_attention` dans schemas/headers pour Sédentarité, Activité physique, Bien-être)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1, 14.2.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -992,6 +996,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `global-tamper-resistance.test.php` (PASS 10/10), `rest-backend-submission.test.php` (PASS 10/10), suite complète 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Certification de l'autorité serveur et de la tamper-resistance sur les 10 questionnaires. Élimination garantie de toute tentative d'injection de score ou de catégorie cliente, isolation de PSS-10 et recalcul systématique à partir des réponses brutes.
 - Prochaine sous-étape : 14.5 — Sérialisation et transport des questions & drapeaux Safety.
+
+### 2026-09-15 — Sous-étape 14.5 : Sérialisation et transport des questions & drapeaux Safety
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `google-sheets-storage-format.test.php` (Section 8 PASS), `google-sheets-storage-format.test.js` (Tests H & I PASS), suites complètes 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Confirmation formelle de l'inventaire Safety (exactement 6 questionnaires propriétaires avec questions Safety : Sommeil [3], Nutrition [3], Pieds & confort postural [4], Hydratation [3], Fatigue & récupération [3], Risque nutritionnel [4] ; et absence stricte de volet Safety sur Bien-être [0], Activité physique [0], Sédentarité [0]). Validation de la non-pollution stricte du score (scores bruts, max disponibles, finaux et par dimensions 100% identiques avec ou sans trigger actif), absence de points sur les réponses Safety, et transmission conforme de `safety_attention` ("Oui" ou "Non").
+- Prochaine sous-étape : 14.6 — Audit du transport N/A et normalisation du score.
 
 ---
 
