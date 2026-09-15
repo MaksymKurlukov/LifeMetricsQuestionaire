@@ -905,17 +905,32 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Tous les tests PASS ;
   - Aucun fichier temporaire, cache ou artefact local inutile ;
   - Fichiers de test exclus du ZIP de production ;
+  - `preview.php` et les autres outils de développement exclus du ZIP de production ;
   - Bootstrap, assets, templates et configurations présents.
 - Contrôles après build :
   - Inspecter le contenu réel du ZIP, le dossier racine, les fichiers PHP, CSS/JS et configurations.
+  - Vérifier automatiquement l'absence de `preview.php`, des tests, des fichiers Git, backups et `.DS_Store`.
+- Vérification d'intégration après build :
+  - Installer le ZIP produit dans un WordPress de staging, l'activer et vérifier l'absence d'erreur PHP.
+  - Vérifier le shortcode et le parcours complet des 10 questionnaires : intro, questions, résultat, REST et confirmation de sauvegarde.
+  - Vérifier séparément le runtime PSS-10 legacy et les 9 questionnaires propriétaires.
+  - Déployer/vérifier les deux Apps Script (PSS-10 legacy et Web App central), la configuration des endpoints WordPress et les 10 onglets Google Sheets (`PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`, `Risque_Nutritionnel`, `Bien_Etre`).
+  - Pour chaque questionnaire, confirmer qu'une soumission de test crée exactement une ligne dans l'onglet attendu et qu'une réémission du même `session_id` ne crée pas de doublon.
+  - Conserver le rapport de vérification manuelle comme preuve de release et livrer le ZIP ainsi que ce rapport à Camille ; aucune nouvelle modification UI n'est incluse dans cette étape.
 - Fichiers potentiellement concernés :
   - scripts/build-release-zip.sh
   - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
 - Tests :
   - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip
   - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+  - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production
+  - Checklist WordPress + Apps Script + Google Sheets exécutée sur le ZIP produit
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS.
+  - ZIP installé et activé dans WordPress de staging sans erreur.
+  - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus.
+  - La déduplication par `session_id` est confirmée sur le déploiement utilisé.
+  - Le rapport de validation manuelle est complet et transmissible à Camille.
 - Livrables à fournir :
   - Chemin exact du ZIP et taille ;
   - Résumé du contenu vérifié ;
