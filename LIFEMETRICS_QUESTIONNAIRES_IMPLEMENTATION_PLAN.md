@@ -27,9 +27,9 @@
 
 ## État actuel du projet
 
-- Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Préparation, intégration Git & plan d'exécution)
-- Dernière phase terminée : PHASE 13 — Restitution frontend finale (Baseline UI gelée au commit 75dc058)
-- Prochaine sous-étape à exécuter : PHASE 14.1 — Complétion schémas Google Apps Script (risque-nutritionnel & bien-etre)
+- Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.1 — Complétion des schémas Google Apps Script (risque-nutritionnel & bien-etre)
+- Prochaine sous-étape à exécuter : PHASE 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -652,16 +652,19 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 #### Sous-étapes d'exécution de la Phase 14
 
 ##### Sous-étape 14.1 — Complétion des schémas Google Apps Script (`risque-nutritionnel` & `bien-etre`)
-- Statut : À FAIRE / À MODIFIER
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Ajouter les définitions complètes de schémas pour `risque-nutritionnel` et `bien-etre` dans le Web App Google Apps Script central.
 - Fichiers concernés : `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
-- État actuel : `QUESTIONNAIRE_SCHEMAS` ne contient que 7 questionnaires. `risque-nutritionnel` et `bien-etre` sont rejetés en 400 `validation_error` (`Unknown questionnaire_id`).
-- Modification nécessaire :
-  1. Définir le schéma `risque-nutritionnel` : `sheetName: 'Risque_Nutritionnel'`, `hasSafety: true`, 12 questions scorées RN01–RN12 avec texte canonique, 4 questions de sécurité RNSF01–RNSF04 avec texte canonique.
-  2. Définir le schéma `bien-etre` : `sheetName: 'Bien_Etre'`, `hasSafety: false`, 12 questions scorées BE01–BE12 avec texte canonique, 0 question de sécurité.
-  3. Compléter `QUESTIONNAIRE_ALIASES` si nécessaire (`bien_etre`, `risque_nutritionnel`).
-- Tests ciblés : `node lifemetrics-questionnaires/tests/backend-logic.test.js`, `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`.
-- Critères d'acceptation : `getSchema('risque-nutritionnel')` et `getSchema('bien-etre')` renvoient des objets valides avec leurs noms d'onglets et questions canoniques.
+- Résultat :
+  1. Schéma `risque-nutritionnel` ajouté : `sheetName: 'Risque_Nutritionnel'`, `hasSafety: true`, 12 questions scorées canoniques RN01–RN12, 4 questions de sécurité canoniques RNSF01–RNSF04 (36 colonnes physiques).
+  2. Schéma `bien-etre` ajouté : `sheetName: 'Bien_Etre'`, `hasSafety: false`, 12 questions scorées canoniques BE01–BE12, 0 question de sécurité (31 colonnes physiques).
+  3. Alias ajoutés dans `QUESTIONNAIRE_ALIASES` : `'risque_nutritionnel': 'risque-nutritionnel'`, `'bien_etre': 'bien-etre'`.
+- Tests ciblés & non-régression :
+  - `node lifemetrics-questionnaires/tests/backend-logic.test.js` : PASS
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : PASS
+  - Smoke tests GAS `getSchema`, `getTargetSheetName`, `getHeaderList` : PASS (RN=36 colonnes, BE=31 colonnes)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : Aucune.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -948,6 +951,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   3. Analyse approfondie Phase 14 : Identification des lacunes de schémas Google Apps Script pour `risque-nutritionnel` et `bien-etre` et couverture de tests à étendre à 10 questionnaires.
   4. Plan d'exécution automatisé : Décomposition de la Phase 14 en 10 sous-étapes granulaires (14.1 à 14.10) et formalisation de l'Automated Execution Contract.
 - Notes : Prêt pour l'exécution automatisée de la sous-étape 14.1.
+
+### 2026-09-15 — Sous-étape 14.1 : Complétion des schémas Google Apps Script (risque-nutritionnel & bien-etre)
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : Smoke tests schémas GAS, `backend-logic.test.js`, `google-sheets-storage-format.test.js`, suite complète 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Schémas `risque-nutritionnel` (onglet `Risque_Nutritionnel`, hasSafety: true, 12 questions scorées RN01–RN12, 4 questions de sécurité RNSF01–RNSF04, 36 colonnes) et `bien-etre` (onglet `Bien_Etre`, hasSafety: false, 12 questions scorées BE01–BE12, 0 questions de sécurité, 31 colonnes) enregistrés avec succès dans `generic-google-apps-script.gs`. Aliases `risque_nutritionnel` et `bien_etre` ajoutés.
+- Prochaine sous-étape : 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS).
 
 ---
 

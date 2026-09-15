@@ -171,13 +171,58 @@ var QUESTIONNAIRE_SCHEMAS = {
       { id: 'PFSF03', text: "Votre douleur est-elle apparue brutalement après une chute, un choc ou un autre traumatisme récent ?" },
       { id: 'PFSF04', text: "La douleur ou la gêne vous empêche-t-elle actuellement de marcher normalement ou d'assurer vos activités habituelles ?" }
     ]
+  },
+  'risque-nutritionnel': {
+    sheetName: 'Risque_Nutritionnel',
+    hasSafety: true,
+    scoredQuestions: [
+      { id: 'RN01', text: "Au cours des 4 dernières semaines, comment décririez-vous votre appétit par rapport à votre niveau habituel ?" },
+      { id: 'RN02', text: "Au cours des 4 dernières semaines, à quelle fréquence vous êtes-vous senti rassasié très rapidement, au point de ne pas pouvoir terminer un repas que vous auriez normalement mangé ?" },
+      { id: 'RN03', text: "Au cours des 4 dernières semaines, par rapport à vos habitudes, quelle quantité avez-vous généralement consommée lors de vos repas ?" },
+      { id: 'RN04', text: "Au cours des 4 dernières semaines, à quelle fréquence avez-vous sauté un repas principal ou mangé seulement une très petite quantité alors que vous auriez normalement pris un repas complet ?" },
+      { id: 'RN05', text: "Au cours des 3 derniers mois, avez-vous constaté une perte de poids sans avoir cherché volontairement à maigrir ?" },
+      { id: 'RN06', text: "Au cours des dernières semaines, dans quelle mesure avez-vous remarqué, sans l'avoir recherché, des signes comme des vêtements devenus plus amples ou le besoin de resserrer davantage votre ceinture ?" },
+      { id: 'RN07', text: "Au cours des 4 dernières semaines, à quelle fréquence des difficultés à mâcher vous ont-elles conduit à manger moins ou à éviter certains aliments ?" },
+      { id: 'RN08', text: "Au cours des 4 dernières semaines, à quelle fréquence avez-vous eu des difficultés à avaler des aliments ou des boissons ?" },
+      { id: 'RN09', text: "Au cours des 4 dernières semaines, à quelle fréquence des symptômes comme des nausées, vomissements, douleurs ou inconforts digestifs vous ont-ils conduit à manger moins que prévu ?" },
+      { id: 'RN10', text: "Au cours des 4 dernières semaines, quelle a été la plus longue période pendant laquelle des symptômes ou un problème de santé vous ont conduit à manger nettement moins que d'habitude ?" },
+      { id: 'RN11', text: "Au cours des 4 dernières semaines, à quelle fréquence des difficultés à faire les courses, à vous déplacer ou à accéder aux aliments dont vous aviez besoin vous ont-elles conduit à manger moins que prévu ?" },
+      { id: 'RN12', text: "Au cours des 4 dernières semaines, à quelle fréquence des difficultés à préparer ou organiser vos repas vous ont-elles conduit à prendre un repas insuffisant ou à ne pas manger ?" }
+    ],
+    safetyQuestions: [
+      { id: 'RNSF01', text: "Avez-vous récemment constaté une perte de poids importante ou rapide sans avoir cherché à maigrir ?" },
+      { id: 'RNSF02', text: "Depuis plusieurs jours, mangez-vous très peu ou avez-vous des difficultés importantes à vous alimenter suffisamment ?" },
+      { id: 'RNSF03', text: "Avez-vous actuellement des difficultés importantes à avaler, des épisodes d'étouffement pendant les repas ou l'impression que les aliments passent difficilement ?" },
+      { id: 'RNSF04', text: "Des symptômes tels que des vomissements répétés, des douleurs importantes ou un autre problème de santé vous empêchent-ils actuellement de vous alimenter normalement ?" }
+    ]
+  },
+  'bien-etre': {
+    sheetName: 'Bien_Etre',
+    hasSafety: false,
+    scoredQuestions: [
+      { id: 'BE01', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous été satisfait de votre vie quotidienne dans son ensemble ?" },
+      { id: 'BE02', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment que votre quotidien correspondait globalement à ce qui est important pour vous ?" },
+      { id: 'BE03', text: "Au cours des 14 derniers jours, à quelle fréquence avez-vous ressenti des émotions agréables comme du calme, du plaisir, de la satisfaction ou de la joie ?" },
+      { id: 'BE04', text: "Lorsque vous avez vécu un moment difficile au cours des 14 derniers jours, dans quelle mesure avez-vous généralement réussi à retrouver un état émotionnel plus stable ?" },
+      { id: 'BE05', text: "Au cours des 14 derniers jours, à quelle fréquence avez-vous eu suffisamment d'envie ou de motivation pour commencer les activités prévues dans votre journée ?" },
+      { id: 'BE06', text: "Au cours des 14 derniers jours, dans quelle mesure vos activités habituelles vous ont-elles semblé intéressantes ou engageantes ?" },
+      { id: 'BE07', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment de pouvoir gérer les exigences ordinaires de votre quotidien ?" },
+      { id: 'BE08', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment de garder une certaine maîtrise sur l'organisation de votre vie quotidienne ?" },
+      { id: 'BE09', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment que ce que vous faisiez au quotidien avait du sens pour vous ?" },
+      { id: 'BE10', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment d'avancer vers des objectifs ou des choses importantes pour vous ?" },
+      { id: 'BE11', text: "Au cours des 14 derniers jours, dans quelle mesure vous êtes-vous senti suffisamment connecté aux personnes qui comptent pour vous ?" },
+      { id: 'BE12', text: "Au cours des 14 derniers jours, dans quelle mesure avez-vous eu le sentiment de pouvoir compter sur quelqu'un si vous aviez besoin de soutien ?" }
+    ],
+    safetyQuestions: []
   }
 };
 
 var QUESTIONNAIRE_ALIASES = {
   'fatigue': 'fatigue-recuperation',
   'activite_physique': 'activite-physique',
-  'pieds_confort': 'pieds-confort-postural'
+  'pieds_confort': 'pieds-confort-postural',
+  'risque_nutritionnel': 'risque-nutritionnel',
+  'bien_etre': 'bien-etre'
 };
 
 function getSchema(questionnaireId) {
