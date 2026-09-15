@@ -41,6 +41,12 @@ assert.equal(genericContext.getTargetSheetName('activite_physique'), 'Activite_P
 assert.equal(genericContext.getTargetSheetName('activite-physique'), 'Activite_Physique');
 assert.equal(genericContext.getTargetSheetName('pieds_confort'), 'Pieds_Confort');
 assert.equal(genericContext.getTargetSheetName('pieds-confort-postural'), 'Pieds_Confort');
+assert.equal(genericContext.getTargetSheetName('risque_nutritionnel'), 'Risque_Nutritionnel');
+assert.equal(genericContext.getTargetSheetName('risque-nutritionnel'), 'Risque_Nutritionnel');
+assert.equal(genericContext.getTargetSheetName('bien_etre'), 'Bien_Etre');
+assert.equal(genericContext.getTargetSheetName('bien-etre'), 'Bien_Etre');
+assert.notEqual(genericContext.getSchema('risque-nutritionnel'), null);
+assert.notEqual(genericContext.getSchema('bien-etre'), null);
 
 // Unknown IDs must be rejected
 assert.equal(genericContext.getTargetSheetName('unknown_test'), null);

@@ -142,7 +142,18 @@ $engine = new LifeMetrics_Questionnaire_Scoring_Engine();
 $adapter = new LifeMetrics_Google_Apps_Script_Adapter();
 $registry = new LifeMetrics_Questionnaire_Registry(
     dirname(__DIR__) . '/questionnaires',
-    array('pss10' => 'pss10/questionnaire.php'),
+    array(
+        'pss10' => 'pss10/questionnaire.php',
+        'sedentarite' => 'sedentarite/questionnaire.php',
+        'hydratation' => 'hydratation/questionnaire.php',
+        'fatigue-recuperation' => 'fatigue-recuperation/questionnaire.php',
+        'sommeil' => 'sommeil/questionnaire.php',
+        'nutrition' => 'nutrition/questionnaire.php',
+        'activite-physique' => 'activite-physique/questionnaire.php',
+        'pieds-confort-postural' => 'pieds-confort-postural/questionnaire.php',
+        'risque-nutritionnel' => 'risque-nutritionnel/questionnaire.php',
+        'bien-etre' => 'bien-etre/questionnaire.php',
+    ),
     $validator
 );
 $service = new LifeMetrics_Submission_Service($registry, $engine, $adapter);
@@ -161,6 +172,8 @@ expect_true($service->get_endpoint('sommeil') === 'https://script.google.com/mac
 expect_true($service->get_endpoint('nutrition') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Nutrition resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('activite-physique') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Activite Physique resolves to central LMQ_GOOGLE_ENDPOINT');
 expect_true($service->get_endpoint('pieds-confort-postural') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Pieds Confort Postural resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('risque-nutritionnel') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Risque Nutritionnel resolves to central LMQ_GOOGLE_ENDPOINT');
+expect_true($service->get_endpoint('bien-etre') === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-001/002: Bien-etre resolves to central LMQ_GOOGLE_ENDPOINT');
 
 // ----------------------------------------------------
 // BACK-003: Filter Hook Endpoint Override
@@ -282,5 +295,43 @@ $posted_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'], 
 expect_true($posted_body['session_id'] === '123e4567-e89b-42d3-a456-426614174000', 'BACK-012: Session ID preserved');
 expect_true($posted_body['final_score'] === 30, 'BACK-012: Final score computed accurately (30)');
 expect_true($posted_body['category'] === 'Stress très élevé', 'BACK-012: Canonical category derived');
+
+// ----------------------------------------------------
+// BACK-012b: Full Multi-Destination Submission Service Flow (Risque Nutritionnel to central endpoint)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$rn_answers = array();
+for ($i = 1; $i <= 12; $i++) {
+    $rn_answers['RN' . sprintf('%02d', $i)] = '1';
+}
+$rn_answers['RNSF01'] = 'no';
+$rn_answers['RNSF02'] = 'no';
+$rn_answers['RNSF03'] = 'no';
+$rn_answers['RNSF04'] = 'no';
+$req_rn = new WP_REST_Request(array('answers' => $rn_answers, 'session_id' => '123e4567-e89b-42d3-a456-426614174001'));
+$res_rn = $service->submit('risque-nutritionnel', $req_rn);
+expect_true(is_array($res_rn) && isset($res_rn['success']) && $res_rn['success'] === true, 'BACK-012b: Risque Nutritionnel submission succeeds');
+expect_true(count($GLOBALS['mock_remote_post_log']) === 1, 'BACK-012b: Exactly one remote POST dispatched');
+expect_true($GLOBALS['mock_remote_post_log'][0]['url'] === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-012b: POST sent to central endpoint');
+$posted_rn_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'], true);
+expect_true($posted_rn_body['questionnaire_id'] === 'risque-nutritionnel', 'BACK-012b: Questionnaire ID matches');
+expect_true($posted_rn_body['final_score'] === 12, 'BACK-012b: Final score is 12');
+
+// ----------------------------------------------------
+// BACK-012c: Full Multi-Destination Submission Service Flow (Bien-être to central endpoint)
+// ----------------------------------------------------
+$GLOBALS['mock_remote_post_log'] = array();
+$be_answers = array();
+for ($i = 1; $i <= 12; $i++) {
+    $be_answers['BE' . sprintf('%02d', $i)] = '1';
+}
+$req_be = new WP_REST_Request(array('answers' => $be_answers, 'session_id' => '123e4567-e89b-42d3-a456-426614174002'));
+$res_be = $service->submit('bien-etre', $req_be);
+expect_true(is_array($res_be) && isset($res_be['success']) && $res_be['success'] === true, 'BACK-012c: Bien-être submission succeeds');
+expect_true(count($GLOBALS['mock_remote_post_log']) === 1, 'BACK-012c: Exactly one remote POST dispatched');
+expect_true($GLOBALS['mock_remote_post_log'][0]['url'] === 'https://script.google.com/macros/s/lifemetrics_central_endpoint/exec', 'BACK-012c: POST sent to central endpoint');
+$posted_be_body = json_decode($GLOBALS['mock_remote_post_log'][0]['args']['body'], true);
+expect_true($posted_be_body['questionnaire_id'] === 'bien-etre', 'BACK-012c: Questionnaire ID matches');
+expect_true($posted_be_body['final_score'] === 12, 'BACK-012c: Final score is 12');
 
 echo "All Backend Multi-Destination Routing Tests (BACK-001 to BACK-012): ALL PASSED.\n";

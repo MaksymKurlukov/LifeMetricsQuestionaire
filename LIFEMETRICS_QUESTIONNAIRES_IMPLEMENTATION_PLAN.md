@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
-- Prochaine sous-étape à exécuter : PHASE 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
+- Prochaine sous-étape à exécuter : PHASE 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -688,15 +688,21 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
-- Statut : À FAIRE / À MODIFIER
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Vérifier que tous les 10 questionnaires résolvent autoritairement leurs endpoints respectifs et sont protégés contre la découverte publique non autorisée.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/tests/backend-routing.test.php`
   - `lifemetrics-questionnaires/tests/backend-logic.test.js`
-- État actuel : `backend-routing.test.php` et `backend-logic.test.js` ne testent que 7 questionnaires propriétaires + PSS-10.
-- Modification nécessaire : Ajouter les assertions pour `risque-nutritionnel` et `bien-etre` sur la résolution vers `LMQ_GOOGLE_ENDPOINT` et `getTargetSheetName`.
-- Tests ciblés : `php lifemetrics-questionnaires/tests/backend-routing.test.php` et `node lifemetrics-questionnaires/tests/backend-logic.test.js`.
-- Critères d'acceptation : BACK-001 à BACK-012 validés sur les 10 questionnaires.
+- Résultat :
+  1. Résolution autoritaire d'endpoints vérifiée sur les 10 questionnaires (BACK-001/002) : PSS-10 isolé vers `LMQ_PSS10_GOOGLE_ENDPOINT`, 9 questionnaires propriétaires (dont `risque-nutritionnel` et `bien-etre`) routés vers le Web App central `LMQ_GOOGLE_ENDPOINT`.
+  2. Tests de contournement et de sécurité validés (BACK-003 à BACK-011) : filtres dynamiques, rejet d'instruments inconnus, redirections sûres 302/307, blocage strict anti-SSRF sur redirections malveillantes, gestion des erreurs réseau/HTTP/rejet, idempotence duplicate.
+  3. Flux complets de soumission multi-destinations validés (BACK-012, BACK-012b, BACK-012c) : confirmation de l'émission des requêtes vers le bon endpoint avec payload structuré pour PSS-10, `risque-nutritionnel` et `bien-etre`.
+  4. Validation JS `backend-logic.test.js` : tests allowlist `getTargetSheetName` et `getSchema` validés sur les 10 questionnaires et leurs aliases.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/backend-routing.test.php` : PASS (BACK-001 à BACK-012c)
+  - `node lifemetrics-questionnaires/tests/backend-logic.test.js` : PASS
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -967,6 +973,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : `google-sheets-storage-format.test.php` (PASS 9/9), `google-sheets-storage-format.test.js` (PASS 9/9), suite complète 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Couverture intégrale des 9 questionnaires propriétaires V2 dans les deux environnements de test de stockage physique Google Sheets. `risque-nutritionnel` (36 colonnes) et `bien-etre` (31 colonnes) validés en colonnes canoniques, ordre, adjacence réponse/points, gestion N/A, autorité serveur des points et insertions de lignes doPost simulées.
 - Prochaine sous-étape : 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires).
+
+### 2026-09-15 — Sous-étape 14.3 : Intégrité du routage d'endpoint et de découverte (10 questionnaires)
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/backend-routing.test.php`, `lifemetrics-questionnaires/tests/backend-logic.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `backend-routing.test.php` (BACK-001 à BACK-012c PASS), `backend-logic.test.js` (PASS), suite complète 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Résolution d'endpoints autoritaire validée pour l'ensemble des 10 questionnaires (PSS-10 vers endpoint dédié legacy, 9 questionnaires propriétaires dont `risque-nutritionnel` et `bien-etre` vers `LMQ_GOOGLE_ENDPOINT`), getTargetSheetName et getSchema validés en JS, tests de rejet SSRF/redirections malveillantes confirmés, et flux complets de soumission multi-destinations BACK-012/b/c certifiés.
+- Prochaine sous-étape : 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires).
 
 ---
 
