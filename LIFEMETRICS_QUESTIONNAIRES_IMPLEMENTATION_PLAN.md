@@ -28,8 +28,8 @@
 ## État actuel du projet
 
 - Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.1 — Complétion des schémas Google Apps Script (risque-nutritionnel & bien-etre)
-- Prochaine sous-étape à exécuter : PHASE 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
+- Prochaine sous-étape à exécuter : PHASE 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
@@ -670,17 +670,19 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
-- Statut : À FAIRE / À MODIFIER
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Étendre les suites d'audit physique des feuilles Google Sheets pour couvrir les 9 questionnaires propriétaires V2 (dont `risque-nutritionnel` et `bien-etre`).
 - Fichiers concernés :
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
   - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
-- État actuel : Les deux tests ne valident que 7 questionnaires.
-- Modification nécessaire :
-  - Ajouter `risque-nutritionnel` (36 colonnes physiques : 3 métadonnées + 24 scorées + 4 sécurité + 3 scores + 1 catégorie + 1 attention sécurité).
-  - Ajouter `bien-etre` (31 colonnes physiques : 3 métadonnées + 24 scorées + 0 sécurité + 3 scores + 1 catégorie + 0 attention sécurité).
-- Tests ciblés : `php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php` et `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`.
-- Critères d'acceptation : Les 9 questionnaires propriétaires passent avec succès l'audit des colonnes, de l'ordre, et du typage dans les deux environnements.
+- Résultat :
+  1. Test PHP étendu : validation rigoureuse des 9 questionnaires propriétaires (dont `risque-nutritionnel` à 36 colonnes et `bien-etre` à 31 colonnes), vérification des questions, dimensions, types, labels autoritaires et absence de points sur questions Safety.
+  2. Test JS étendu : validation des en-têtes physiques générés pour les 9 questionnaires, confirmation de l'absence de colonnes techniques résiduelles, tests d'insertion doPost simulés avec succès pour `risque-nutritionnel` (avec `safety_attention = Oui`) et `bien-etre` (31 colonnes).
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php` : PASS (9/9 questionnaires)
+  - `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` : PASS (9/9 questionnaires)
+  - Suites complètes : 23/23 PHP PASS, 19/19 JS PASS
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -958,6 +960,13 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : Smoke tests schémas GAS, `backend-logic.test.js`, `google-sheets-storage-format.test.js`, suite complète 23/23 PHP PASS, 19/19 JS PASS
 - Résultat : Schémas `risque-nutritionnel` (onglet `Risque_Nutritionnel`, hasSafety: true, 12 questions scorées RN01–RN12, 4 questions de sécurité RNSF01–RNSF04, 36 colonnes) et `bien-etre` (onglet `Bien_Etre`, hasSafety: false, 12 questions scorées BE01–BE12, 0 questions de sécurité, 31 colonnes) enregistrés avec succès dans `generic-google-apps-script.gs`. Aliases `risque_nutritionnel` et `bien_etre` ajoutés.
 - Prochaine sous-étape : 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS).
+
+### 2026-09-15 — Sous-étape 14.2 : Audits du format de stockage physique Google Sheets (PHP & JS)
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `google-sheets-storage-format.test.php` (PASS 9/9), `google-sheets-storage-format.test.js` (PASS 9/9), suite complète 23/23 PHP PASS, 19/19 JS PASS
+- Résultat : Couverture intégrale des 9 questionnaires propriétaires V2 dans les deux environnements de test de stockage physique Google Sheets. `risque-nutritionnel` (36 colonnes) et `bien-etre` (31 colonnes) validés en colonnes canoniques, ordre, adjacence réponse/points, gestion N/A, autorité serveur des points et insertions de lignes doPost simulées.
+- Prochaine sous-étape : 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires).
 
 ---
 

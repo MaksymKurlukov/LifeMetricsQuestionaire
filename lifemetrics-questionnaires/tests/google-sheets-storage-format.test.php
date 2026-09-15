@@ -44,6 +44,8 @@ $all_ids = array(
     'nutrition' => array('sheet' => 'Nutrition', 'scored' => 12, 'safety' => 3, 'dims' => 6, 'has_safety_col' => true, 'total_cols' => 35),
     'activite-physique' => array('sheet' => 'Activite_Physique', 'scored' => 12, 'safety' => 0, 'dims' => 5, 'has_safety_col' => false, 'total_cols' => 31),
     'pieds-confort-postural' => array('sheet' => 'Pieds_Confort', 'scored' => 12, 'safety' => 4, 'dims' => 6, 'has_safety_col' => true, 'total_cols' => 36),
+    'risque-nutritionnel' => array('sheet' => 'Risque_Nutritionnel', 'scored' => 12, 'safety' => 4, 'dims' => 6, 'has_safety_col' => true, 'total_cols' => 36),
+    'bien-etre' => array('sheet' => 'Bien_Etre', 'scored' => 12, 'safety' => 0, 'dims' => 6, 'has_safety_col' => false, 'total_cols' => 31),
 );
 
 // 1. Verify schema definition completeness, question count, and canonical column layouts
@@ -134,4 +136,4 @@ $pss10_config = require __DIR__ . '/../questionnaires/pss10/questionnaire.php';
 assert_same('pss10', $pss10_config['id'], 'PSS10 config ID');
 assert_true(count($pss10_config['questions']) === 10, 'PSS10 has 10 questions');
 
-echo "ALL 7 PROPRIETARY QUESTIONNAIRES PASSED PHYSICAL GOOGLE SHEETS STORAGE FORMAT AUDIT." . PHP_EOL;
+echo "ALL 9 PROPRIETARY QUESTIONNAIRES PASSED PHYSICAL GOOGLE SHEETS STORAGE FORMAT AUDIT." . PHP_EOL;

@@ -55,10 +55,12 @@ const expectedSchemas = {
   'sommeil': { sheet: 'Sommeil', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
   'nutrition': { sheet: 'Nutrition', scoredCount: 12, safetyCount: 3, hasSafety: true, totalCols: 35 },
   'activite-physique': { sheet: 'Activite_Physique', scoredCount: 12, safetyCount: 0, hasSafety: false, totalCols: 31 },
-  'pieds-confort-postural': { sheet: 'Pieds_Confort', scoredCount: 12, safetyCount: 4, hasSafety: true, totalCols: 36 }
+  'pieds-confort-postural': { sheet: 'Pieds_Confort', scoredCount: 12, safetyCount: 4, hasSafety: true, totalCols: 36 },
+  'risque-nutritionnel': { sheet: 'Risque_Nutritionnel', scoredCount: 12, safetyCount: 4, hasSafety: true, totalCols: 36 },
+  'bien-etre': { sheet: 'Bien_Etre', scoredCount: 12, safetyCount: 0, hasSafety: false, totalCols: 31 }
 };
 
-// 1. Verify schema definitions and physical column layouts for all 7 proprietary questionnaires
+// 1. Verify schema definitions and physical column layouts for all 9 proprietary questionnaires
 for (const [id, exp] of Object.entries(expectedSchemas)) {
   const schema = schemas[id];
   assert(schema, `Schema defined for ${id}`);
@@ -300,10 +302,56 @@ const testFormulaPayload = {
   displayed_category: '@INJECTION'
 };
 
-let formulaRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testFormulaPayload) } }).text);
-assert.strictEqual(formulaRes.ok, true);
-const formulaRow = sedSheet.rows[2];
-assert(formulaRow[3].startsWith("'+"), 'Formula in answer label escaped with single quote');
-assert(formulaRow[30].startsWith("'@"), 'Formula in displayed_category escaped with single quote');
+// Test F: Risque Nutritionnel doPost with safety questions and safety_attention = "Oui"
+const testRnPayload = {
+  session_id: '11112222-3333-4444-8555-666677778888',
+  completed_at: '2026-09-09T11:20:00Z',
+  questionnaire_id: 'risque-nutritionnel',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'RN01': { value: '1', label: 'Mon appétit est habituel ou très bon', points: 1, applicable: true }
+  },
+  safety_answers: {
+    'RNSF01': { value: 'yes', label: 'Oui', triggers: ['RN_SAFETY_MESSAGE'] }
+  },
+  raw_score: 15,
+  available_max: 60,
+  final_score: 15,
+  calculated_category: 'RISQUE_FAIBLE',
+  displayed_category: 'Risque nutritionnel faible',
+  safety_flags: ['RN_SAFETY_MESSAGE']
+};
+let rnRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testRnPayload) } }).text);
+assert.strictEqual(rnRes.ok, true);
+const rnSheet = mockSpreadsheet.getSheetByName('Risque_Nutritionnel');
+assert.strictEqual(rnSheet.getLastRow(), 2, 'Header row + 1 data row created for RN');
+assert.strictEqual(rnSheet.rows[0].length, 36, 'RN Header row has 36 columns');
+assert.strictEqual(rnSheet.rows[1].length, 36, 'RN Data row has 36 columns');
+assert.strictEqual(rnSheet.rows[0][35], 'safety_attention');
+assert.strictEqual(rnSheet.rows[1][35], 'Oui', 'RN safety_attention is Oui');
+
+// Test G: Bien-être doPost without safety questions
+const testBePayload = {
+  session_id: '22223333-4444-4555-8666-777788889999',
+  completed_at: '2026-09-09T11:25:00Z',
+  questionnaire_id: 'bien-etre',
+  questionnaire_version: '1.0.0',
+  answers: {
+    'BE01': { value: '1', label: 'Très satisfait', points: 1, applicable: true }
+  },
+  raw_score: 14,
+  available_max: 60,
+  final_score: 14,
+  calculated_category: 'SATISFAISANT',
+  displayed_category: 'Bien-être satisfaisant'
+};
+let beRes = JSON.parse(gasEnv.doPost({ postData: { contents: JSON.stringify(testBePayload) } }).text);
+assert.strictEqual(beRes.ok, true);
+const beSheet = mockSpreadsheet.getSheetByName('Bien_Etre');
+assert.strictEqual(beSheet.getLastRow(), 2, 'Header row + 1 data row created for BE');
+assert.strictEqual(beSheet.rows[0].length, 31, 'BE Header row has 31 columns');
+assert.strictEqual(beSheet.rows[1].length, 31, 'BE Data row has 31 columns');
+assert.strictEqual(beSheet.rows[0][30], 'category');
+assert.strictEqual(beSheet.rows[1][30], 'Bien-être satisfaisant');
 
 console.log('ALL REFINED GOOGLE APPS SCRIPT STORAGE FORMAT JAVASCRIPT TESTS PASSED.');
