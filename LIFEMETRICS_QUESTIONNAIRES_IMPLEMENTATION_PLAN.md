@@ -959,10 +959,18 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
 
 ### WORK-20 — Corriger et sécuriser l'outil preview avant release
 
-- Statut : À FAIRE
-- Position : gate de la Phase 16, avant la clôture du build ZIP.
+- Statut : TERMINÉ (2026-09-15)
+- Position : gate validée de la Phase 16, avant le build ZIP final.
 - Objectif : conserver le preview comme outil de développement sans le distribuer dans le ZIP de production et garantir que le chemin PSS-10 preview n'est pas présenté comme le runtime WordPress de production.
-- Critères : `preview.php` est exclu du ZIP ; le build vérifie explicitement cette exclusion ; les questionnaires restent prévisualisables localement ; le runtime PSS-10 legacy de production reste inchangé.
+- Critères validés :
+  - `preview.php` est explicitement exclu du ZIP de release dans `scripts/build-release-zip.sh` (`-x "lifemetrics-questionnaires/preview.php"`) ;
+  - Le build script vérifie automatiquement après création que `preview.php` et `tests/` sont absents du ZIP (`unzip -l | grep -q`) et échoue immédiatement en cas de fuite ;
+  - `lifemetrics-questionnaires/tests/stage11-release-audit.test.php` audite et certifie cette exclusion et la présence du garde-fou ;
+  - Dans `preview.php`, le cas PSS-10 est explicitement désactivé dans le sélecteur avec documentation claire expliquant que son runtime historique WordPress dédié (`LifeMetrics_Legacy_PSS10_Runtime`, template `pss10/template.php`, `style.css`, `app.js`) n'est pas représentatif du moteur générique V2 autonome ;
+  - Les 9 questionnaires propriétaires V2 restent 100% prévisualisables et interactifs sur desktop, tablette et mobile ;
+  - Le gel UI (UI Freeze) est intégralement préservé (aucun fichier template, CSS partagé ou DOM de questionnaire modifié) ;
+  - 42/42 suites de tests (23 PHP, 19 JS) passent avec succès (100%).
+- Date de complétion : 2026-09-15
 - Tâche Notion : `WORK-20 — Corriger et sécuriser l'outil preview avant release`.
 
 ### WORK-23 — Préparer la revue finale et la stratégie de merge vers main
@@ -1141,6 +1149,19 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
   3. UI Freeze : Préservé à 100% (aucune modification de code CSS, template ou DOM).
   4. Non-régression PSS-10 : 100% validée.
 - Prochaine phase : PHASE 16 — WordPress Release ZIP (WORK-20).
+
+### 2026-09-15 — WORK-20 : Corriger et sécuriser l'outil preview avant release
+- Statut : TERMINÉ
+- Fichiers modifiés : `lifemetrics-questionnaires/preview.php`, `scripts/build-release-zip.sh`, `lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `preview.php` render tests (10/10 PASS), `stage11-release-audit.test.php` (PASS), suites complètes 23/23 PHP PASS (100%), 19/19 JS PASS (100%)
+- Résultat : Sécurisation et fiabilisation de l'outil de preview autonome :
+  1. Traitement PSS-10 : Option désactivée dans le `<select>` avec documentation claire affichée dans le canvas expliquant que PSS-10 possède un runtime WordPress dédié (`LifeMetrics_Legacy_PSS10_Runtime`, template `pss10/template.php`, `style.css`, `app.js`, 13 gardes de mutation) non représentatif du moteur générique V2. Les scripts d'UI génériques ne sont pas injectés pour PSS-10.
+  2. 9 questionnaires V2 : Fonctionnement autonome et interactif parfait sur desktop, tablette et mobile avec sélection dynamique et affichage du statut.
+  3. Exclusion du ZIP release : Exclusion explicite de `preview.php` ajoutée à `scripts/build-release-zip.sh` (`-x "lifemetrics-questionnaires/preview.php"`).
+  4. Contrôle automatisé anti-fuite : Ajout dans `build-release-zip.sh` d'une vérification post-build (`unzip -l | grep -q`) bloquant le build en cas de présence de `preview.php` ou `tests/`.
+  5. Audit automatisé de release : `stage11-release-audit.test.php` enrichi d'assertions vérifiant l'exclusion et les gardes dans le script de build.
+  6. UI Freeze respecté : Aucun template, CSS, balise HTML ou DOM de questionnaire modifié.
+- Prochaine phase : PHASE 16 — WordPress Release ZIP (WORK-22).
 
 ---
 

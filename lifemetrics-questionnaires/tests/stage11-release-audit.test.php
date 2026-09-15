@@ -300,4 +300,24 @@ foreach ($runtime_files as $file) {
     }
 }
 
+// ----------------------------------------------------
+// 5. Release Packaging & Exclusions Audit (WORK-20)
+// ----------------------------------------------------
+$build_script_path = dirname(__DIR__, 2) . '/scripts/build-release-zip.sh';
+audit_assert(file_exists($build_script_path), 'Release build script exists at scripts/build-release-zip.sh');
+$build_script = file_get_contents($build_script_path);
+
+audit_assert(str_contains($build_script, '-x "lifemetrics-questionnaires/preview.php"'), 'build-release-zip.sh explicitly excludes preview.php from release ZIP');
+audit_assert(str_contains($build_script, '-x "lifemetrics-questionnaires/tests/*"'), 'build-release-zip.sh explicitly excludes tests/ from release ZIP');
+audit_assert(str_contains($build_script, 'grep -q "preview.php"'), 'build-release-zip.sh contains automated check preventing preview.php in ZIP');
+audit_assert(str_contains($build_script, 'grep -q "lifemetrics-questionnaires/tests/"'), 'build-release-zip.sh contains automated check preventing tests/ in ZIP');
+
+// Standalone preview tool audits (WORK-20)
+$preview_file = dirname(__DIR__) . '/preview.php';
+audit_assert(file_exists($preview_file), 'preview.php exists as development tool');
+$preview_content = file_get_contents($preview_file);
+audit_assert(str_contains($preview_content, 'Prévisualisation autonome non applicable au PSS-10'), 'preview.php documents that PSS-10 is not representative in generic preview');
+audit_assert(str_contains($preview_content, '<option value="pss10"'), 'preview.php has PSS-10 in questionnaire selection');
+audit_assert(str_contains($preview_content, 'disabled'), 'preview.php disables PSS-10 in selection');
+
 echo "Stage 11 Production Packaging & Release Readiness Audit: ALL PASSED.\n";

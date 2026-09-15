@@ -6,7 +6,9 @@
  * directly in the browser without needing WordPress or a database.
  */
 
-define('ABSPATH', __DIR__ . '/');
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
 
 if (!function_exists('esc_attr')) {
     function esc_attr($str) { return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8'); }
@@ -236,14 +238,20 @@ $modal_title_id = $instance_id . '-modal-title';
   <div class="lmq-dev-toolbar">
     <div class="lmq-dev-toolbar__main">
       <strong class="lmq-dev-toolbar__brand">LifeMetrics Preview</strong>
-      <span class="badge-status"><?php echo esc_html($config['status'] ?? 'ok'); ?></span>
+      <span class="badge-status" style="<?php echo $selected_q === 'pss10' ? 'background: #d97706;' : ''; ?>"><?php echo esc_html($selected_q === 'pss10' ? 'legacy' : ($config['status'] ?? 'ok')); ?></span>
       <div class="lmq-dev-toolbar__field">
         <label class="lmq-dev-toolbar__label" for="q-select">Questionnaire :</label>
         <select id="q-select" aria-label="Questionnaire à prévisualiser" onchange="location.href='?q=' + this.value">
           <?php foreach ($questionnaires as $slug => $label): ?>
-            <option value="<?php echo esc_attr($slug); ?>" <?php echo $slug === $selected_q ? 'selected' : ''; ?>>
-              <?php echo esc_html($label); ?> (<?php echo esc_html($slug); ?>)
-            </option>
+            <?php if ($slug === 'pss10'): ?>
+              <option value="pss10" <?php echo $slug === $selected_q ? 'selected' : ''; ?> disabled>
+                <?php echo esc_html($label); ?> (Runtime legacy dédié — non disponible en preview)
+              </option>
+            <?php else: ?>
+              <option value="<?php echo esc_attr($slug); ?>" <?php echo $slug === $selected_q ? 'selected' : ''; ?>>
+                <?php echo esc_html($label); ?> (<?php echo esc_html($slug); ?>)
+              </option>
+            <?php endif; ?>
           <?php endforeach; ?>
         </select>
       </div>
@@ -259,7 +267,29 @@ $modal_title_id = $instance_id . '-modal-title';
   <!-- Preview Canvas -->
   <div class="lmq-preview-stage">
     <div id="preview-viewport" class="lmq-preview-viewport">
-      <?php if ($config): ?>
+      <?php if ($selected_q === 'pss10'): ?>
+        <div style="padding: 48px 24px; max-width: 640px; margin: 0 auto; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+              <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Runtime WordPress Legacy Isolé</span>
+            </div>
+            <h2 style="margin: 0 0 12px 0; font-size: 19px; color: #0f172a; font-weight: 700;">Prévisualisation autonome non applicable au PSS-10</h2>
+            <p style="margin: 0 0 14px 0; color: #475569; line-height: 1.6; font-size: 14px;">
+              Le questionnaire <strong>Stress PSS-10</strong> repose sur un runtime WordPress historique dédié (<code>LifeMetrics_Legacy_PSS10_Runtime</code>) avec templates, scripts et styles isolés (<code>questionnaires/pss10/template.php</code>, <code>style.css</code>, <code>app.js</code>), strictement verrouillé par 13 gardes de mutation frontend.
+            </p>
+            <p style="margin: 0 0 14px 0; color: #475569; line-height: 1.6; font-size: 14px;">
+              Ce runtime legacy exige l'environnement WordPress réel (shortcode <code>[lifemetrics_questionnaire id="pss10"]</code>) et son endpoint REST dédié <code>/wp-json/lifemetrics-questionnaires/v1/pss10/submit</code>. L'outil autonome <code>preview.php</code> est exclusivement conçu pour les 9 questionnaires propriétaires V2 utilisant le moteur unifié.
+            </p>
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 14px; margin-top: 16px;">
+              <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
+                Pour valider le PSS-10 de façon certifiée, exécutez les suites de tests automatisées dédiées :
+                <br>• <code>php lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php</code>
+                <br>• <code>node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js</code>
+              </p>
+            </div>
+          </div>
+        </div>
+      <?php elseif ($config): ?>
         <div class="lmq-questionnaire-root" id="<?php echo esc_attr($instance_id); ?>" data-lmq-questionnaire="<?php echo esc_attr($config['id']); ?>">
           <script type="application/json" data-lmq-config>
             <?php echo wp_json_encode($config); ?>
@@ -274,8 +304,10 @@ $modal_title_id = $instance_id . '-modal-title';
     </div>
   </div>
 
-  <script src="assets/js/questionnaire-engine.js"></script>
-  <script src="assets/js/questionnaire-ui.js"></script>
+  <?php if ($selected_q !== 'pss10'): ?>
+    <script src="assets/js/questionnaire-engine.js"></script>
+    <script src="assets/js/questionnaire-ui.js"></script>
+  <?php endif; ?>
   
   <script>
     function setDevice(type, btn) {
