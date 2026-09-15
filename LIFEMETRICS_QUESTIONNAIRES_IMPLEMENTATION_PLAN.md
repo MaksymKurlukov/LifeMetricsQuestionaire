@@ -19,7 +19,7 @@
 | 11 | Risque nutritionnel V1 | TERMINÉ |
 | 12 | Bien-être V1 | TERMINÉ |
 | 13 | Restitution frontend finale | TERMINÉ |
-| 14 | Vérification transport et Google Sheets | À FAIRE |
+| 14 | Vérification transport et Google Sheets | EN COURS |
 | 15 | Full Regression Test | À FAIRE |
 | 16 | WordPress Release ZIP | À FAIRE |
 
@@ -27,13 +27,13 @@
 
 ## État actuel du projet
 
-- Phase actuelle : Aucune
-- Dernière phase terminée : PHASE 13 — Restitution frontend finale
-- Prochaine phase à exécuter : PHASE 14 — Vérification transport et Google Sheets
+- Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Préparation, intégration Git & plan d'exécution)
+- Dernière phase terminée : PHASE 13 — Restitution frontend finale (Baseline UI gelée au commit 75dc058)
+- Prochaine sous-étape à exécuter : PHASE 14.1 — Complétion schémas Google Apps Script (risque-nutritionnel & bien-etre)
 - Blocages : Aucun
 - Nombre de phases terminées : 13 / 16
 - Nombre de phases restantes : 3
-- Dernier commit de phase : lifemetrics: phase 13 - restitution frontend finale
+- Dernier commit de phase : 75dc058 (fix(ui): finalize questionnaire visual corrections)
 - Livrable final : lifemetrics-questionnaires.zip
 
 ---
@@ -149,6 +149,15 @@ Sur la page de résultat de TOUS les questionnaires LifeMetrics, il doit y avoir
 
 Cette règle est commune à tous les questionnaires des phases 4 à 12. Elle remplace les anciens CTA spécifiques ou destinations inventées dans les configurations (ex. `/vitascan/`, `/podos360/`).
 Les PDF restent la source de vérité pour les questions, réponses, points, dimensions, catégories, textes de résultat, Safety, guardrails et disclaimers, mais cette règle globale est prioritaire pour les deux CTA de la page de résultat.
+
+### 8. Règle de gel UI / UI Freeze after WORK-17
+- Le frontend validé après le commit `75dc058` constitue la baseline UI officielle.
+- Phase 14+ ne doit pas modifier l’interface utilisateur (templates visuels, CSS, structure visuelle, jauge, cartes, boutons, CTAs, typographie, responsive, layout, animations, textes visibles validés).
+- Toute modification visuelle future doit faire l’objet d’une tâche explicitement dédiée.
+- Le prochain travail de design/polish sera réalisé séparément par Camille.
+- PSS-10 de `main` reste la référence visuelle historique.
+- Si un problème de transport semble nécessiter une modification UI : NE PAS LA FAIRE. Documenter le problème et le marquer comme blocage / décision nécessaire.
+- Cette règle n'interdit pas les corrections backend, transport, tests ou sécurité.
 
 ---
 
@@ -617,54 +626,195 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 - Statut : TERMINÉ
 - Objectif : Harmoniser et moderniser l'expérience utilisateur et l'interface de restitution sur l'ensemble des 10 questionnaires (9 questionnaires propriétaires V2 + PSS-10), en respectant scrupuleusement la méthodologie validée et en intégrant les conclusions de l'Independent UX/UI Design Review.
+- Alignement visuel WORK-17 : Restauration fidèle du style historique de la branche `main` (polices Syne & Plus Jakarta Sans, cartes réponses crème `#f5f0e8`, boutons hero avec effet sweep `::before`, badges résultat pastel, espacements respiratoires, pas d'indicateurs radio artificiels).
+- Baseline UI gelée : Validée au commit `75dc058` (`fix(ui): finalize questionnaire visual corrections`). L'UI/UX est désormais strictement FROZEN pour les phases 14, 15 et 16.
 - Fichiers modifiés :
   - `lifemetrics-questionnaires/templates/questionnaire.php`
   - `lifemetrics-questionnaires/assets/css/questionnaire.css`
   - `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`
   - `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`
-- Améliorations clés réalisées :
-  1. Header épuré « Mon résultat » avec séparateur structural en dégradé brandé.
-  2. Suppression du double badge redondant : catégorie unifiée et mise en valeur sous la jauge (`interpretation-title`).
-  3. Micro-texte d'échelle clair avec sens de lecture.
-  4. Alertes de sécurité prioritaires placées avant l'analyse et les axes d'amélioration.
-  5. Analyse détaillée en progressive disclosure (phrase clé d'accroche + contenu complet dépliable).
-  6. Grille d'axes d'amélioration sous forme de cartes structurées (icône, titre dimension, message d'amélioration).
-  7. Hiérarchie stricte des CTAs : 1 primaire dominant orange, 1 secondaire outline ghost avec flèche, 1 lien tertiaire discret pour recommencer le test.
-  8. Indicateurs radio visuels sur les options de réponse et badge de question de vigilance sur les étapes de sécurité.
-  9. Zero overflow horizontal sur mobile (375px), fluidité parfaite sur tablette (768px) et desktop (1440px).
 - Tests exécutés :
   - Full suite PHP (23 tests PASS)
   - Full suite JS (19 tests PASS)
-  - Full Chrome CDP Browser Audit Matrix (10/10 questionnaires, 3 viewports, 4 scénarios: ALL PASSED)
-- Commit : `lifemetrics: phase 13 - ux ui redesign`
-- Date : 2026-09-11
+  - Full Chrome CDP Browser Audit Matrix (10/10 questionnaires, 3 viewports: ALL PASSED)
+- Commit initial : `lifemetrics: phase 13 - ux ui redesign` (2026-09-11)
+- Commit de finalisation & freeze UI : `75dc058 fix(ui): finalize questionnaire visual corrections` (2026-09-14)
 
 ---
 
-### PHASE 14 — Vérification transport et Google Sheets
+### PHASE 14 — Transport et Google Sheets
 
-- Statut : À FAIRE
-- Objectif : Vérifier que le payload existant transporte correctement les données réellement nécessaires vers le backend et Google Sheets. Ne modifier le transport que si un manque concret est démontré.
-- Règle PSS-10 : Le PSS-10 est vérifié uniquement pour la non-régression de son flux historique existant. Ne pas migrer son payload, son scoring ou son runtime vers le moteur V2 uniquement pour uniformiser l'architecture.
-- Fichiers potentiellement concernés :
-  - lifemetrics-questionnaires/includes/class-submission-service.php
-  - lifemetrics-questionnaires/backend/generic-google-apps-script.gs
-  - lifemetrics-questionnaires/tests/rest-backend-submission.test.php
-  - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php
-  - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
-- Tests :
-  - php lifemetrics-questionnaires/tests/rest-backend-submission.test.php
-  - php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php
-  - node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
-- Critères de validation :
-  - Payload et écriture Google Sheets validés ; tests PASS.
+- Statut global : EN COURS
+- Objectif : Valider, sécuriser et tester de bout en bout l'ensemble de la chaîne de transport des 10 questionnaires (Frontend -> REST WordPress -> Autorité Serveur -> Submission Service -> Google Apps Script -> Google Sheets), tout en respectant strictement le gel de l'UI validée au commit `75dc058`.
+- Règle PSS-10 : Le questionnaire PSS-10 conserve son transport et runtime historiques isolés (`LMQ_PSS10_GOOGLE_ENDPOINT`, onglet `PSS10`, payload plat q1..q10).
+- Règle UI Freeze : Aucune modification des templates, CSS, HTML, balises, scripts visuels ou textes de l'interface utilisateur.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+#### Sous-étapes d'exécution de la Phase 14
+
+##### Sous-étape 14.1 — Complétion des schémas Google Apps Script (`risque-nutritionnel` & `bien-etre`)
+- Statut : À FAIRE / À MODIFIER
+- Objectif : Ajouter les définitions complètes de schémas pour `risque-nutritionnel` et `bien-etre` dans le Web App Google Apps Script central.
+- Fichiers concernés : `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+- État actuel : `QUESTIONNAIRE_SCHEMAS` ne contient que 7 questionnaires. `risque-nutritionnel` et `bien-etre` sont rejetés en 400 `validation_error` (`Unknown questionnaire_id`).
+- Modification nécessaire :
+  1. Définir le schéma `risque-nutritionnel` : `sheetName: 'Risque_Nutritionnel'`, `hasSafety: true`, 12 questions scorées RN01–RN12 avec texte canonique, 4 questions de sécurité RNSF01–RNSF04 avec texte canonique.
+  2. Définir le schéma `bien-etre` : `sheetName: 'Bien_Etre'`, `hasSafety: false`, 12 questions scorées BE01–BE12 avec texte canonique, 0 question de sécurité.
+  3. Compléter `QUESTIONNAIRE_ALIASES` si nécessaire (`bien_etre`, `risque_nutritionnel`).
+- Tests ciblés : `node lifemetrics-questionnaires/tests/backend-logic.test.js`, `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`.
+- Critères d'acceptation : `getSchema('risque-nutritionnel')` et `getSchema('bien-etre')` renvoient des objets valides avec leurs noms d'onglets et questions canoniques.
+- Dépendances : Aucune.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.2 — Audits du format de stockage physique Google Sheets (PHP & JS)
+- Statut : À FAIRE / À MODIFIER
+- Objectif : Étendre les suites d'audit physique des feuilles Google Sheets pour couvrir les 9 questionnaires propriétaires V2 (dont `risque-nutritionnel` et `bien-etre`).
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`
+- État actuel : Les deux tests ne valident que 7 questionnaires.
+- Modification nécessaire :
+  - Ajouter `risque-nutritionnel` (36 colonnes physiques : 3 métadonnées + 24 scorées + 4 sécurité + 3 scores + 1 catégorie + 1 attention sécurité).
+  - Ajouter `bien-etre` (31 colonnes physiques : 3 métadonnées + 24 scorées + 0 sécurité + 3 scores + 1 catégorie + 0 attention sécurité).
+- Tests ciblés : `php lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php` et `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`.
+- Critères d'acceptation : Les 9 questionnaires propriétaires passent avec succès l'audit des colonnes, de l'ordre, et du typage dans les deux environnements.
+- Dépendances : 14.1.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.3 — Intégrité du routage d'endpoint et de découverte (10 questionnaires)
+- Statut : À FAIRE / À MODIFIER
+- Objectif : Vérifier que tous les 10 questionnaires résolvent autoritairement leurs endpoints respectifs et sont protégés contre la découverte publique non autorisée.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/tests/backend-routing.test.php`
+  - `lifemetrics-questionnaires/tests/backend-logic.test.js`
+- État actuel : `backend-routing.test.php` et `backend-logic.test.js` ne testent que 7 questionnaires propriétaires + PSS-10.
+- Modification nécessaire : Ajouter les assertions pour `risque-nutritionnel` et `bien-etre` sur la résolution vers `LMQ_GOOGLE_ENDPOINT` et `getTargetSheetName`.
+- Tests ciblés : `php lifemetrics-questionnaires/tests/backend-routing.test.php` et `node lifemetrics-questionnaires/tests/backend-logic.test.js`.
+- Critères d'acceptation : BACK-001 à BACK-012 validés sur les 10 questionnaires.
+- Dépendances : 14.1.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.4 — Résistance globale aux falsifications et autorité serveur (10 questionnaires)
+- Statut : À FAIRE / À MODIFIER
+- Objectif : Garantir qu'aucune valeur sensible (score, catégorie, dimensions, drapeaux) transmise par le client ne peut être falsifiée, sur l'ensemble des 10 questionnaires.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/tests/global-tamper-resistance.test.php`
+  - `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`
+- État actuel : Seuls 7 questionnaires propriétaires + PSS-10 sont soumis au test de payload forgé.
+- Modification nécessaire : Inclure `risque-nutritionnel` et `bien-etre` dans la matrice de tamper-resistance et vérifier que le serveur recalcule tout depuis les réponses brutes.
+- Tests ciblés : `php lifemetrics-questionnaires/tests/global-tamper-resistance.test.php` et `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php`.
+- Critères d'acceptation : Rejet absolu des claims clients injectés (score 9999, fausses catégories, etc.) sur les 10 questionnaires.
+- Dépendances : 14.1, 14.3.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.5 — Sérialisation et transport des questions & drapeaux Safety
+- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Objectif : Confirmer que les questions Safety (Sommeil, Hydratation, Fatigue, Nutrition, Pieds, Risque nutritionnel) sont sérialisées avec labels clairs, sans points, sans altération du score numérique, et avec calcul serveur rigoureux de la colonne `safety_attention`.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/includes/class-submission-service.php`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
+- Modification nécessaire : Ajouter des tests de non-régression explicites vérifiant que `safety_attention` prend la valeur "Oui" si un trigger est actif et "Non" sinon, et qu'aucun point numérique n'est jamais attribué.
+- Tests ciblés : Tests PHP ciblés.
+- Critères d'acceptation : Écriture conforme et non-pollution du score certifiée sur les 5 questionnaires à volet Safety.
+- Dépendances : 14.1, 14.2.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.6 — Audit du transport N/A et normalisation du score
+- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Objectif : Confirmer que les options N/A d'Hydratation (HY05) et de Sédentarité (SD07, SD08) transmettent des chaînes vides `""` dans la colonne Points sans introduire de décalage de colonnes, et que le score est normalisé exactement sur la capacité réelle disponible.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/includes/class-submission-service.php`
+  - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+  - `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.php`
+- Modification nécessaire : Valider dans les tests de stockage que le cas N/A écrit le libellé dans la colonne texte et laisse la colonne de points vide (`""`).
+- Tests ciblés : Tests PHP / JS format de stockage.
+- Critères d'acceptation : Colonnes parfaitement synchronisées, pas de `0` ou `null` indésirable.
+- Dépendances : 14.2.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.7 — Vérification du transport des guardrails et de la catégorie affichée
+- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Objectif : Valider que pour les 4 questionnaires avec guardrails (Pieds, Sédentarité, Risque nutritionnel, Bien-être), le transport transmet à la fois `calculated_category` et `displayed_category`, et que le tableur stocke la catégorie affichée sans altérer le score numérique.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/includes/class-submission-service.php`
+  - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+- Modification nécessaire : Tester les cas de déclenchement des garde-fous et vérifier les valeurs écrites dans la colonne `category`.
+- Tests ciblés : Tests PHP de soumission REST.
+- Critères d'acceptation : Score final intact + catégorie plafonnée enregistrée.
+- Dépendances : 14.4.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.8 — Vérification de l'idempotence, du session_id et du rate limiting
+- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Objectif : Valider le mécanisme anti-doublon (idempotence) sur requêtes répétées, doubles-clics, retries réseau, et expiration de lock.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/includes/class-google-apps-script-adapter.php`
+  - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+  - `lifemetrics-questionnaires/tests/backend-routing.test.php`
+- Modification nécessaire : Ajouter des cas de tests reproduisant l'envoi répété d'un même `session_id` pour confirmer la réponse `{ success: true, duplicate: true }` sans écriture redondante.
+- Tests ciblés : `php lifemetrics-questionnaires/tests/backend-routing.test.php`.
+- Critères d'acceptation : Zéro ligne dupliquée dans le tableur lors de réémissions du même `session_id`.
+- Dépendances : 14.1.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.9 — Neutralisation systématique des injections de formules
+- Statut : À FAIRE / VÉRIFIÉ EXISTANT (à valider par test dédié)
+- Objectif : Valider la neutralisation systématique des caractères de formules Google Sheets (`=`, `+`, `-`, `@`) sur tous les champs textuels des payloads.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`
+  - `lifemetrics-questionnaires/tests/backend-logic.test.js`
+- Modification nécessaire : S'assurer que chaque valeur textuelle insérée dans une cellule passe par `safeSheetText()` et est préfixée d'une apostrophe si elle commence par un caractère de formule.
+- Tests ciblés : `node lifemetrics-questionnaires/tests/backend-logic.test.js`.
+- Critères d'acceptation : Aucun texte commençant par `=+-@` ne peut s'exécuter comme formule dans Google Sheets.
+- Dépendances : 14.1.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+##### Sous-étape 14.10 — Isolation du transport PSS-10 legacy et certification globale
+- Statut : À FAIRE / À TESTER
+- Objectif : Certifier la non-régression absolue du transport PSS-10 historique et valider l'ensemble de la suite de tests (PHP + JS) à 100% de succès.
+- Fichiers concernés :
+  - `lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php`
+  - `lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js`
+  - Toutes les 23 suites PHP et 19 suites JS.
+- Critères d'acceptation : 23/23 tests PHP PASS, 19/19 tests JS PASS, 0 régression PSS-10, Phase 14 prête à être clôturée.
+- Dépendances : 14.1 à 14.9.
+- Risque : Faible.
+- Automatisation : 100% automatisable.
+
+---
+
+### AUTOMATED EXECUTION CONTRACT
+
+Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lors des prochains runs.
+À chaque prompt demandant : « Exécute la prochaine sous-étape non terminée de Phase 14 », l'assistant doit :
+
+1. **Lecture du plan** : Lire `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md` et identifier la première sous-étape (14.1 à 14.10) dont le statut est `À FAIRE` ou `EN COURS`.
+2. **Inspection ciblée** : Inspecter les fichiers source et de test associés à cette sous-étape uniquement.
+3. **Implémentation stricte** :
+   - Modifier uniquement ce qui est requis pour cette sous-étape.
+   - Respecter le gel de l'UI (aucune modification CSS, template, ou composant visuel).
+   - Ne pas toucher aux questions cliniques ou méthodologiques.
+4. **Validation ciblée** :
+   - Exécuter les tests unitaires et de régression spécifiés pour la sous-étape.
+   - S'assurer qu'aucun test ne régresse.
+5. **Mise à jour du plan** :
+   - Basculer le statut de la sous-étape à `TERMINÉ`.
+   - Indiquer la date, les fichiers modifiés et les résultats des tests.
+   - Mettre à jour l'état actuel et désigner la prochaine sous-étape.
+6. **Commit dédié** :
+   - Effectuer un commit Git propre avec message conventionnel (ex. `fix(transport): add risque-nutritionnel and bien-etre to gas schema`).
+7. **Rapport d'exécution** :
+   - Émettre le rapport de sous-étape avec le verdict et stopper immédiatement (1 seule sous-étape par run).
+8. **Gestion des blocages** :
+   - Si une ambiguïté ou un échec survient : marquer `BLOQUÉ`, documenter la cause exacte et STOPPER sans contournement silencieux.
 
 ---
 
@@ -779,6 +929,17 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
   6. Textes longs : Confort de lecture optimal (line-height 1.7, padding aéré).
   7. CTAs : Suppression stricte du soulignement sur tous les états avec focus visible préservé.
 - Notes : Prêt pour la Phase 14 (Vérification transport et Google Sheets).
+
+### 2026-09-15 — Phase 14 : Préparation, intégration Git et plan d'exécution automatisable
+- Statut : EN COURS (Préparation, intégration Git & plan validés)
+- Fichiers modifiés : `DECISIONS.md`, `ARCHITECTURE.md`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : Suite complète PHP 23/23 PASS, suite complète JS 19/19 PASS
+- Résultat :
+  1. Intégration Git : Branche `feature/multi-questionnaires` synchronisée avec succès depuis `redesign/questionnaire-pages` jusqu'au commit validé `75dc058` via fast-forward strict.
+  2. Règle de gel UI (UI Freeze) : Enregistrée dans DEC-025, ARCHITECTURE.md et le plan central. La baseline frontend issue de `75dc058` est gelée.
+  3. Analyse approfondie Phase 14 : Identification des lacunes de schémas Google Apps Script pour `risque-nutritionnel` et `bien-etre` et couverture de tests à étendre à 10 questionnaires.
+  4. Plan d'exécution automatisé : Décomposition de la Phase 14 en 10 sous-étapes granulaires (14.1 à 14.10) et formalisation de l'Automated Execution Contract.
+- Notes : Prêt pour l'exécution automatisée de la sous-étape 14.1.
 
 ---
 

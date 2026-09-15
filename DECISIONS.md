@@ -235,12 +235,21 @@ Each decision records context, alternatives, proposal/rationale, consequences, a
 - Consequences: The browser never selects worksheet names or knows spreadsheet IDs; unknown IDs are rejected; storage administration and unified reporting are simplified; physical schemas remain clean and independent per test.
 - Rollback/compatibility: Supersedes the multi-file assumption of DEC-020 while fully preserving DEC-021, DEC-022, and DEC-023.
 
+## DEC-025 - UI freeze after WORK-17
+
+- Status: `ACCEPTED` on 2026-09-14 by Maksym Kurlukov.
+- Context: WORK-17 visual restoration and alignment with `main` was completed and validated up to commit `75dc058`. To avoid continuous visual churn during backend, transport, and packaging phases, the UI/UX baseline must be frozen.
+- Alternatives: allow continuous visual tweaking during technical phases; freeze UI baseline.
+- Proposal/rationale: The frontend validated after commit `75dc058` constitutes the authoritative UI baseline. Phase 14+ must not alter templates, CSS, HTML structure, gauge, cards, buttons, CTAs, typography, responsiveness, layout, animations, or validated texts. Future design polish will be handled in a distinct design phase by Camille. PSS-10 of `main` remains the visual historical reference.
+- Consequences: UI/UX is strictly frozen. Technical work on transport, backend, scoring, validation, and security continues without UI modifications.
+- Rollback/compatibility: If any transport issue seems to require a UI change, it is not performed but documented as a blocking decision.
+
 ## Approval record
 
 | Field | Value |
 |---|---|
 | Decision owner | Maksym Kurlukov |
 | Approver | Maksym Kurlukov |
-| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-023; 2026-09-09 for DEC-024 |
-| Approved decisions | DEC-001 through DEC-024 |
+| Approval date | 2026-09-03 for DEC-001 through DEC-015; 2026-09-08 for DEC-016 through DEC-023; 2026-09-09 for DEC-024; 2026-09-14 for DEC-025 |
+| Approved decisions | DEC-001 through DEC-025 |
 | Required action | none for STAGE 9 amendment; future changes require an amended or superseding ADR |

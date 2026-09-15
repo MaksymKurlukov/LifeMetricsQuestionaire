@@ -111,6 +111,7 @@ The `lifemetrics-questionnaires` plugin provides a unified, extensible runtime f
 ### D. Generic Renderer & Assets (`class-questionnaire-renderer.php`, `class-assets.php`)
 - Embeds questionnaire configuration into the page via secure `<script type="application/json">` elements.
 - Enqueues shared styling (`questionnaire.css`) and script modules (`questionnaire-engine.js`, `questionnaire-ui.js`) with cache-busting `filemtime` timestamps.
+- **UI Freeze Rule**: The frontend baseline is strictly frozen after commit `75dc058`. No visual or structural UI/UX changes permitted during Phases 14–16.
 
 ### E. REST Controller (`class-rest-controller.php`)
 - Registers `POST /wp-json/lifemetrics-questionnaires/v1/<id>/submit`.
