@@ -20,19 +20,19 @@
 | 12 | Bien-être V1 | TERMINÉ |
 | 13 | Restitution frontend finale | TERMINÉ |
 | 14 | Vérification transport et Google Sheets | TERMINÉ |
-| 15 | Full Regression Test | À FAIRE |
+| 15 | Full Regression Test | TERMINÉ |
 | 16 | WordPress Release ZIP | À FAIRE |
 
 ---
 
 ## État actuel du projet
 
-- Phase actuelle : Aucune phase EN COURS — PHASE 14 terminée
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.10 — Isolation du transport PSS-10 legacy et certification globale (Phase 14 clôturée)
-- Prochaine phase à exécuter : PHASE 15 — Full Regression Test
+- Phase actuelle : Aucune phase EN COURS — PHASE 15 terminée
+- Dernière phase terminée : PHASE 15 — Full Regression Test
+- Prochaine phase à exécuter : PHASE 16 — WordPress Release ZIP
 - Blocages : Aucun
-- Nombre de phases terminées : 14 / 16
-- Nombre de phases restantes : 2
+- Nombre de phases terminées : 15 / 16
+- Nombre de phases restantes : 1
 - Dernier commit de phase : 8d3d9ee (lifemetrics: phase 14 - transport et google sheets (certified))
 - Livrable final : lifemetrics-questionnaires.zip
 - Tableau Notion synchronisé : https://app.notion.com/p/3da507fddb678146b412ffe3a733ea0f
@@ -874,26 +874,24 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 
 ### PHASE 15 — Full Regression Test
 
-- Statut : À FAIRE
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Exécuter toutes les suites PHP et JS pour certifier la non-régression globale avant release.
-- Fichiers potentiellement concernés :
-  - Ensemble des fichiers dans lifemetrics-questionnaires/tests/
+- Fichiers concernés :
+  - Ensemble des 23 suites PHP et 19 suites JS dans `lifemetrics-questionnaires/tests/` (42 suites au total).
 - Tests :
-  - for f in lifemetrics-questionnaires/tests/*.test.php; do php "$f" || exit 1; done
-  - for f in lifemetrics-questionnaires/tests/*.test.js; do node "$f" || exit 1; done
+  - `for f in lifemetrics-questionnaires/tests/*.test.php; do php "$f" || exit 1; done` (23/23 PASS)
+  - `for f in lifemetrics-questionnaires/tests/*.test.js; do node "$f" || exit 1; done` (19/19 PASS)
 - Critères de validation :
-  - 0 test en échec ;
+  - 0 test en échec (42/42 suites validées à 100%) ;
   - 0 erreur applicative connue ;
   - Aucun nouvel avertissement introduit par les modifications ;
-  - Gardes de non-régression PSS-10 intactes.
-- Gestion d'échec : Si un test échoue, marquer BLOQUÉ et aucun build de release ne doit être fait.
-
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+  - Gardes de non-régression PSS-10 intactes (13/13 mutation guards validés) ;
+  - Gel UI (UI Freeze) rigoureusement respecté.
+- Fichiers réellement modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : 23 suites PHP et 19 suites JS (42 suites) exécutées sur le HEAD actuel.
+- Résultat : Non-régression certifiée à 100% sur le HEAD actuel. Prêt pour la Phase 16 (WordPress Release ZIP).
+- NON DÉTERMINÉ : Aucun.
+- Date de complétion : 2026-09-15
 
 ---
 
@@ -1132,6 +1130,17 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
   3. UI Freeze respecté : Aucune modification des templates, CSS, HTML, balises, scripts visuels ou textes de l'interface utilisateur depuis le commit validé `75dc058`.
   4. Phase 14 clôturée : Les 10 sous-étapes (14.1 à 14.10) sont terminées.
 - Prochaine phase : PHASE 15 — Full Regression Test.
+
+### 2026-09-15 — Phase 15 : Régression complète sur le HEAD actuel (WORK-21)
+- Statut : TERMINÉ
+- Fichiers modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : 23 suites PHP et 19 suites JavaScript (42/42 PASS)
+- Résultat : Certification globale de non-régression sur le HEAD actuel (`cfd51f2`) :
+  1. Suites PHP : 23/23 PASS sans avertissement ni échec (schémas, scoring, parité, assets, renderer, routes REST, transport multi-destinations, format de stockage Sheets, tamper-resistance, PSS-10 legacy, audit PDF).
+  2. Suites JavaScript : 19/19 PASS sans avertissement ni échec (moteur de calcul, UI browser, flow d'hydratation, restitution frontend Phase 13, storage format Sheets, déduplication, neutralisation d'injections formules, 13 mutation guards PSS-10).
+  3. UI Freeze : Préservé à 100% (aucune modification de code CSS, template ou DOM).
+  4. Non-régression PSS-10 : 100% validée.
+- Prochaine phase : PHASE 16 — WordPress Release ZIP (WORK-20).
 
 ---
 
