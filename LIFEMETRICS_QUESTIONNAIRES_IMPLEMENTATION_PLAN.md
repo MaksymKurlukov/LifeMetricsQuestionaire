@@ -911,6 +911,8 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Inspecter le contenu réel du ZIP, le dossier racine, les fichiers PHP, CSS/JS et configurations.
   - Vérifier automatiquement l'absence de `preview.php`, des tests, des fichiers Git, backups et `.DS_Store`.
 - Vérification d'intégration après build :
+  - Après validation complète de la Phase 15 et avant l'installation WordPress, mettre à jour les deux Apps Script dans la Google Sheet cible depuis le commit validé : `lifemetrics-questionnaires/backend/google-apps-script.gs` pour le PSS-10 legacy et `lifemetrics-questionnaires/backend/generic-google-apps-script.gs` pour les 9 questionnaires propriétaires.
+  - Déployer une nouvelle version de chaque Web App Apps Script, vérifier les droits d'accès publics requis, relever les URLs réellement déployées et configurer ces URLs dans les constantes WordPress `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT` (via `wp-config.php` ou la configuration de déploiement, sans les exposer au navigateur).
   - Installer le ZIP produit dans un WordPress de staging, l'activer et vérifier l'absence d'erreur PHP.
   - Vérifier le shortcode et le parcours complet des 10 questionnaires : intro, questions, résultat, REST et confirmation de sauvegarde.
   - Vérifier séparément le runtime PSS-10 legacy et les 9 questionnaires propriétaires.
