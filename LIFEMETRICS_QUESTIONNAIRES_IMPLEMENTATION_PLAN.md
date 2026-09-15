@@ -27,12 +27,12 @@
 
 ## État actuel du projet
 
-- Phase actuelle : PHASE 14 — Vérification transport et Google Sheets (Exécution sous-étapes en cours)
-- Dernière sous-étape terminée : SOUS-ÉTAPE 14.9 — Neutralisation systématique des injections de formules
-- Prochaine sous-étape à exécuter : PHASE 14.10 — Isolation du transport PSS-10 legacy et certification globale
+- Phase actuelle : PHASE 14 — Transport et Google Sheets (TERMINÉE)
+- Dernière sous-étape terminée : SOUS-ÉTAPE 14.10 — Isolation du transport PSS-10 legacy et certification globale (Phase 14 clôturée)
+- Prochaine phase à exécuter : PHASE 15 — Script de build et packaging ZIP
 - Blocages : Aucun
-- Nombre de phases terminées : 13 / 16
-- Nombre de phases restantes : 3
+- Nombre de phases terminées : 14 / 16
+- Nombre de phases restantes : 2
 - Dernier commit de phase : 75dc058 (fix(ui): finalize questionnaire visual corrections)
 - Livrable final : lifemetrics-questionnaires.zip
 
@@ -644,7 +644,7 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 
 ### PHASE 14 — Transport et Google Sheets
 
-- Statut global : EN COURS
+- Statut global : TERMINÉ (2026-09-15)
 - Objectif : Valider, sécuriser et tester de bout en bout l'ensemble de la chaîne de transport des 10 questionnaires (Frontend -> REST WordPress -> Autorité Serveur -> Submission Service -> Google Apps Script -> Google Sheets), tout en respectant strictement le gel de l'UI validée au commit `75dc058`.
 - Règle PSS-10 : Le questionnaire PSS-10 conserve son transport et runtime historiques isolés (`LMQ_PSS10_GOOGLE_ENDPOINT`, onglet `PSS10`, payload plat q1..q10).
 - Règle UI Freeze : Aucune modification des templates, CSS, HTML, balises, scripts visuels ou textes de l'interface utilisateur.
@@ -825,13 +825,19 @@ Ne jamais exécuter de commandes destructives (git reset --hard, git clean -fd, 
 - Automatisation : 100% automatisable.
 
 ##### Sous-étape 14.10 — Isolation du transport PSS-10 legacy et certification globale
-- Statut : À FAIRE / À TESTER
+- Statut : TERMINÉ (2026-09-15)
 - Objectif : Certifier la non-régression absolue du transport PSS-10 historique et valider l'ensemble de la suite de tests (PHP + JS) à 100% de succès.
 - Fichiers concernés :
   - `lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php`
   - `lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js`
   - Toutes les 23 suites PHP et 19 suites JS.
-- Critères d'acceptation : 23/23 tests PHP PASS, 19/19 tests JS PASS, 0 régression PSS-10, Phase 14 prête à être clôturée.
+- Tests exécutés :
+  - `php lifemetrics-questionnaires/tests/pss10-rest-characterization.test.php` : PASS (Contrat backend REST complet, validation 10-50, inversion Q4/5/7/8, autorité serveur, redirects 302 sécurisés sur `script.googleusercontent.com`, résilience réseau/HTTP/rejet amont, isolation des IDs d'instance DOM)
+  - `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` : PASS (13 gardes de mutation frontend PSS-10 vérifiés avec succès, étanchéité de l'UI et du transport legacy)
+  - Suite de régression complète PHP : 23/23 tests PASS (100%)
+  - Suite de régression complète JS : 19/19 tests PASS (100%)
+- Critères d'acceptation : 23/23 tests PHP PASS, 19/19 tests JS PASS, 0 régression PSS-10, Phase 14 validée et clôturée.
+- Date de complétion : 2026-09-15
 - Dépendances : 14.1 à 14.9.
 - Risque : Faible.
 - Automatisation : 100% automatisable.
@@ -1058,6 +1064,17 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   3. Sécurisation complète des colonnes numériques : `raw_score` et `available_max` passent par `safeSheetText` s'ils sont transmis sous forme de chaînes textuelles pour éviter toute injection dans les colonnes métriques.
   4. Test physique d'injection complet : Validation sur le schéma `sommeil` avec des payloads hostiles (`=HYPERLINK(...)`, `-CMD(...)`, `\t=IMPORTXML(...)`, `@SUM(...)`, `\n+DANGEROUS_CATEGORY`) : aucune cellule de la ligne insérée ne peut s'exécuter comme formule dans Google Sheets.
 - Prochaine sous-étape : 14.10 — Isolation du transport PSS-10 legacy et certification globale.
+
+### 2026-09-15 — Sous-étape 14.10 : Isolation du transport PSS-10 legacy et certification globale (Clôture Phase 14)
+- Statut : TERMINÉ (Phase 14 entièrement validée)
+- Fichiers modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `pss10-rest-characterization.test.php` (PASS), `pss10-frontend-characterization.test.js` (PASS avec 13 gardes de mutation), suites complètes 23/23 PHP PASS (100%), 19/19 JS PASS (100%)
+- Résultat : Certification globale et clôture formelle de la Phase 14 :
+  1. Isolation PSS-10 absolue : Le transport et le runtime historiques du PSS-10 restent strictement isolés et conformes (route REST `/pss10/submit`, endpoint dédié `LMQ_PSS10_GOOGLE_ENDPOINT`, onglet `PSS10`, payload plat q1..q10, échelle 10–50, et 13 gardes de mutation frontend confirmés).
+  2. Couverture de test intégrale : Les 23 suites PHP et 19 suites JavaScript s'exécutent avec 100% de succès.
+  3. UI Freeze respecté : Aucune modification des templates, CSS, HTML, balises, scripts visuels ou textes de l'interface utilisateur depuis le commit validé `75dc058`.
+  4. Phase 14 clôturée : Les 10 sous-étapes (14.1 à 14.10) sont terminées.
+- Prochaine phase : PHASE 15 — Script de build et packaging ZIP.
 
 ---
 
