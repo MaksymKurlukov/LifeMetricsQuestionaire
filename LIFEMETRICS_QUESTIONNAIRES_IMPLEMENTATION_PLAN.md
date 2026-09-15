@@ -897,51 +897,55 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 
 ### PHASE 16 — WordPress Release ZIP
 
-- Statut : À FAIRE
-- Objectif : Produire l'archive finale lifemetrics-questionnaires.zip installable dans WordPress.
+- Statut : EN COURS (Packaging et audit ZIP certifiés ; en attente de la validation d'intégration staging WordPress, Apps Script et Google Sheets)
+- Objectif : Produire l'archive finale lifemetrics-questionnaires.zip installable dans WordPress et valider son intégration de bout en bout.
 - Contrôles avant build :
-  - Tous les tests PASS ;
+  - Tous les tests PASS (42/42 suites certifiées) ;
   - Aucun fichier temporaire, cache ou artefact local inutile ;
   - Fichiers de test exclus du ZIP de production ;
   - `preview.php` et les autres outils de développement exclus du ZIP de production ;
   - Bootstrap, assets, templates et configurations présents.
-- Contrôles après build :
-  - Inspecter le contenu réel du ZIP, le dossier racine, les fichiers PHP, CSS/JS et configurations.
-  - Vérifier automatiquement l'absence de `preview.php`, des tests, des fichiers Git, backups et `.DS_Store`.
-- Vérification d'intégration après build :
-  - Après validation complète de la Phase 15 et avant l'installation WordPress, mettre à jour les deux Apps Script dans la Google Sheet cible depuis le commit validé : `lifemetrics-questionnaires/backend/google-apps-script.gs` pour le PSS-10 legacy et `lifemetrics-questionnaires/backend/generic-google-apps-script.gs` pour les 9 questionnaires propriétaires.
-  - Déployer une nouvelle version de chaque Web App Apps Script, vérifier les droits d'accès publics requis, relever les URLs réellement déployées et configurer ces URLs dans les constantes WordPress `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT` (via `wp-config.php` ou la configuration de déploiement, sans les exposer au navigateur).
-  - Installer le ZIP produit dans un WordPress de staging, l'activer et vérifier l'absence d'erreur PHP.
-  - Vérifier le shortcode et le parcours complet des 10 questionnaires : intro, questions, résultat, REST et confirmation de sauvegarde.
-  - Vérifier séparément le runtime PSS-10 legacy et les 9 questionnaires propriétaires.
-  - Déployer/vérifier les deux Apps Script (PSS-10 legacy et Web App central), la configuration des endpoints WordPress et les 10 onglets Google Sheets (`PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`, `Risque_Nutritionnel`, `Bien_Etre`).
-  - Pour chaque questionnaire, confirmer qu'une soumission de test crée exactement une ligne dans l'onglet attendu et qu'une réémission du même `session_id` ne crée pas de doublon.
-  - Conserver le rapport de vérification manuelle comme preuve de release et livrer le ZIP ainsi que ce rapport à Camille ; aucune nouvelle modification UI n'est incluse dans cette étape.
+- Contrôles après build (exécutés et certifiés) :
+  - Archive produite : `lifemetrics-questionnaires.zip` (109 926 octets / 107 KB, 61 fichiers, 432 010 octets décompressés) ;
+  - Absence stricte certifiée de `preview.php`, du dossier `tests/`, des fichiers Git (`.git*`), backups (`*~`) et `.DS_Store` ;
+  - Présence certifiée des 10 questionnaires dans `questionnaires/*/questionnaire.php` ;
+  - Présence certifiée des 11 classes PHP dans `includes/`, des templates, des assets CSS/JS/SVG partagés et PSS-10 legacy ;
+  - Présence des deux scripts backend dans `backend/` (`google-apps-script.gs` et `generic-google-apps-script.gs`) ;
+  - `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` : ALL PASSED.
+- Vérification d'intégration après build (reste à exécuter sur environnement de staging) :
+  - [ ] Déployer la Web App Google Apps Script PSS-10 legacy (`lifemetrics-questionnaires/backend/google-apps-script.gs`) vers le classeur Google Sheets cible (onglet `results` / `PSS10`) avec droits d'accès anonymes/publics.
+  - [ ] Déployer la Web App Google Apps Script Générique (`lifemetrics-questionnaires/backend/generic-google-apps-script.gs`) vers le classeur cible (9 onglets : `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`, `Risque_Nutritionnel`, `Bien_Etre`).
+  - [ ] Définir les constantes de déploiement WordPress dans `wp-config.php` : `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT`.
+  - [ ] Téléverser et activer l'archive `lifemetrics-questionnaires.zip` sur l'instance WordPress de staging.
+  - [ ] Tester le shortcode et le parcours complet des 10 questionnaires : intro, passage, affichage des résultats, appel REST et synchronisation Google Apps Script.
+  - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires.
+  - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
+  - [ ] Rédiger le rapport de validation manuelle pour remise à Camille avant clôture définitive de Phase 16.
 - Fichiers potentiellement concernés :
   - scripts/build-release-zip.sh
   - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
 - Tests :
-  - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip
-  - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php
-  - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production
-  - Checklist WordPress + Apps Script + Google Sheets exécutée sur le ZIP produit
+  - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip (PASS)
+  - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php (PASS)
+  - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production (PASS - 61 fichiers, 0 fuite test/preview)
+  - Checklist WordPress + Apps Script + Google Sheets exécutée sur le ZIP produit (EN ATTENTE)
 - Critères de validation :
-  - Archive ZIP propre générée ; audit de packaging PASS.
-  - ZIP installé et activé dans WordPress de staging sans erreur.
-  - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus.
-  - La déduplication par `session_id` est confirmée sur le déploiement utilisé.
-  - Le rapport de validation manuelle est complet et transmissible à Camille.
+  - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
+  - ZIP installé et activé dans WordPress de staging sans erreur. [EN ATTENTE]
+  - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN ATTENTE]
+  - La déduplication par `session_id` est confirmée sur le déploiement utilisé. [EN ATTENTE]
+  - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
-  - Chemin exact du ZIP et taille ;
-  - Résumé du contenu vérifié ;
-  - Checklist de validation manuelle WordPress.
+  - Chemin exact du ZIP et taille : `lifemetrics-questionnaires.zip` (109 926 octets) ;
+  - Résumé du contenu vérifié : 61 fichiers conformes, packaging audité ;
+  - Checklist de validation manuelle WordPress : fournie.
 
-- Fichiers réellement modifiés : À compléter après exécution.
-- Tests exécutés : À compléter après exécution.
-- Résultat : À compléter après exécution.
-- NON DÉTERMINÉ : À compléter si nécessaire.
-- Commit : À compléter après exécution.
-- Date : À compléter après exécution.
+- Fichiers réellement modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip`, `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, régression complète 42 suites (23 PHP, 19 JS).
+- Résultat : Packaging et audit ZIP 100% validés. Phase 16 en cours (attente validation manuelle WordPress / Apps Script).
+- NON DÉTERMINÉ : Aucun blocage technique de code.
+- Commit : 51a9c06
+- Date : 2026-09-15
 
 ---
 
