@@ -947,6 +947,45 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 
 ---
 
+## TÂCHES DE SORTIE DU PROJET — SYNCHRONISÉES AVEC NOTION
+
+Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `LifeMetrics Questionnaires`. Elles ne créent pas de nouvelles phases techniques : elles détaillent les conditions de documentation, de release et de remise finale autour des Phases 15 et 16. Toute modification de leur statut ou de leurs critères doit être reportée ici et dans leur page Notion correspondante.
+
+### WORK-19 — Réconcilier la documentation avec l'état réel du code
+
+- Statut : À FAIRE
+- Position : après la Phase 16 et avant la revue finale WORK-23.
+- Objectif : remettre README, ARCHITECTURE, QUESTIONNAIRE_INVENTORY et CHANGELOG au niveau de l'inventaire, des scores, du runtime PSS-10 legacy et des résultats réellement validés.
+- Critères : les chiffres de tests, l'inventaire des 10 questionnaires et les règles de publication correspondent au code et aux configurations courantes ; aucun document obsolète ne remplace les PDF validés ou les configurations.
+- Tâche Notion : `WORK-19 — Réconcilier la documentation avec l'état réel du code`.
+
+### WORK-20 — Corriger et sécuriser l'outil preview avant release
+
+- Statut : À FAIRE
+- Position : gate de la Phase 16, avant la clôture du build ZIP.
+- Objectif : conserver le preview comme outil de développement sans le distribuer dans le ZIP de production et garantir que le chemin PSS-10 preview n'est pas présenté comme le runtime WordPress de production.
+- Critères : `preview.php` est exclu du ZIP ; le build vérifie explicitement cette exclusion ; les questionnaires restent prévisualisables localement ; le runtime PSS-10 legacy de production reste inchangé.
+- Tâche Notion : `WORK-20 — Corriger et sécuriser l'outil preview avant release`.
+
+### WORK-23 — Préparer la revue finale et la stratégie de merge vers main
+
+- Statut : À FAIRE
+- Position : après la clôture de la Phase 16 et de WORK-19/WORK-20.
+- Objectif : comparer la branche de release à `main`, vérifier les critères de livraison, préparer le rollback et remettre le ZIP ainsi que le rapport de validation à Camille.
+- Critères : Phases 14–16 terminées ; WORK-19 et WORK-20 résolues ; installation WordPress, Apps Script et Google Sheets validés ; aucune fusion vers `main` avant cette revue.
+- Tâche Notion : `WORK-23 — Préparer la revue finale et la stratégie de merge vers main`.
+
+### Ordre de sortie unique
+
+| Date planifiée | Élément | Dépendance |
+|---|---|---|
+| 2026-09-16 | PHASE 15 — Full Regression Test (WORK-21) | Phase 14 terminée |
+| 2026-09-17 | PHASE 16 — WordPress Release ZIP (WORK-22) + gate WORK-20 + mise à jour des deux Apps Script | Phase 15 PASS |
+| 2026-09-18 | WORK-19 — Réconciliation documentaire | Phase 16 terminée |
+| 2026-09-19 | WORK-23 — Revue finale, rapport et remise à Camille | Phase 16 + WORK-19 + WORK-20 terminées |
+
+---
+
 ## Journal d'implémentation
 
 ### 2026-09-11 — Phase 1 : Schema Validator V2
