@@ -988,7 +988,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
     * Rétablissement de la graisse typographique (`font-weight: 700`) sur `.result-title` ("Mon score stress") face aux resets de thèmes WordPress. [RÉALISÉ]
   - [x] Diagnostiquer et réparer le pipeline de soumission générique (testé sur `sedentarite`) :
     * Cause identifiée : `schema_conflict` Apps Script (code HTTP 502 / `lmq_upstream_rejected`) provoqué par une divergence d'apostrophe typographique (`’` courbe dans `sedentarite/questionnaire.php` vs `'` droite ASCII dans `generic-google-apps-script.gs` et dans l'en-tête Google Sheets) ;
-    * Correction appliquée : normalisation des 5 questions de `sedentarite/questionnaire.php`, normalisation défensive des apostrophes dans `class-submission-service.php` (`questions_schema`) et tolérance typographique dans `generic-google-apps-script.gs` ;
+    * Correction appliquée : normalisation des questions contenant des apostrophes typographiques dans `sedentarite/questionnaire.php` (sur les 12 questions scorées du questionnaire), normalisation défensive des apostrophes dans `class-submission-service.php` (`questions_schema`) et tolérance typographique dans `generic-google-apps-script.gs` ;
     * Validation réelle WordPress local sous MAMP : POST REST `sedentarite/submit` validé en HTTP 200 `{"success":true,"duplicate":false}`, déduplication certifiée en HTTP 200 `{"success":true,"duplicate":true}`, écriture réelle confirmée dans l'onglet `Sedentarite` du Google Sheet. [RÉALISÉ]
   - [x] Diagnostiquer et corriger le contour parasite sur le titre de résultat « Mon résultat » (Sédentarité / questionnaires génériques) :
     * Cause identifiée : `questionnaire-ui.js` déplace le focus vers `h2[data-lmq-role="result-header"][tabindex="-1"]` pour les lecteurs d'écran (a11y). Dans WordPress, la règle globale du thème actif `twentytwentyfive` (`:where(.wp-site-blocks *:focus) { outline-width: 2px; outline-style: solid; }`) imposait un contour rectangulaire (noir/bleu) sur le titre ;
@@ -1007,7 +1007,10 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
     * Suppression du pseudo-élément CSS injectant le pictogramme `⚠️` (`.lmq-questionnaire .safety-card strong::before`) pour un rendu purement textuel, sobre et non anxiogène ;
     * Les questionnaires sans Safety (`pss10`, `sedentarite`, `activite-physique`, `bien-etre`) restent strictement inchangés. [RÉALISÉ]
   - [x] Ajout du bloc de restitution « Compléter votre résultat » sur les 10 questionnaires :
-    * Intégration dans la configuration des 10 questionnaires d'une propriété dédiée `result_completion` avec le titre exact « Compléter votre résultat » et des textes d'orientation spécifiques (VitaScan, Podos360 ou pharmacies partenaires) ;
+    * Intégration dans la configuration des 10 questionnaires d'une propriété dédiée `result_completion` avec le titre exact « Compléter votre résultat » et des textes d'orientation spécifiques :
+      - VitaScan (4 questionnaires) : `hydratation`, `nutrition`, `activite-physique`, `risque-nutritionnel` ;
+      - Podos360 (1 questionnaire) : `pieds-confort-postural` ;
+      - Services des pharmacies partenaires LifeMetrics / texte neutre (5 questionnaires, sans mention de VitaScan) : `pss10`, `sedentarite`, `fatigue-recuperation`, `sommeil`, `bien-etre` ;
     * Validation stricte du schéma 2.0.0 (`TOP_LEVEL` et validation textuelle sans balises) via `LifeMetrics_Questionnaire_Schema_Validator` ;
     * Style sobre, lisible et harmonisé introduisant naturellement le bouton de bilan ;
     * Séparation architecturale legacy préservée pour PSS-10 sans fusion avec le runtime générique. [RÉALISÉ]
@@ -1050,7 +1053,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Tests de soumission REST et résilience typographique (`rest-backend-submission.test.php`: ALL PASS)
   - Tests de format physique et résilience typographique Google Sheets (`google-sheets-storage-format.test.js`: ALL PASS)
   - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
-  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (TERMINÉ - 10/10 questionnaires PASS de bout en bout, titre de résultat et accordéon analyse sans contours parasites, messages Safety simplifiés sans icône ⚠️, texte de complétion dans l'analyse détaillée sur les 10 questionnaires, cartes de vigilance supprimées sur risque-nutritionnel)
+  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (TERMINÉ - 10/10 questionnaires PASS de bout en bout : 12 questions scorées pour chacun des 9 questionnaires propriétaires et 10 questions pour PSS-10 legacy ; titre de résultat et accordéon analyse sans contours parasites ; messages Safety simplifiés sans icône ⚠️ sur les 6 questionnaires concernés ; texte de complétion dans l'analyse détaillée orientant vers VitaScan, Podos360 ou pharmacies partenaires ; cartes de vigilance supprimées sur risque-nutritionnel)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
   - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
@@ -1061,8 +1064,8 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Pipeline générique réparé et certifié (REST HTTP 200, écriture onglet `Sedentarite`, déduplication OK). [RÉALISÉ]
   - Titre de résultat sans contour parasite après transition (accessibilité préservée). [RÉALISÉ]
   - Stratégie globale de focus appliquée et vérifiée (suppression des contours parasites sur clic/souris, maintien de `:focus-visible` au clavier). [RÉALISÉ]
-  - Messages Safety simplifiés avec titre commun et suppression de l'icône ⚠️. [RÉALISÉ]
-  - Bloc « Compléter votre résultat » déployé sur les 10 questionnaires dans l'analyse détaillée. [RÉALISÉ]
+  - Messages Safety simplifiés avec titre commun et suppression de l'icône ⚠️ (répartition certifiée : 12 scorées + 3 Safety sur `hydratation`, `fatigue-recuperation`, `sommeil`, `nutrition` ; 12 scorées + 4 Safety sur `pieds-confort-postural`, `risque-nutritionnel` ; aucun Safety sur `pss10`, `sedentarite`, `activite-physique`, `bien-etre`). [RÉALISÉ]
+  - Bloc « Compléter votre résultat » déployé sur les 10 questionnaires dans l'analyse détaillée (VitaScan pour `hydratation`, `nutrition`, `activite-physique`, `risque-nutritionnel` ; Podos360 pour `pieds-confort-postural` ; texte neutre vers pharmacies partenaires pour `pss10`, `sedentarite`, `fatigue-recuperation`, `sommeil`, `bien-etre`). [RÉALISÉ]
   - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [RÉALISÉ]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [RÉALISÉ]
 - Livrables fournis :
@@ -1364,12 +1367,26 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
 - Fichiers modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
 - Faits marquants et validation :
   1. Validation manuelle réelle des 10 questionnaires sur WordPress local MAMP (`wordpress-local/wordpress`, DB `lifemetrics_wordpress_test`) : intro → modal → questions → résultat → analyse détaillée → CTAs → sauvegarde REST → synchronisation Google Sheets.
-  2. Les 10 questionnaires certifiés : `pss10`, `sedentarite`, `hydratation`, `fatigue-recuperation`, `sommeil`, `nutrition`, `activite-physique`, `pieds-confort-postural`, `risque-nutritionnel`, `bien-etre`.
+  2. Structure certifiée des 10 questionnaires :
+     - Tous les 9 questionnaires propriétaires comportent exactement **12 questions scorées** :
+       * `hydratation` : 12 questions scorées + 3 questions Safety
+       * `fatigue-recuperation` : 12 questions scorées + 3 questions Safety
+       * `sommeil` : 12 questions scorées + 3 questions Safety
+       * `nutrition` : 12 questions scorées + 3 questions Safety
+       * `pieds-confort-postural` : 12 questions scorées + 4 questions Safety
+       * `risque-nutritionnel` : 12 questions scorées + 4 questions Safety
+       * `sedentarite` : 12 questions scorées (aucun Safety)
+       * `activite-physique` : 12 questions scorées (aucun Safety)
+       * `bien-etre` : 12 questions scorées (aucun Safety)
+     - `pss10` (legacy standard Cohen) : 10 questions scorées (aucun Safety).
   3. UI & UX finalisées et certifiées :
      - Élimination des focus parasites (titre « Mon résultat » et toggle « Lire l'analyse détaillée ») ;
-     - Messages Safety simplifiés et sobres avec titre commun « Un point mérite votre attention. » et suppression de l'icône ⚠️ ;
-     - Complétion du bilan intégrée comme dernier paragraphe dans le volet dépliable de l'analyse détaillée (sans titre distinct ni carte séparée) ;
-     - Suppression des cartes « Point de vigilance » sur l'écran résultat de `risque-nutritionnel`.
+     - Messages Safety simplifiés et sobres avec titre commun « Un point mérite votre attention. » et suppression de l'icône ⚠️ sur les 6 questionnaires concernés ;
+     - Complétion du bilan intégrée comme dernier paragraphe dans le volet dépliable de l'analyse détaillée (sans titre distinct ni carte séparée) avec orientation exacte :
+       * VitaScan (4 questionnaires) : `hydratation`, `nutrition`, `activite-physique`, `risque-nutritionnel` ;
+       * Podos360 (1 questionnaire) : `pieds-confort-postural` ;
+       * Services des pharmacies partenaires LifeMetrics / texte neutre (5 questionnaires, sans mention de VitaScan) : `pss10`, `sedentarite`, `fatigue-recuperation`, `sommeil`, `bien-etre` ;
+     - Suppression des cartes « Point de vigilance » sur l'écran résultat de `risque-nutritionnel` (guardrails métier conservés côté serveur).
   4. Packaging ZIP & Release Audit :
      - `lifemetrics-questionnaires.zip` généré proprement (61 fichiers de production, 449 153 octets non compressés) ;
      - `stage11-release-audit.test.php` PASS à 100% ;
