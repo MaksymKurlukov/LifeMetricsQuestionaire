@@ -58,6 +58,34 @@
   width: 100%;
 }
 
+/* ---------- Focus Management & Accessibilite Clavier ---------- */
+.lmq-pss10 *:focus {
+  outline: none;
+}
+
+.lmq-pss10 *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.lmq-pss10 [tabindex="-1"]:focus {
+  outline: none;
+}
+
+.lmq-pss10 button:focus-visible,
+.lmq-pss10 a:focus-visible,
+.lmq-pss10 input:focus-visible,
+.lmq-pss10 select:focus-visible,
+.lmq-pss10 textarea:focus-visible,
+.lmq-pss10 .btn:focus-visible,
+.lmq-pss10 .answer-card:focus-visible,
+.lmq-pss10 .answer-btn:focus-visible,
+.lmq-pss10 [role="button"]:focus-visible,
+.lmq-pss10 [role="radio"]:focus-visible,
+.lmq-pss10 [tabindex="0"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* ---------- Sections (une visible à la fois) ---------- */
 .lmq-pss10 .section {
   display: none;

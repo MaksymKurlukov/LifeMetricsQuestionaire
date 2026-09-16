@@ -993,6 +993,14 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - [x] Diagnostiquer et corriger le contour parasite sur le titre de résultat « Mon résultat » (Sédentarité / questionnaires génériques) :
     * Cause identifiée : `questionnaire-ui.js` déplace le focus vers `h2[data-lmq-role="result-header"][tabindex="-1"]` pour les lecteurs d'écran (a11y). Dans WordPress, la règle globale du thème actif `twentytwentyfive` (`:where(.wp-site-blocks *:focus) { outline-width: 2px; outline-style: solid; }`) imposait un contour rectangulaire (noir/bleu) sur le titre ;
     * Correction appliquée : neutralisation de l'outline et box-shadow sur le titre de résultat en état de focus (`.result-title:focus`, `[data-lmq-role="result-header"]:focus { outline: none; box-shadow: none; }` dans `questionnaire.css` et `style.css`), tout en conservant le focus programmatique pour les technologies d'assistance et les styles `:focus-visible` sur les contrôles interactifs au clavier (boutons CTA, accordéon, etc.). [RÉALISÉ]
+  - [x] Audit global et résolution architecturale des états focus dans le runtime WordPress (thème Twenty Twenty-Five) :
+    * Problème observé : après ouverture de l'accordéon "Lire l'analyse détaillée" / "Masquer l'analyse", un contour rectangulaire orange parasite entourait tout le contrôle (texte + chevron) par collision avec `:where(.wp-site-blocks *:focus)` ;
+    * Inventaire exhaustif des contrôles focusables : cartes réponses (`.answer-card`, `.answer-btn`), boutons navigation (`.btn--cta`, `.btn--back`), modal (`[data-lmq-role="learn-more"]`, `.modal-close`), titres recevant un focus programmatique (`.test-question`, `.result-title`), accordéon analyse (`.analysis-toggle`), CTAs (`.result-actions .btn`, `.btn--primary`, `.btn--secondary`), bouton recommencer (`.btn--tertiary`, `.btn--restart`), réessai sauvegarde (`.btn--retry`), liens (`.link`, `.footer-link`) ;
+    * Stratégie CSS globale aux namespaces `.lmq-questionnaire` et `.lmq-pss10` :
+      1) Neutralisation globale sur clic souris et focus programmatique (`*:focus { outline: none; }` et `*:focus:not(:focus-visible) { outline: none; }`) surclassant la spécificité nulle `(0,0,0)` de `:where()` tout en préservant intactes les élévations et ombres natives du design LifeMetrics ;
+      2) Neutralisation systématique sur les cibles de focus programmatique non-interactives (`[tabindex="-1"]:focus { outline: none; }`) ;
+      3) Restitution et harmonisation d'un indicateur de focus clavier normé, visible et accessible (`:focus-visible` avec `outline: 2px solid var(--color-primary); outline-offset: 2px;`) pour tous les éléments interactifs (`button`, `a`, `input`, `.btn`, `.answer-card`, `.analysis-toggle`, `[role="button"]`, `[role="radio"]`, etc.) ;
+    * Vérification et parité : comportement désormais strictement identique entre `preview.php` et le runtime WordPress réel (sans régression PSS-10 certifié ni altération du UI FREEZE). [RÉALISÉ]
   - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
@@ -1021,7 +1029,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Tests de soumission REST et résilience typographique (`rest-backend-submission.test.php`: ALL PASS)
   - Tests de format physique et résilience typographique Google Sheets (`google-sheets-storage-format.test.js`: ALL PASS)
   - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
-  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout, titre de résultat sans contour parasite)
+  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout, titre de résultat et accordéon analyse sans contours parasites)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
   - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
@@ -1031,6 +1039,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Rétablissement visuel PSS-10 conforme sans régression méthodologique ni scoring. [RÉALISÉ]
   - Pipeline générique réparé et certifié (REST HTTP 200, écriture onglet `Sedentarite`, déduplication OK). [RÉALISÉ]
   - Titre de résultat sans contour parasite après transition (accessibilité préservée). [RÉALISÉ]
+  - Stratégie globale de focus appliquée et vérifiée (suppression des contours parasites sur clic/souris, maintien de `:focus-visible` au clavier). [RÉALISÉ]
   - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN COURS]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
@@ -1039,10 +1048,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Checklist de validation manuelle WordPress local : en cours d'exécution.
 
 - Fichiers réellement modifiés : `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css`, `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
-- Résultat : Contour parasite sur le titre de résultat éliminé. Accessibilité programmatique pour lecteurs d'écran préservée. Phase 16 en cours.
+- Tests exécutés : `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-browser-responsive.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
+- Résultat : Stratégie CSS globale de focus déployée au niveau des namespaces .lmq-questionnaire et .lmq-pss10. Contours parasites souris/programmatiques éliminés sans altérer les ombres/élévations. Indicateur :focus-visible clavier standardisé et accessible. Phase 16 en cours.
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : dédié pour l'élimination du contour parasite sur le titre de résultat.
+- Commit : dédié pour l'audit global et la stratégie de focus dans le runtime WordPress.
+- Date : 2026-09-16
 - Date : 2026-09-16
 
 

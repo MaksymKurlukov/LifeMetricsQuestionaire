@@ -175,6 +175,16 @@ assert.ok(cssContent.includes(".result-badge--favorable") || cssContent.includes
 assert.ok(cssContent.includes(".result-badge--intermediate") || cssContent.includes(".result-badge--rank-2"), "CSS includes orange/intermediate category styles");
 assert.ok(cssContent.includes(".result-badge--unfavorable") || cssContent.includes(".result-badge--rank-3"), "CSS includes red/unfavorable category styles");
 assert.ok(cssContent.includes(".result-title:focus") && cssContent.includes("outline: none;"), "CSS suppresses parasitic focus outline on result title");
+assert.ok(cssContent.includes(".lmq-questionnaire *:focus") && cssContent.includes(".lmq-questionnaire *:focus:not(:focus-visible)"), "CSS defines global focus reset on mouse/programmatic focus");
+assert.ok(cssContent.includes(".lmq-questionnaire [tabindex=\"-1\"]:focus"), "CSS suppresses focus outline on programmatic non-interactive targets");
+assert.ok(cssContent.includes(".lmq-questionnaire .analysis-toggle:focus-visible") && cssContent.includes(".lmq-questionnaire button:focus-visible"), "CSS defines accessible focus-visible for analysis toggle and buttons");
+assert.ok(cssContent.includes("outline: 2px solid var(--color-primary);") && cssContent.includes("outline-offset: 2px;"), "CSS applies 2px solid orange outline with 2px offset for keyboard accessibility");
+
+// Also verify PSS-10 global focus strategy
+const pss10CssPath = path.resolve(__dirname, "..", "questionnaires", "pss10", "assets", "css", "style.css");
+const pss10CssContent = fs.readFileSync(pss10CssPath, "utf-8");
+assert.ok(pss10CssContent.includes(".lmq-pss10 *:focus") && pss10CssContent.includes(".lmq-pss10 *:focus:not(:focus-visible)"), "PSS-10 CSS defines global focus reset on mouse/programmatic focus");
+assert.ok(pss10CssContent.includes(".lmq-pss10 button:focus-visible") && pss10CssContent.includes("outline: 2px solid var(--color-primary);"), "PSS-10 CSS defines accessible focus-visible for keyboard navigation");
 
 // ----------------------------------------------------
 // 2. Mock DOM: Green Result (Rank 1)
