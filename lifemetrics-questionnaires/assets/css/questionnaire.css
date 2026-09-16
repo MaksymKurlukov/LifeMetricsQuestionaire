@@ -459,6 +459,17 @@
   display: none !important;
 }
 
+.lmq-questionnaire .answer-card:focus,
+.lmq-questionnaire .answer-btn:focus {
+  outline: none;
+}
+
+.lmq-questionnaire .answer-card:focus:not(:focus-visible),
+.lmq-questionnaire .answer-btn:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
 .lmq-questionnaire .answer-btn:focus-visible,
 .lmq-questionnaire .answer-card:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -508,6 +519,7 @@
 .lmq-questionnaire .card--result .result-title,
 .lmq-questionnaire .result-title {
   font-size: var(--text-xl);
+  font-weight: 700;
   margin: 0 0 var(--space-sm);
   text-align: center;
   color: var(--color-text);

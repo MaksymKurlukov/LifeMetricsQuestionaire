@@ -426,6 +426,23 @@
   background: rgba(232, 93, 44, 0.08);
 }
 
+.lmq-pss10 .answer-card:focus,
+.lmq-pss10 .answer-btn:focus {
+  outline: none;
+}
+
+.lmq-pss10 .answer-card:focus:not(:focus-visible),
+.lmq-pss10 .answer-btn:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.lmq-pss10 .answer-card:focus-visible,
+.lmq-pss10 .answer-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .lmq-pss10 .answer-card input {
   position: absolute;
   opacity: 0;
@@ -439,6 +456,7 @@
 /* ---------- Résultat ---------- */
 .lmq-pss10 .result-title {
   font-size: var(--text-xl);
+  font-weight: 700;
   margin: 0 0 var(--space-sm);
   text-align: center;
 }
@@ -454,17 +472,24 @@
   width: 100%;
 }
 
-.lmq-pss10 .result-badge--low {
+.lmq-pss10 .result-badge--low,
+.lmq-pss10 .result-badge--favorable,
+.lmq-pss10 .result-badge--rank-0,
+.lmq-pss10 .result-badge--rank-1 {
   background: rgba(74, 222, 128, 0.2);
   color: #166534;
 }
 
-.lmq-pss10 .result-badge--medium {
+.lmq-pss10 .result-badge--medium,
+.lmq-pss10 .result-badge--intermediate,
+.lmq-pss10 .result-badge--rank-2 {
   background: rgba(251, 191, 36, 0.25);
   color: #92400e;
 }
 
-.lmq-pss10 .result-badge--high {
+.lmq-pss10 .result-badge--high,
+.lmq-pss10 .result-badge--unfavorable,
+.lmq-pss10 .result-badge--rank-3 {
   background: rgba(239, 68, 68, 0.15);
   color: #b91c1c;
 }

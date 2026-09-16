@@ -330,12 +330,16 @@
       const badge = rootEl.querySelector('[data-lmq-role="result-badge"]');
       if (badge && level) {
         badge.textContent = level.title;
-        badge.className = `result-badge result-badge--${semanticType} result-badge--rank-${rank}`;
+        const catCode = level.code ? level.code.toLowerCase() : '';
+        badge.className = `result-badge result-badge--${semanticType} result-badge--rank-${rank}${catCode ? ' result-badge--' + catCode : ''}`;
       }
+
+      const classMsg = config.classification_messages && (config.classification_messages[level?.code] || config.classification_messages[scoreResult.displayed_category]);
 
       const interpTitle = rootEl.querySelector('[data-lmq-role="interpretation-title"]');
       if (interpTitle && level) {
-        interpTitle.textContent = level.title;
+        const titleText = (classMsg && classMsg.title) ? classMsg.title : level.title;
+        interpTitle.textContent = titleText;
         interpTitle.className = `interpretation-title interpretation-title--${semanticType} interpretation-title--rank-${rank}`;
         interpTitle.hidden = badge && badge.textContent.trim() === interpTitle.textContent.trim();
       }
@@ -380,55 +384,64 @@
       const analysisText = rootEl.querySelector('[data-lmq-role="analysis-text"]');
       const analysisToggle = rootEl.querySelector('[data-lmq-role="analysis-toggle"]');
 
-      if (level && level.description) {
-        const fullText = level.description;
+      const fullText = (classMsg && typeof classMsg.text === 'string' && classMsg.text.trim() !== '')
+        ? classMsg.text.trim()
+        : (level && level.description ? level.description : '');
+
+      if (fullText) {
         let lead = '';
         let details = '';
 
-        if (fullText.includes('\n\n')) {
-          const parts = fullText.split(/\n\n+/);
-          lead = parts[0];
-          details = parts.slice(1).join('\n\n');
-        } else {
-          const match = fullText.match(/^([^.!?]+[.!?])\s+([A-ZÀ-Ÿ].*)$/s);
-          if (match && match[2].length > 40) {
-            lead = match[1];
-            details = match[2];
+        if (analysisLead) {
+          if (fullText.includes('\n\n')) {
+            const parts = fullText.split(/\n\n+/);
+            lead = parts[0];
+            details = parts.slice(1).join('\n\n');
           } else {
-            lead = fullText;
-            details = '';
+            const match = fullText.match(/^([^.!?]+[.!?])\s+([A-ZÀ-Ÿ].*)$/s);
+            if (match && match[2].length > 40) {
+              lead = match[1];
+              details = match[2];
+            } else {
+              lead = fullText;
+              details = '';
+            }
           }
+
+          analysisLead.textContent = lead;
+          if (analysisText) analysisText.textContent = details;
+
+          if (analysisToggle) {
+            if (details.trim().length > 0) {
+              analysisToggle.hidden = false;
+              analysisToggle.setAttribute('aria-expanded', 'false');
+              if (analysisDetails) analysisDetails.hidden = true;
+              const toggleText = analysisToggle.querySelector('.toggle-text');
+              if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
+
+              analysisToggle.onclick = () => {
+                const isExpanded = analysisToggle.getAttribute('aria-expanded') === 'true';
+                const nextState = !isExpanded;
+                analysisToggle.setAttribute('aria-expanded', String(nextState));
+                if (analysisDetails) analysisDetails.hidden = !nextState;
+                if (toggleText) {
+                  toggleText.textContent = nextState ? "Masquer l'analyse" : "Lire l'analyse détaillée";
+                }
+                const toggleIcon = analysisToggle.querySelector('.toggle-icon');
+                if (toggleIcon) {
+                  toggleIcon.style.transform = nextState ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+              };
+            } else {
+              analysisToggle.hidden = true;
+              if (analysisDetails) analysisDetails.hidden = true;
+            }
+          }
+        } else if (analysisText) {
+          // Template without progressive disclosure lead (e.g. legacy PSS-10 template)
+          analysisText.textContent = fullText;
         }
 
-        if (analysisLead) analysisLead.textContent = lead;
-        if (analysisText) analysisText.textContent = details;
-
-        if (analysisToggle) {
-          if (details.trim().length > 0) {
-            analysisToggle.hidden = false;
-            analysisToggle.setAttribute('aria-expanded', 'false');
-            if (analysisDetails) analysisDetails.hidden = true;
-            const toggleText = analysisToggle.querySelector('.toggle-text');
-            if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
-
-            analysisToggle.onclick = () => {
-              const isExpanded = analysisToggle.getAttribute('aria-expanded') === 'true';
-              const nextState = !isExpanded;
-              analysisToggle.setAttribute('aria-expanded', String(nextState));
-              if (analysisDetails) analysisDetails.hidden = !nextState;
-              if (toggleText) {
-                toggleText.textContent = nextState ? "Masquer l'analyse" : "Lire l'analyse détaillée";
-              }
-              const toggleIcon = analysisToggle.querySelector('.toggle-icon');
-              if (toggleIcon) {
-                toggleIcon.style.transform = nextState ? 'rotate(180deg)' : 'rotate(0deg)';
-              }
-            };
-          } else {
-            analysisToggle.hidden = true;
-            if (analysisDetails) analysisDetails.hidden = true;
-          }
-        }
         if (analysisBlock) analysisBlock.hidden = false;
       } else if (analysisBlock) {
         analysisBlock.hidden = true;

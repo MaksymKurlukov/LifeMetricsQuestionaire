@@ -1,7 +1,77 @@
 /**
  * PSS-10 Google Apps Script Web App.
  * Public endpoint: validates one completed questionnaire and appends one row.
+ *
+ * Storage Architecture:
+ * - Worksheet: "PSS10" (fallback: "results", or first sheet)
+ * - Human-readable, enriched column layout (24 columns):
+ *   - Metadata: created_at, session_id (Columns 1-2)
+ *   - For each question (Q1..Q10):
+ *     - "Q<N> - <CANONICAL QUESTION TEXT>" (Selected answer label: 'Jamais', 'Presque jamais', 'Parfois', 'Assez souvent', 'Très souvent')
+ *     - "Q<N> — Points" (Points used in calculation: 1 to 5, taking into account reverse scoring for Q4, Q5, Q7, Q8)
+ *   - Summary scores: final_score (10 to 50), category ('Stress bas', 'Stress assez élevé', 'Stress très élevé')
+ * - Idempotency via session_id deduplication on Column 2
+ * - Formula injection protection (escaping '=+-@')
+ * - Concurrency locking and rate limiting
  */
+
+var PSS10_QUESTIONS = [
+  { id: 'Q1', key: 'q1', isReverse: false, text: "Avez-vous été dérangé par un événement inattendu ?" },
+  { id: 'Q2', key: 'q2', isReverse: false, text: "Vous a-t-il semblé difficile de contrôler les choses importantes de votre quotidien ?" },
+  { id: 'Q3', key: 'q3', isReverse: false, text: "Vous êtes-vous senti nerveux et stressé ?" },
+  { id: 'Q4', key: 'q4', isReverse: true,  text: "Vous êtes-vous senti confiant dans vos capacités à prendre en main vos problèmes personnels ?" },
+  { id: 'Q5', key: 'q5', isReverse: true,  text: "Avez-vous senti que les choses allaient comme vous le vouliez ?" },
+  { id: 'Q6', key: 'q6', isReverse: false, text: "Avez-vous pensé que vous ne pouviez pas assumer toutes les choses que vous deviez faire ?" },
+  { id: 'Q7', key: 'q7', isReverse: true,  text: "Avez-vous été capable de maîtriser votre énervement ?" },
+  { id: 'Q8', key: 'q8', isReverse: true,  text: "Avez-vous senti que vous contrôliez la situation ?" },
+  { id: 'Q9', key: 'q9', isReverse: false, text: "Vous êtes-vous senti irrité parce que les événements échappaient à votre contrôle ?" },
+  { id: 'Q10', key: 'q10', isReverse: false, text: "Avez-vous trouvé que les difficultés s'accumulaient à un tel point que vous ne pouviez plus les surmonter ?" }
+];
+
+var PSS10_ANSWER_LABELS = {
+  1: 'Jamais',
+  2: 'Presque jamais',
+  3: 'Parfois',
+  4: 'Assez souvent',
+  5: 'Très souvent'
+};
+
+function getPss10HeaderList() {
+  var headers = [
+    'created_at',
+    'session_id'
+  ];
+  for (var i = 0; i < PSS10_QUESTIONS.length; i++) {
+    var q = PSS10_QUESTIONS[i];
+    headers.push(q.id + ' - ' + q.text);
+    headers.push(q.id + ' — Points');
+  }
+  headers.push('final_score');
+  headers.push('category');
+  return headers;
+}
+
+function getPss10AnswerDetails(data, qDef) {
+  var points = data[qDef.key];
+  var choiceVal = qDef.isReverse ? (6 - points) : points;
+  var label = PSS10_ANSWER_LABELS[choiceVal] || '';
+
+  if (data.answers && typeof data.answers === 'object') {
+    var raw = data.answers[qDef.id] !== undefined ? data.answers[qDef.id] : data.answers[qDef.key];
+    if (raw) {
+      if (typeof raw === 'object' && raw.label) {
+        label = String(raw.label);
+      } else if (typeof raw === 'string' && isNaN(Number(raw))) {
+        label = raw;
+      }
+    }
+  }
+
+  return {
+    label: label,
+    points: points
+  };
+}
 
 function jsonResponse(payload) {
   return ContentService
@@ -21,8 +91,12 @@ function categoryFromScore(finalScore) {
 }
 
 function safeSheetText(value) {
+  if (value === null || value === undefined) return '';
   var text = String(value);
-  return /^[=+\-@]/.test(text) ? "'" + text : text;
+  if (text === '') return '';
+  if (/^'[\t\r\n ]*[=+\-@]/.test(text)) return text;
+  if (/^[\t\r\n ]*[=+\-@]/.test(text)) return "'" + text;
+  return text;
 }
 
 function isValidSessionId(value) {
@@ -65,11 +139,11 @@ function doPost(e) {
       return validationError('Invalid category');
     }
 
-    var qKeys = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     var sum = 0;
     var validatedAnswers = [];
-    for (var i = 0; i < qKeys.length; i++) {
-      var value = data[qKeys[i]];
+    for (var i = 0; i < PSS10_QUESTIONS.length; i++) {
+      var qKey = PSS10_QUESTIONS[i].key;
+      var value = data[qKey];
       if (typeof value !== 'number' || value % 1 !== 0 || value < 1 || value > 5) {
         return validationError('q1..q10 must be integers from 1 to 5');
       }
@@ -92,10 +166,12 @@ function doPost(e) {
     // This rate limit only dampens accidental rapid repeats. It is not auth.
     var rateLimitKey = 'rl_' + data.session_id;
     var cache = CacheService.getScriptCache();
-    if (cache.get(rateLimitKey)) {
+    if (cache && cache.get(rateLimitKey)) {
       return jsonResponse({ ok: false, code: 'rate_limited', error: 'Too many requests' });
     }
-    cache.put(rateLimitKey, '1', 5);
+    if (cache) {
+      cache.put(rateLimitKey, '1', 5);
+    }
 
     hasLock = lock.tryLock(10000);
     if (!hasLock) {
@@ -103,8 +179,21 @@ function doPost(e) {
     }
 
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = spreadsheet.getSheetByName('results') || spreadsheet.getSheets()[0];
+    var sheet = spreadsheet.getSheetByName('PSS10') ||
+                spreadsheet.getSheetByName('results') ||
+                spreadsheet.getSheets()[0];
     var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var expectedHeaders = getPss10HeaderList();
+
+    if (lastRow === 0) {
+      sheet.appendRow(expectedHeaders);
+      lastRow = 1;
+      lastCol = expectedHeaders.length;
+    } else if (lastRow === 1 && lastCol === 14) {
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+      lastCol = expectedHeaders.length;
+    }
 
     if (lastRow > 1) {
       var existingSessions = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
@@ -116,22 +205,42 @@ function doPost(e) {
       }
     }
 
-    sheet.appendRow([
-      safeSheetText(data.created_at),
-      safeSheetText(data.session_id),
-      validatedAnswers[0],
-      validatedAnswers[1],
-      validatedAnswers[2],
-      validatedAnswers[3],
-      validatedAnswers[4],
-      validatedAnswers[5],
-      validatedAnswers[6],
-      validatedAnswers[7],
-      validatedAnswers[8],
-      validatedAnswers[9],
-      data.final_score,
-      safeSheetText(expectedCategory)
-    ]);
+    if (lastCol === 14 && lastRow > 1) {
+      // Legacy 14-column backward compatibility for existing sheets with historic data rows
+      sheet.appendRow([
+        safeSheetText(data.created_at),
+        safeSheetText(data.session_id),
+        validatedAnswers[0],
+        validatedAnswers[1],
+        validatedAnswers[2],
+        validatedAnswers[3],
+        validatedAnswers[4],
+        validatedAnswers[5],
+        validatedAnswers[6],
+        validatedAnswers[7],
+        validatedAnswers[8],
+        validatedAnswers[9],
+        data.final_score,
+        safeSheetText(expectedCategory)
+      ]);
+    } else {
+      // Enriched 24-column storage (Response label + Points per question)
+      var enrichedRow = [
+        safeSheetText(data.created_at),
+        safeSheetText(data.session_id)
+      ];
+
+      for (var j = 0; j < PSS10_QUESTIONS.length; j++) {
+        var ansDetails = getPss10AnswerDetails(data, PSS10_QUESTIONS[j]);
+        enrichedRow.push(safeSheetText(ansDetails.label));
+        enrichedRow.push(ansDetails.points);
+      }
+
+      enrichedRow.push(data.final_score);
+      enrichedRow.push(safeSheetText(expectedCategory));
+
+      sheet.appendRow(enrichedRow);
+    }
 
     return jsonResponse({ ok: true, duplicate: false });
   } catch (error) {

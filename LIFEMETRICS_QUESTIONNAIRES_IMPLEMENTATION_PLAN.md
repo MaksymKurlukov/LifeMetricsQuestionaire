@@ -21,19 +21,19 @@
 | 13 | Restitution frontend finale | TERMINÉ |
 | 14 | Vérification transport et Google Sheets | TERMINÉ |
 | 15 | Full Regression Test | TERMINÉ |
-| 16 | WordPress Release ZIP | À FAIRE |
+| 16 | WordPress Release ZIP | EN COURS |
 
 ---
 
 ## État actuel du projet
 
-- Phase actuelle : Aucune phase EN COURS — PHASE 15 terminée
-- Dernière phase terminée : PHASE 15 — Full Regression Test
-- Prochaine phase à exécuter : PHASE 16 — WordPress Release ZIP
+- Phase actuelle : PHASE 16 — WordPress Release ZIP (WORK-22) (EN COURS)
+- Dernière phase terminée : PHASE 15 — Full Regression Test (WORK-21)
+- Prochaine phase à exécuter : Finalisation PHASE 16 (Préparation WordPress local MAMP, validation de bout en bout du ZIP, 10 onglets Sheets)
 - Blocages : Aucun
-- Nombre de phases terminées : 15 / 16
+- Nombre de phases terminées : 15 / 16 (Phase 16 en cours de validation)
 - Nombre de phases restantes : 1
-- Dernier commit de phase : 8d3d9ee (lifemetrics: phase 14 - transport et google sheets (certified))
+- Dernier commit de phase : ac4d413 (docs(release): build and audit release zip package (phase 16 in progress))
 - Livrable final : lifemetrics-questionnaires.zip
 - Tableau Notion synchronisé : https://app.notion.com/p/3da507fddb678146b412ffe3a733ea0f
 
@@ -897,8 +897,70 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 
 ### PHASE 16 — WordPress Release ZIP
 
-- Statut : EN COURS (Packaging et audit ZIP certifiés ; en attente de la validation d'intégration staging WordPress, Apps Script et Google Sheets)
-- Objectif : Produire l'archive finale lifemetrics-questionnaires.zip installable dans WordPress et valider son intégration de bout en bout.
+- Statut : EN COURS (Packaging et audit ZIP certifiés ; stockage PSS-10 enrichi 24 colonnes validé localement ; Apps Script TEST déployés ; en attente de la validation sur WordPress local isolé)
+- Objectif : Produire l'archive finale lifemetrics-questionnaires.zip installable dans WordPress, intégrer la mise à niveau du stockage Google Sheets PSS-10 au même niveau d'exploitabilité que les questionnaires propriétaires (sans modifier ni UI, ni runtime legacy, ni scoring, ni fusionner les backends), et valider l'intégration de bout en bout sur les 10 destinations Google Sheets réelles via un environnement WordPress isolé.
+
+- Contexte d'environnement réel validé (16 septembre 2026) :
+  - Le WordPress LifeMetrics actuellement accessible est le **site réel de production** déjà en fonctionnement avec ses extensions et fonctionnalités.
+  - Il n'existe actuellement **aucun WordPress de staging/local** pour LifeMetrics.
+  - MAMP est actuellement utilisé uniquement comme serveur Apache/PHP local pour ouvrir et tester `lifemetrics-questionnaires/preview.php`.
+  - **IMPORTANT** : `preview.php` n'est pas un environnement WordPress et ne permet pas de certifier l'installation du ZIP, les shortcodes, le REST WordPress et le parcours production complet.
+
+- Décision d'environnement & Stratégie de release (Gate WORK-22) :
+  1. **Protection absolue du site de production** : NE PAS installer ni remplacer `lifemetrics-questionnaires.zip` sur le WordPress LifeMetrics de production à ce stade. Le site de production reste strictement INCHANGÉ jusqu'à validation complète de l'environnement isolé.
+  2. **Création d'un WordPress local isolé sous MAMP** : Avant toute modification du site réel, préparer un environnement WordPress local dédié et isolé sous MAMP (ou staging isolé équivalent).
+  3. **Périmètre exhaustif de validation sur l'environnement isolé** :
+     - Installation du vrai ZIP `lifemetrics-questionnaires.zip` ;
+     - Activation du plugin sans aucune erreur PHP ;
+     - Les 10 shortcodes fonctionnels ;
+     - Parcours utilisateur complet : intro → questions → résultat ;
+     - Endpoints REST WordPress fonctionnels ;
+     - Prise en compte de `LMQ_PSS10_GOOGLE_ENDPOINT` ;
+     - Prise en compte de `LMQ_GOOGLE_ENDPOINT` ;
+     - Écriture effective dans les 10 destinations Google Sheets ;
+     - Nouveau stockage PSS-10 en 24 colonnes (libellés + points) vérifié ;
+     - Validation spécifique de l'onglet `Risque_Nutritionnel` ;
+     - Validation spécifique de l'onglet `Bien_Etre` ;
+     - Idempotence et absence de doublon sur `session_id`.
+  4. **État des backends Apps Script TEST (16 septembre 2026)** :
+     - Les deux Apps Script TEST ont déjà été mis à jour et déployés manuellement :
+       - Web App PSS-10 séparée (`lifemetrics-questionnaires/backend/google-apps-script.gs`) ;
+       - Web App générique pour les 9 questionnaires propriétaires (`lifemetrics-questionnaires/backend/generic-google-apps-script.gs`).
+     - Les deux URLs `/exec` existent et restent strictement distinctes.
+  5. **Configuration côté serveur uniquement** : Ces URLs seront configurées exclusivement côté serveur dans le `wp-config.php` du WordPress local/staging pour la validation, sans exposition au navigateur.
+  6. **UI FREEZE absolu** : Zéro modification CSS, template, balise HTML ou DOM.
+
+- Décision de stockage PSS-10 validée (Release Gate WORK-22) :
+  1. **Niveau d'exploitabilité équivalent** : Le stockage PSS-10 dans Google Sheets ne se limite plus au format minimal `created_at` / `session_id` / `q1`..`q10` numériques / `final_score` / `category`.
+  2. **Détail par question (24 colonnes)** : Pour chaque question PSS-10 (q1 à q10), le stockage consigne et restitue :
+     - la réponse sélectionnée / son libellé textuel ('Jamais', 'Presque jamais', 'Parfois', 'Assez souvent', 'Très souvent') ;
+     - les points correspondants (avec prise en compte rigoureuse du reverse scoring validé pour q4, q5, q7, q8).
+     La structure est cohérente avec le principe des questionnaires propriétaires (colonnes adjacentes `Reponse_*` / `Points_*`).
+  3. **Invariants stricts (NON MODIFIÉS)** :
+     - Méthodologie PSS-10 inchangée ;
+     - Scoring inchangé (somme 10–50) ;
+     - Reverse scoring existant validé inchangé ;
+     - Catégories inchangées ('Stress bas', 'Stress assez élevé', 'Stress très élevé') ;
+     - Runtime legacy de production inchangé (`LifeMetrics_Legacy_PSS10_Runtime`, template `pss10/template.php`, `style.css`, `app.js`, 13 mutation guards) ;
+     - UI FREEZE absolu : 0 modification CSS, DOM ou HTML.
+  4. **Isolation technique stricte des backends (NON FUSIONNÉS)** :
+     - `backend/google-apps-script.gs` et `backend/generic-google-apps-script.gs` RESTENT STRICTEMENT SÉPARÉS ;
+     - PSS-10 conserve son backend Apps Script dédié et son endpoint autonome (`LMQ_PSS10_GOOGLE_ENDPOINT`).
+  5. **Gate Google Sheets — Vérification obligatoire des 10 onglets** :
+     - Vérifier la présence effective et la configuration des 10 onglets cibles dans le/les classeurs Google Sheets :
+       - `PSS10` (ou `results`)
+       - `Sedentarite`
+       - `Hydratation`
+       - `Fatigue`
+       - `Sommeil`
+       - `Nutrition`
+       - `Activite_Physique`
+       - `Pieds_Confort`
+       - **`Risque_Nutritionnel`** (onglet obligatoire)
+       - **`Bien_Etre`** (onglet obligatoire)
+  6. **Règle de certification** :
+     - La Phase 16 NE PEUT PAS être déclarée TERMINÉE avant validation réelle sur le WordPress local isolé et sur les 10 destinations Google Sheets.
+
 - Contrôles avant build :
   - Tous les tests PASS (42/42 suites certifiées) ;
   - Aucun fichier temporaire, cache ou artefact local inutile ;
@@ -906,46 +968,67 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - `preview.php` et les autres outils de développement exclus du ZIP de production ;
   - Bootstrap, assets, templates et configurations présents.
 - Contrôles après build (exécutés et certifiés) :
-  - Archive produite : `lifemetrics-questionnaires.zip` (109 926 octets / 107 KB, 61 fichiers, 432 010 octets décompressés) ;
+  - Archive produite : `lifemetrics-questionnaires.zip` (111 635 octets / 109 KB, 61 fichiers, 436 562 octets décompressés) ;
   - Absence stricte certifiée de `preview.php`, du dossier `tests/`, des fichiers Git (`.git*`), backups (`*~`) et `.DS_Store` ;
   - Présence certifiée des 10 questionnaires dans `questionnaires/*/questionnaire.php` ;
   - Présence certifiée des 11 classes PHP dans `includes/`, des templates, des assets CSS/JS/SVG partagés et PSS-10 legacy ;
-  - Présence des deux scripts backend dans `backend/` (`google-apps-script.gs` et `generic-google-apps-script.gs`) ;
+  - Présence des deux scripts backend dans `backend/` (`google-apps-script.gs` enrichi et `generic-google-apps-script.gs`) ;
   - `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` : ALL PASSED.
-- Vérification d'intégration après build (reste à exécuter sur environnement de staging) :
-  - [ ] Déployer la Web App Google Apps Script PSS-10 legacy (`lifemetrics-questionnaires/backend/google-apps-script.gs`) vers le classeur Google Sheets cible (onglet `results` / `PSS10`) avec droits d'accès anonymes/publics.
-  - [ ] Déployer la Web App Google Apps Script Générique (`lifemetrics-questionnaires/backend/generic-google-apps-script.gs`) vers le classeur cible (9 onglets : `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`, `Risque_Nutritionnel`, `Bien_Etre`).
-  - [ ] Définir les constantes de déploiement WordPress dans `wp-config.php` : `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT`.
-  - [ ] Téléverser et activer l'archive `lifemetrics-questionnaires.zip` sur l'instance WordPress de staging.
-  - [ ] Tester le shortcode et le parcours complet des 10 questionnaires : intro, passage, affichage des résultats, appel REST et synchronisation Google Apps Script.
-  - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires.
+- Vérification d'intégration après build (feuille de route environnement isolé) :
+  - [x] Mettre à jour `lifemetrics-questionnaires/backend/google-apps-script.gs` et `backend-logic.test.js` pour stocker les libellés de réponses et points par question pour PSS-10. [RÉALISÉ]
+  - [x] Reconstruire le ZIP de release `lifemetrics-questionnaires.zip` et certifier à nouveau l'audit de packaging. [RÉALISÉ]
+  - [x] Déployer manuellement les 2 Web Apps Apps Script TEST le 16/09/2026 (PSS-10 et Générique) et relever leurs 2 URLs `/exec` distinctes. [RÉALISÉ]
+  - [x] Préparer un environnement WordPress local dédié et isolé sous MAMP (`wordpress-local/wordpress`, DB: `lifemetrics_wordpress_test`) sans toucher au site de production. [RÉALISÉ]
+  - [x] Configurer les constantes serveur `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT` dans le `wp-config.php` du WordPress local isolé. [RÉALISÉ]
+  - [x] Téléverser et activer l'archive `lifemetrics-questionnaires.zip` sur le WordPress local isolé sans erreur PHP. [RÉALISÉ]
+  - [x] Diagnostiquer et corriger les 4 régressions visuelles PSS-10 constatées en runtime WordPress réel :
+    * Correction du contour sombre/noir parasite sur la carte sélectionnée (`:focus:not(:focus-visible)` réinitialisé, `:focus-visible` préservé pour l'accessibilité clavier) ;
+    * Restauration du texte d'interprétation clinique sous "D’après vos réponses," (`classification_messages[level.code].text` injecté dans `analysisText` en l'absence de lead progressif) ;
+    * Rétablissement du badge sémantique coloré pour la catégorie de stress (`result-badge--intermediate`, `result-badge--medium` et variantes de rang stylisées) ;
+    * Rétablissement de la graisse typographique (`font-weight: 700`) sur `.result-title` ("Mon score stress") face aux resets de thèmes WordPress. [RÉALISÉ]
+  - [ ] Tester le shortcode et le parcours complet des 10 questionnaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
+  - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
-  - [ ] Rédiger le rapport de validation manuelle pour remise à Camille avant clôture définitive de Phase 16.
+  - [ ] Rédiger le rapport de validation manuelle pour remise à Camille avant tout déploiement sur la production.
 - Fichiers potentiellement concernés :
+  - lifemetrics-questionnaires/backend/google-apps-script.gs
   - scripts/build-release-zip.sh
   - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
+  - lifemetrics-questionnaires/tests/backend-logic.test.js
+  - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
+  - lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css
+  - lifemetrics-questionnaires/assets/css/questionnaire.css
+  - lifemetrics-questionnaires/assets/js/questionnaire-ui.js
 - Tests :
   - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip (PASS)
   - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php (PASS)
   - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production (PASS - 61 fichiers, 0 fuite test/preview)
-  - Checklist WordPress + Apps Script + Google Sheets exécutée sur le ZIP produit (EN ATTENTE)
+  - Suite de tests unitaire pour le nouveau stockage PSS-10 (`backend-logic.test.js`: PASS)
+  - Tests de caractérisation et responsives PSS-10 (`pss10-frontend-characterization.test.js`, `pss10-browser-responsive.test.js`: ALL PASS)
+  - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
+  - Checklist WordPress local + Apps Script + Google Sheets (10 onglets dont Risque_Nutritionnel et Bien_Etre) exécutée sur le ZIP produit (EN COURS)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
-  - ZIP installé et activé dans WordPress de staging sans erreur. [EN ATTENTE]
-  - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN ATTENTE]
+  - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
+  - Les 2 Apps Script TEST déployés avec URLs distinctes. [RÉALISÉ]
+  - WordPress local MAMP isolé préparé sans modification de la production. [RÉALISÉ]
+  - ZIP installé et activé dans WordPress local sans erreur. [RÉALISÉ]
+  - Rétablissement visuel PSS-10 conforme sans régression méthodologique ni scoring. [RÉALISÉ]
+  - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN COURS]
   - La déduplication par `session_id` est confirmée sur le déploiement utilisé. [EN ATTENTE]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
-  - Chemin exact du ZIP et taille : `lifemetrics-questionnaires.zip` (109 926 octets) ;
+  - Chemin exact du ZIP et taille : `lifemetrics-questionnaires.zip` ;
   - Résumé du contenu vérifié : 61 fichiers conformes, packaging audité ;
-  - Checklist de validation manuelle WordPress : fournie.
+  - Checklist de validation manuelle WordPress local : en cours d'exécution.
 
-- Fichiers réellement modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip`, `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php`, régression complète 42 suites (23 PHP, 19 JS).
-- Résultat : Packaging et audit ZIP 100% validés. Phase 16 en cours (attente validation manuelle WordPress / Apps Script).
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/backend/google-apps-script.gs`, `lifemetrics-questionnaires/tests/backend-logic.test.js`, `lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css`, `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`, `.gitignore`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `node lifemetrics-questionnaires/tests/backend-logic.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` (PASS - 13 mutation guards), `node lifemetrics-questionnaires/tests/pss10-browser-responsive.test.js` (PASS - Mobile/Tablet/Desktop), `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
+- Résultat : Stockage PSS-10 enrichi implémenté et testé. Corrections visuelles PSS-10 validées sans régression. Packaging ZIP reconstruit et audité. WordPress local MAMP opérationnel. Phase 16 en cours (poursuite des tests manuels des 10 questionnaires et Google Sheets).
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : 51a9c06
-- Date : 2026-09-15
+- Commit : dédié pour les corrections visuelles PSS-10 et l'état de validation WordPress locale.
+- Date : 2026-09-16
+
 
 ---
 
@@ -976,6 +1059,45 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
   - 42/42 suites de tests (23 PHP, 19 JS) passent avec succès (100%).
 - Date de complétion : 2026-09-15
 - Tâche Notion : `WORK-20 — Corriger et sécuriser l'outil preview avant release`.
+
+### WORK-22 — Construire et auditer le ZIP WordPress avec stockage PSS-10 enrichi et 10 onglets Sheets
+
+- Statut : EN COURS
+- Position : après WORK-21 (Phase 15) et WORK-20, avant WORK-19 et WORK-23.
+- Objectif : produire l'archive finale lifemetrics-questionnaires.zip, enrichir le stockage Google Sheets PSS-10 (libellés de réponses + points par question) au même niveau d'exploitabilité que les questionnaires propriétaires sans modifier ni UI, ni runtime legacy, ni scoring, ni fusionner les backends, et valider l'intégration sur les 10 onglets Google Sheets (dont obligatoirement Risque_Nutritionnel et Bien_Etre) via un environnement WordPress local MAMP isolé.
+- Contexte d'environnement réel :
+  - Le seul environnement WordPress LifeMetrics actuellement accessible est le **site réel de production** déjà en exploitation avec ses extensions et fonctionnalités.
+  - Aucun WordPress staging ou local LifeMetrics n'existe actuellement.
+  - MAMP n'était utilisé que pour `preview.php` (qui n'est pas un runtime WordPress et ne permet pas de certifier l'installation du ZIP, les shortcodes, le REST WordPress ou le parcours complet).
+  - **Protection absolue de la production** : Interdiction formelle d'installer ou de remplacer `lifemetrics-questionnaires.zip` sur le site réel de production à ce stade. La production reste strictement intacte.
+- Prérequis de validation :
+  - Préparer préalablement un environnement WordPress local dédié et isolé sous MAMP (ou staging isolé équivalent).
+- Critères obligatoires de validation :
+  - Installation et activation du plugin depuis le ZIP réel (`lifemetrics-questionnaires.zip`, 111 635 octets) sans aucune erreur PHP ;
+  - Rendu et fonctionnement complet des 10 shortcodes ;
+  - Parcours utilisateur complet pour les 10 questionnaires (intro → questions → écran de résultat) ;
+  - Routes REST WordPress internes vérifiées et opérationnelles ;
+  - Configuration serveur (`wp-config.php`) des constantes d'endpoints sans exposition au navigateur :
+    * `LMQ_PSS10_GOOGLE_ENDPOINT` (pointant vers la Web App PSS-10 TEST déployée le 16/09/2026) ;
+    * `LMQ_GOOGLE_ENDPOINT` (pointant vers la Web App Générique TEST déployée le 16/09/2026) ;
+  - Écriture effective d'une seule ligne par soumission dans les 10 onglets Google Sheets correspondants :
+    * `PSS10` (format enrichi 24 colonnes avec libellés textuels et points par question) ;
+    * `Sedentarite` ;
+    * `Hydratation` ;
+    * `Fatigue` ;
+    * `Sommeil` ;
+    * `Nutrition` ;
+    * `Activite_Physique` ;
+    * `Pieds_Confort` ;
+    * `Risque_Nutritionnel` (onglet obligatoire vérifié) ;
+    * `Bien_Etre` (onglet obligatoire vérifié) ;
+  - Déduplication par `session_id` certifiée (aucun doublon en cas de re-soumission) ;
+  - RÈGLE STRICTE : UI FREEZE ABSOLU (zéro modification de CSS, style, structure visuelle, templates, HTML ou DOM) ;
+  - Zéro modification de la méthodologie, scoring, reverse scoring, catégories ou runtime legacy PSS-10 ;
+  - Zéro fusion entre backends Apps Script (`backend/google-apps-script.gs` et `backend/generic-google-apps-script.gs` restent isolés) ;
+  - Rédaction du rapport de validation manuelle pour remise à Camille avant tout déploiement sur la production ;
+  - La Phase 16 et WORK-22 restent EN COURS jusqu'à la réussite de l'ensemble de ces contrôles réels.
+- Tâche Notion : `WORK-22 — Construire et auditer le ZIP WordPress`.
 
 ### WORK-23 — Préparer la revue finale et la stratégie de merge vers main
 
@@ -1166,6 +1288,28 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
   5. Audit automatisé de release : `stage11-release-audit.test.php` enrichi d'assertions vérifiant l'exclusion et les gardes dans le script de build.
   6. UI Freeze respecté : Aucun template, CSS, balise HTML ou DOM de questionnaire modifié.
 - Prochaine phase : PHASE 16 — WordPress Release ZIP (WORK-22).
+
+### 2026-09-16 — WORK-22 : Implémentation du stockage PSS-10 enrichi & Déploiement Apps Script TEST
+- Statut : EN COURS (Stockage enrichi 24 colonnes validé localement, packaging ZIP audité, Apps Script TEST déployés)
+- Fichiers modifiés : `lifemetrics-questionnaires/backend/google-apps-script.gs`, `lifemetrics-questionnaires/tests/backend-logic.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `node lifemetrics-questionnaires/tests/backend-logic.test.js` (PASS), `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` (PASS), `bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suites de régression 42/42 PASS.
+- Réalisations :
+  1. Stockage enrichi PSS-10 (24 colonnes) : ajout des paires de colonnes libellé textuel + points réels pour Q1 à Q10, avec prise en compte du reverse scoring validé (Q4, Q5, Q7, Q8) et rétrocompatibilité avec l'ancien schéma 14 colonnes.
+  2. Préservation intégrale de la méthodologie PSS-10 (somme 10–50), des catégories ('Stress bas', 'Stress assez élevé', 'Stress très élevé') et du runtime legacy isolé (`LifeMetrics_Legacy_PSS10_Runtime`).
+  3. Packaging release reconstruit et certifié : `lifemetrics-questionnaires.zip` (111 635 octets / 109 KB, 61 fichiers, 0 fuite test/preview).
+  4. Déploiement manuel le 16/09/2026 des 2 Web Apps Google Apps Script TEST distinctes (PSS-10 legacy enrichi et Générique V2).
+- Prochaine étape : Préparation de l'environnement WordPress local isolé sous MAMP pour certification de bout en bout.
+
+### 2026-09-16 — WORK-22 : Cadrage de l'environnement de validation WordPress local MAMP & Protection de la production
+- Statut : EN COURS (Cadrage d'environnement validé dans le plan de release, site de production gelé)
+- Fichiers modifiés : `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Décision actée :
+  1. Contexte réel : le site WordPress actuellement accessible est le site de production réel en exploitation. Aucun staging LifeMetrics n'existe. `preview.php` n'est pas un runtime WordPress.
+  2. Protection absolue du site de production : interdiction formelle d'installer ou remplacer le ZIP sur la production à ce stade. La production reste strictement intacte.
+  3. Environnement de test local : préparation préalable d'une instance WordPress locale dédiée et isolée sous MAMP (ou staging équivalent).
+  4. Périmètre de certification locale : installation du ZIP réel, activation sans erreur PHP, rendu des 10 shortcodes, parcours utilisateur complets, endpoints REST internes, configuration serveur des constantes `LMQ_PSS10_GOOGLE_ENDPOINT` et `LMQ_GOOGLE_ENDPOINT` vers les Web Apps TEST, écritures réelles dans les 10 onglets Google Sheets (dont PSS-10 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`), déduplication `session_id`.
+  5. UI FREEZE absolu : 0 modification visuelle, CSS, template, balise HTML ou DOM.
+- Prochaine étape : Configuration du WordPress local sous MAMP, exécution de la checklist de validation manuelle et rapport pour Camille.
 
 ---
 
