@@ -289,8 +289,8 @@ return array(
     'safety_messages' => array(
         'NUTRITION_SAFETY_MESSAGE' => array(
             'priority' => 100,
-            'title' => 'Votre situation peut nécessiter des conseils plus personnalisés.',
-            'text' => 'Cette auto-évaluation générale ne tient pas compte de certaines situations médicales ou nutritionnelles particulières. Si nécessaire, parlez-en à un médecin ou à un professionnel de la nutrition. Un résultat favorable ne doit jamais masquer un message d\'attention déclenché par une question de sécurité.',
+            'title' => 'Un point mérite votre attention.',
+            'text' => 'Certaines situations médicales, variations de poids importantes ou difficultés à vous alimenter peuvent nécessiter des conseils personnalisés d’un professionnel de santé ou de la nutrition.',
         ),
     ),
     'result_ctas' => array(

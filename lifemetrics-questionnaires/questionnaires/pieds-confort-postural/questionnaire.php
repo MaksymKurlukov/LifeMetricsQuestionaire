@@ -332,8 +332,8 @@ return array(
     'safety_messages' => array(
         'PIEDS_SAFETY_MESSAGE' => array(
             'priority' => 100,
-            'title' => 'Certaines de vos réponses nécessitent une attention particulière.',
-            'text' => 'Cette auto-évaluation ne permet pas d\'identifier l\'origine d\'une douleur ou d\'un trouble du pied. En présence d\'une douleur importante, d\'un traumatisme, d\'une perte de sensibilité, d\'une plaie ou d\'une modification inhabituelle du pied, demandez conseil à un professionnel de santé. Ce message reste prioritaire même si le score global est favorable.',
+            'title' => 'Un point mérite votre attention.',
+            'text' => 'Une douleur importante, un traumatisme, une perte de sensibilité, une plaie ou une modification inhabituelle du pied mérite un avis professionnel.',
         ),
     ),
     'result_ctas' => array(

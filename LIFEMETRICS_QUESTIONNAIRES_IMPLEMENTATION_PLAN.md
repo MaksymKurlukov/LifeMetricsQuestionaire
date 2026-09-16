@@ -1001,6 +1001,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
       2) Neutralisation systématique sur les cibles de focus programmatique non-interactives (`[tabindex="-1"]:focus { outline: none; }`) ;
       3) Restitution et harmonisation d'un indicateur de focus clavier normé, visible et accessible (`:focus-visible` avec `outline: 2px solid var(--color-primary); outline-offset: 2px;`) pour tous les éléments interactifs (`button`, `a`, `input`, `.btn`, `.answer-card`, `.analysis-toggle`, `[role="button"]`, `[role="radio"]`, etc.) ;
     * Vérification et parité : comportement désormais strictement identique entre `preview.php` et le runtime WordPress réel (sans régression PSS-10 certifié ni altération du UI FREEZE). [RÉALISÉ]
+  - [x] Simplification textuelle du système Safety et suppression de l'icône ⚠️ :
+    * Harmonisation du titre commun : « Un point mérite votre attention. » sur les 6 questionnaires possédant des questions Safety (`hydratation`, `fatigue-recuperation`, `sommeil`, `nutrition`, `pieds-confort-postural`, `risque-nutritionnel`) ;
+    * Rédaction de messages d'attention plus concis, proportionnés et bienveillants, sans modifier la mécanique Safety (IDs, règles de déclenchement, `safety_flags`, `safety_attention`, calcul des scores et catégories strictement inchangés) ;
+    * Suppression du pseudo-élément CSS injectant le pictogramme `⚠️` (`.lmq-questionnaire .safety-card strong::before`) pour un rendu purement textuel, sobre et non anxiogène ;
+    * Les questionnaires sans Safety (`pss10`, `sedentarite`, `activite-physique`, `bien-etre`) restent strictement inchangés. [RÉALISÉ]
   - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
@@ -1029,7 +1034,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Tests de soumission REST et résilience typographique (`rest-backend-submission.test.php`: ALL PASS)
   - Tests de format physique et résilience typographique Google Sheets (`google-sheets-storage-format.test.js`: ALL PASS)
   - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
-  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout, titre de résultat et accordéon analyse sans contours parasites)
+  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout, titre de résultat et accordéon analyse sans contours parasites, messages Safety simplifiés sans icône ⚠️)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
   - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
@@ -1040,6 +1045,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Pipeline générique réparé et certifié (REST HTTP 200, écriture onglet `Sedentarite`, déduplication OK). [RÉALISÉ]
   - Titre de résultat sans contour parasite après transition (accessibilité préservée). [RÉALISÉ]
   - Stratégie globale de focus appliquée et vérifiée (suppression des contours parasites sur clic/souris, maintien de `:focus-visible` au clavier). [RÉALISÉ]
+  - Messages Safety simplifiés avec titre commun et suppression de l'icône ⚠️. [RÉALISÉ]
   - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN COURS]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
@@ -1047,12 +1053,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Résumé du contenu vérifié : 61 fichiers conformes, packaging audité ;
   - Checklist de validation manuelle WordPress local : en cours d'exécution.
 
-- Fichiers réellement modifiés : `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css`, `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-browser-responsive.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
-- Résultat : Stratégie CSS globale de focus déployée au niveau des namespaces .lmq-questionnaire et .lmq-pss10. Contours parasites souris/programmatiques éliminés sans altérer les ombres/élévations. Indicateur :focus-visible clavier standardisé et accessible. Phase 16 en cours.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/questionnaires/hydratation/questionnaire.php`, `lifemetrics-questionnaires/questionnaires/fatigue-recuperation/questionnaire.php`, `lifemetrics-questionnaires/questionnaires/sommeil/questionnaire.php`, `lifemetrics-questionnaires/questionnaires/nutrition/questionnaire.php`, `lifemetrics-questionnaires/questionnaires/pieds-confort-postural/questionnaire.php`, `lifemetrics-questionnaires/questionnaires/risque-nutritionnel/questionnaire.php`, `lifemetrics-questionnaires/assets/css/questionnaire.css`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
+- Résultat : Messages Safety mis à jour avec le titre commun « Un point mérite votre attention. » et textes adaptés. Icône ⚠️ supprimée. Mécanique Safety, scoring et Google Sheets strictement préservés. Phase 16 en cours.
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : dédié pour l'audit global et la stratégie de focus dans le runtime WordPress.
-- Date : 2026-09-16
+- Commit : dédié pour la simplification des messages Safety et la suppression de l'icône ⚠️.
 - Date : 2026-09-16
 
 

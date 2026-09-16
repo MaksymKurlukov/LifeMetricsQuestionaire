@@ -294,8 +294,8 @@ return array(
     'safety_messages' => array(
         'HYDRATATION_SAFETY_MESSAGE' => array(
             'priority' => 100,
-            'title' => 'Certaines de vos réponses nécessitent une attention particulière.',
-            'text' => 'Cette auto-évaluation ne permet pas d\'évaluer votre état d\'hydratation ni de déterminer la quantité de liquide adaptée à une situation médicale particulière. En cas de symptômes importants, de pertes importantes de liquides ou si un professionnel de santé vous a donné des consignes spécifiques, suivez ces recommandations et demandez conseil à un professionnel de santé si nécessaire. Un résultat favorable ne doit jamais masquer un message d\'attention déclenché par une question de sécurité.',
+            'title' => 'Un point mérite votre attention.',
+            'text' => 'Certaines de vos réponses peuvent nécessiter un avis professionnel, notamment en cas de symptômes importants, de pertes inhabituelles de liquides ou de consignes médicales spécifiques.',
         ),
     ),
     'result_ctas' => array(

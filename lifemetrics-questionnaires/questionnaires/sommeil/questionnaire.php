@@ -285,8 +285,8 @@ return array(
     'safety_messages' => array(
         'SOMMEIL_SAFETY_MESSAGE' => array(
             'priority' => 100,
-            'title' => 'Certaines de vos réponses nécessitent une attention particulière.',
-            'text' => 'Cette auto-évaluation ne permet pas d\'identifier la cause de ces signes. Il est recommandé d\'en parler à un professionnel de santé. Un bon score global ne doit jamais masquer un message d\'attention déclenché par une question de sécurité.',
+            'title' => 'Un point mérite votre attention.',
+            'text' => 'Certaines réponses concernant votre respiration, votre somnolence ou la persistance de vos difficultés de sommeil méritent d’être discutées avec un professionnel de santé.',
         ),
     ),
     'result_ctas' => array(

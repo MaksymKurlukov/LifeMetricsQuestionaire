@@ -313,8 +313,8 @@ return array(
     'safety_messages' => array(
         'FATIGUE_SAFETY_MESSAGE' => array(
             'priority' => 100,
-            'title' => 'Certaines de vos réponses méritent une attention particulière.',
-            'text' => 'Cette auto-évaluation ne permet pas d\'identifier la cause de votre fatigue. Une fatigue persistante malgré le repos, très invalidante ou accompagnée d\'autres symptômes peut nécessiter une évaluation par un professionnel de santé.',
+            'title' => 'Un point mérite votre attention.',
+            'text' => 'Une fatigue persistante, très invalidante ou accompagnée de signes inhabituels mérite d’être discutée avec un professionnel de santé.',
         ),
     ),
     'result_ctas' => array(

@@ -400,8 +400,8 @@ return array(
     "safety_messages" => array(
         "RN_SAFETY_MESSAGE" => array(
             "priority" => 100,
-            "title" => "Certaines de vos réponses nécessitent une attention particulière.",
-            "text" => "Cette auto-évaluation ne permet pas d'identifier la cause de vos difficultés alimentaires ni d'évaluer à elle seule votre état nutritionnel. Une perte de poids importante ou rapide, une forte diminution des apports, des difficultés importantes à avaler ou l'impossibilité de s'alimenter normalement justifient de demander conseil à un professionnel de santé.",
+            "title" => "Un point mérite votre attention.",
+            "text" => "Une perte de poids involontaire importante, une forte diminution des apports ou des difficultés à vous alimenter normalement justifient de demander conseil à un professionnel de santé.",
         ),
     ),
     "result_ctas" => array(

@@ -715,11 +715,6 @@
   margin-bottom: var(--space-xs);
 }
 
-.lmq-questionnaire .safety-card strong::before {
-  content: "⚠️ ";
-  font-size: 1rem;
-}
-
 .lmq-questionnaire .safety-card p,
 .lmq-questionnaire .safety-message p {
   margin: 0;
