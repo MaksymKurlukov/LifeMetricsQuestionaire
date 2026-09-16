@@ -525,6 +525,13 @@
   color: var(--color-text);
 }
 
+.lmq-questionnaire .card--result .result-title:focus,
+.lmq-questionnaire .result-title:focus,
+.lmq-questionnaire [data-lmq-role="result-header"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .lmq-questionnaire .result-badge {
   display: inline-block;
   padding: var(--space-xs) var(--space-sm);

@@ -461,6 +461,11 @@
   text-align: center;
 }
 
+.lmq-pss10 .result-title:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .lmq-pss10 .result-badge {
   display: inline-block;
   padding: var(--space-xs) var(--space-sm);

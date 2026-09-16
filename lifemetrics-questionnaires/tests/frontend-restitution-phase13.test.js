@@ -174,6 +174,7 @@ assert.ok(cssContent.includes(".lmq-questionnaire .card--result .result-title"),
 assert.ok(cssContent.includes(".result-badge--favorable") || cssContent.includes(".result-badge--rank-1"), "CSS includes green/favorable category styles");
 assert.ok(cssContent.includes(".result-badge--intermediate") || cssContent.includes(".result-badge--rank-2"), "CSS includes orange/intermediate category styles");
 assert.ok(cssContent.includes(".result-badge--unfavorable") || cssContent.includes(".result-badge--rank-3"), "CSS includes red/unfavorable category styles");
+assert.ok(cssContent.includes(".result-title:focus") && cssContent.includes("outline: none;"), "CSS suppresses parasitic focus outline on result title");
 
 // ----------------------------------------------------
 // 2. Mock DOM: Green Result (Rank 1)

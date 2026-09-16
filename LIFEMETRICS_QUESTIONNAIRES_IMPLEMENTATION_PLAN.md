@@ -990,6 +990,9 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
     * Cause identifiée : `schema_conflict` Apps Script (code HTTP 502 / `lmq_upstream_rejected`) provoqué par une divergence d'apostrophe typographique (`’` courbe dans `sedentarite/questionnaire.php` vs `'` droite ASCII dans `generic-google-apps-script.gs` et dans l'en-tête Google Sheets) ;
     * Correction appliquée : normalisation des 5 questions de `sedentarite/questionnaire.php`, normalisation défensive des apostrophes dans `class-submission-service.php` (`questions_schema`) et tolérance typographique dans `generic-google-apps-script.gs` ;
     * Validation réelle WordPress local sous MAMP : POST REST `sedentarite/submit` validé en HTTP 200 `{"success":true,"duplicate":false}`, déduplication certifiée en HTTP 200 `{"success":true,"duplicate":true}`, écriture réelle confirmée dans l'onglet `Sedentarite` du Google Sheet. [RÉALISÉ]
+  - [x] Diagnostiquer et corriger le contour parasite sur le titre de résultat « Mon résultat » (Sédentarité / questionnaires génériques) :
+    * Cause identifiée : `questionnaire-ui.js` déplace le focus vers `h2[data-lmq-role="result-header"][tabindex="-1"]` pour les lecteurs d'écran (a11y). Dans WordPress, la règle globale du thème actif `twentytwentyfive` (`:where(.wp-site-blocks *:focus) { outline-width: 2px; outline-style: solid; }`) imposait un contour rectangulaire (noir/bleu) sur le titre ;
+    * Correction appliquée : neutralisation de l'outline et box-shadow sur le titre de résultat en état de focus (`.result-title:focus`, `[data-lmq-role="result-header"]:focus { outline: none; box-shadow: none; }` dans `questionnaire.css` et `style.css`), tout en conservant le focus programmatique pour les technologies d'assistance et les styles `:focus-visible` sur les contrôles interactifs au clavier (boutons CTA, accordéon, etc.). [RÉALISÉ]
   - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
@@ -1002,6 +1005,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - lifemetrics-questionnaires/tests/backend-logic.test.js
   - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
   - lifemetrics-questionnaires/tests/rest-backend-submission.test.php
+  - lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js
   - lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css
   - lifemetrics-questionnaires/assets/css/questionnaire.css
   - lifemetrics-questionnaires/assets/js/questionnaire-ui.js
@@ -1013,10 +1017,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production (PASS - 61 fichiers, 0 fuite test/preview)
   - Suite de tests unitaire pour le nouveau stockage PSS-10 (`backend-logic.test.js`: PASS)
   - Tests de caractérisation et responsives PSS-10 (`pss10-frontend-characterization.test.js`, `pss10-browser-responsive.test.js`: ALL PASS)
+  - Tests de restitution frontend et focus (`frontend-restitution-phase13.test.js`: ALL PASS)
   - Tests de soumission REST et résilience typographique (`rest-backend-submission.test.php`: ALL PASS)
   - Tests de format physique et résilience typographique Google Sheets (`google-sheets-storage-format.test.js`: ALL PASS)
   - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
-  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout)
+  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout, titre de résultat sans contour parasite)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
   - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
@@ -1025,6 +1030,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - ZIP installé et activé dans WordPress local sans erreur. [RÉALISÉ]
   - Rétablissement visuel PSS-10 conforme sans régression méthodologique ni scoring. [RÉALISÉ]
   - Pipeline générique réparé et certifié (REST HTTP 200, écriture onglet `Sedentarite`, déduplication OK). [RÉALISÉ]
+  - Titre de résultat sans contour parasite après transition (accessibilité préservée). [RÉALISÉ]
   - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN COURS]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
@@ -1032,11 +1038,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - Résumé du contenu vérifié : 61 fichiers conformes, packaging audité ;
   - Checklist de validation manuelle WordPress local : en cours d'exécution.
 
-- Fichiers réellement modifiés : `lifemetrics-questionnaires/includes/class-submission-service.php`, `lifemetrics-questionnaires/questionnaires/sedentarite/questionnaire.php`, `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php` (PASS), `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
-- Résultat : Pipeline générique réparé avec succès. Sédentarité validée de bout en bout en conditions WordPress réelles (UI, calcul 21/60, REST 200, écriture onglet `Sedentarite` et déduplication). Phase 16 en cours.
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css`, `lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
+- Résultat : Contour parasite sur le titre de résultat éliminé. Accessibilité programmatique pour lecteurs d'écran préservée. Phase 16 en cours.
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : dédié pour la réparation du pipeline générique et la résilience typographique.
+- Commit : dédié pour l'élimination du contour parasite sur le titre de résultat.
 - Date : 2026-09-16
 
 
