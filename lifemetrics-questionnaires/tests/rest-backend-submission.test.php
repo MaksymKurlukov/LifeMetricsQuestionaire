@@ -386,4 +386,24 @@ sub_assert($sent_be['calculated_category'] === 'BIEN_ETRE_FAVORABLE', 'BE calcul
 sub_assert($sent_be['displayed_category'] === 'BIEN_ETRE_A_RENFORCER', 'BE displayed is capped to orange BIEN_ETRE_A_RENFORCER');
 sub_assert(in_array('BE_GUARDRAIL_SATISFACTION', $sent_be['applied_classification_rules'], true), 'BE_GUARDRAIL_SATISFACTION transmitted');
 
+// E. Sédentarité: Questions schema typographical normalization (straight apostrophes)
+$sed_fixture = array(
+    'session_id' => '55556666-7777-4888-9999-000011112222',
+    'completed_at' => '2026-09-16T11:40:00Z',
+    'answers' => array(
+        'SD01' => '1', 'SD02' => '1', 'SD03' => '1', 'SD04' => '1',
+        'SD05' => '1', 'SD06' => '1', 'SD07' => '1', 'SD08' => '1',
+        'SD09' => '1', 'SD10' => '1', 'SD11' => '1', 'SD12' => '1',
+    )
+);
+$req_sed = new WP_REST_Request(json_encode($sed_fixture), $sed_fixture, array());
+$res_sed = $service->submit('sedentarite', $req_sed);
+sub_assert(!is_wp_error($res_sed), 'Sedentarite submission succeeds');
+$sent_sed = json_decode($last_http_post['args']['body'], true);
+sub_assert(isset($sent_sed['questions_schema']['scored']), 'questions_schema.scored present');
+foreach ($sent_sed['questions_schema']['scored'] as $sq) {
+    sub_assert(strpos($sq['text'], '’') === false, "Question {$sq['id']} text has no curly apostrophe (got: {$sq['text']})");
+}
+sub_assert($sent_sed['questions_schema']['scored'][0]['text'] === "Au cours des 14 derniers jours, combien de temps avez-vous passé en moyenne assis ou allongé pendant vos heures d'éveil ?", 'SD01 canonical straight apostrophe preserved');
+
 echo "ALL REST BACKEND SUBMISSION TESTS PASSED." . PHP_EOL;

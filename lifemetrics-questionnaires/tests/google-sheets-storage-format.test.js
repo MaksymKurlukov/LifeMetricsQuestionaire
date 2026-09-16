@@ -756,3 +756,88 @@ for (let c = 0; c < sommeilFormRow.length; c++) {
 }
 
 console.log('ALL PHASE 14.9 FORMULA INJECTION NEUTRALIZATION JS TESTS PASSED.');
+
+// ----------------------------------------------------
+// 6. Typographical Apostrophe Resilience in Headers & Schema Check
+// ----------------------------------------------------
+const sedSchema = schemas['sedentarite'];
+const canonicalSedHeaders = gasEnv.getHeaderList(sedSchema);
+
+// Simulate existing sheet initialized with standard canonical headers (straight apostrophes)
+const fakeSedSheet = {
+  name: 'Sedentarite',
+  rows: [canonicalSedHeaders],
+  getLastRow() { return this.rows.length; },
+  getLastColumn() { return this.rows[0] ? this.rows[0].length : 0; },
+  getRange(row, col, numRows, numCols) {
+    const self = this;
+    return {
+      getValues() {
+        const slice = [];
+        for (let r = row - 1; r < row - 1 + numRows; r++) {
+          const rowData = self.rows[r] || [];
+          slice.push(rowData.slice(col - 1, col - 1 + numCols));
+        }
+        return slice;
+      }
+    };
+  },
+  appendRow(row) {
+    this.rows.push(row);
+  }
+};
+
+const apostropheGasEnv = scriptFn(
+  {
+    getActiveSpreadsheet: () => ({
+      getSheetByName: (name) => (name === 'Sedentarite' ? fakeSedSheet : null)
+    })
+  },
+  sandbox.LockService,
+  sandbox.CacheService,
+  sandbox.ContentService,
+  sandbox.console
+);
+
+// Payload with curly apostrophes in scored question text (e.g. from raw PDF copy-paste)
+const payloadWithCurly = {
+  submission_schema_version: '1.0.0',
+  questionnaire_id: 'sedentarite',
+  questionnaire_version: '1.0.0',
+  client_version: '1.0.0',
+  session_id: '11112222-3333-4444-8888-555566667777',
+  completed_at: '2026-09-16T11:40:00.000Z',
+  questions_schema: {
+    scored: [
+      { id: 'SD01', text: "Au cours des 14 derniers jours, combien de temps avez-vous passé en moyenne assis ou allongé pendant vos heures d’éveil ?" },
+      { id: 'SD02', text: "Au cours des 14 derniers jours, combien de jours par semaine avez-vous passé une très grande partie de votre journée éveillée en position assise ou allongée ?" },
+      { id: 'SD03', text: "Lorsque vous travaillez, étudiez ou vous détendez, combien de temps restez-vous généralement assis sans vous lever ni marcher quelques minutes ?" },
+      { id: 'SD04', text: "Au cours des 14 derniers jours, à quelle fréquence avez-vous passé au moins deux heures presque entièrement assis sans véritable interruption de mouvement ?" },
+      { id: 'SD05', text: "Lorsque vous restez assis pendant une période prolongée, à quelle fréquence vous levez-vous pour marcher ou bouger quelques minutes ?" },
+      { id: 'SD06', text: "Lorsque vous interrompez une période assise, que faites-vous généralement ?" },
+      { id: 'SD07', text: "Pendant vos périodes de travail ou d’études, à quelle fréquence alternez-vous volontairement les périodes assises avec des moments debout ou en mouvement ?" },
+      { id: 'SD08', text: "Pour vos déplacements habituels, quelle part du trajet est généralement passée assis dans une voiture, les transports ou un autre véhicule ?" },
+      { id: 'SD09', text: "En dehors du travail ou des études, combien de temps passez-vous généralement assis devant un écran au cours d’une journée ?" },
+      { id: 'SD10', text: "Lorsque vous regardez un écran ou réalisez une activité de loisir assise pendant longtemps, à quelle fréquence profitez-vous d’une occasion pour vous lever ou bouger ?" },
+      { id: 'SD11', text: "En dehors de vos séances de sport éventuelles, à quelle fréquence intégrez-vous de petits moments de mouvement dans votre journée ?" },
+      { id: 'SD12', text: "Au cours des 14 derniers jours, avez-vous réussi à limiter et interrompre régulièrement les longues périodes assises, y compris les jours de travail, d’études et les week-ends ?" }
+    ],
+    safety: []
+  },
+  answers: {
+    SD01: { value: '1', label: 'Moins de 3 heures', points: 1, applicable: true }
+  },
+  final_score: 12,
+  calculated_category: 'HABITUDES_FAVORABLES',
+  displayed_category: 'HABITUDES_FAVORABLES'
+};
+
+const postResult = apostropheGasEnv.doPost({
+  postData: { contents: JSON.stringify(payloadWithCurly) }
+});
+const postParsed = JSON.parse(postResult.text);
+assert.strictEqual(postParsed.ok, true, 'doPost succeeds without schema_conflict when payload has curly apostrophes');
+assert.strictEqual(postParsed.duplicate, false, 'First submission is not a duplicate');
+assert.strictEqual(fakeSedSheet.rows.length, 2, 'Row appended to sheet');
+
+console.log('ALL APOSTROPHE RESILIENCE & COMPATIBILITY JS TESTS PASSED.');

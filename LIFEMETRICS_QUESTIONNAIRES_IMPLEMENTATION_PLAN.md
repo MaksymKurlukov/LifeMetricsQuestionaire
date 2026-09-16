@@ -986,27 +986,37 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
     * Restauration du texte d'interprétation clinique sous "D’après vos réponses," (`classification_messages[level.code].text` injecté dans `analysisText` en l'absence de lead progressif) ;
     * Rétablissement du badge sémantique coloré pour la catégorie de stress (`result-badge--intermediate`, `result-badge--medium` et variantes de rang stylisées) ;
     * Rétablissement de la graisse typographique (`font-weight: 700`) sur `.result-title` ("Mon score stress") face aux resets de thèmes WordPress. [RÉALISÉ]
-  - [ ] Tester le shortcode et le parcours complet des 10 questionnaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
+  - [x] Diagnostiquer et réparer le pipeline de soumission générique (testé sur `sedentarite`) :
+    * Cause identifiée : `schema_conflict` Apps Script (code HTTP 502 / `lmq_upstream_rejected`) provoqué par une divergence d'apostrophe typographique (`’` courbe dans `sedentarite/questionnaire.php` vs `'` droite ASCII dans `generic-google-apps-script.gs` et dans l'en-tête Google Sheets) ;
+    * Correction appliquée : normalisation des 5 questions de `sedentarite/questionnaire.php`, normalisation défensive des apostrophes dans `class-submission-service.php` (`questions_schema`) et tolérance typographique dans `generic-google-apps-script.gs` ;
+    * Validation réelle WordPress local sous MAMP : POST REST `sedentarite/submit` validé en HTTP 200 `{"success":true,"duplicate":false}`, déduplication certifiée en HTTP 200 `{"success":true,"duplicate":true}`, écriture réelle confirmée dans l'onglet `Sedentarite` du Google Sheet. [RÉALISÉ]
+  - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
   - [ ] Rédiger le rapport de validation manuelle pour remise à Camille avant tout déploiement sur la production.
 - Fichiers potentiellement concernés :
   - lifemetrics-questionnaires/backend/google-apps-script.gs
+  - lifemetrics-questionnaires/backend/generic-google-apps-script.gs
   - scripts/build-release-zip.sh
   - lifemetrics-questionnaires/tests/stage11-release-audit.test.php
   - lifemetrics-questionnaires/tests/backend-logic.test.js
   - lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js
+  - lifemetrics-questionnaires/tests/rest-backend-submission.test.php
   - lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css
   - lifemetrics-questionnaires/assets/css/questionnaire.css
   - lifemetrics-questionnaires/assets/js/questionnaire-ui.js
+  - lifemetrics-questionnaires/includes/class-submission-service.php
+  - lifemetrics-questionnaires/questionnaires/sedentarite/questionnaire.php
 - Tests :
   - bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip (PASS)
   - php lifemetrics-questionnaires/tests/stage11-release-audit.test.php (PASS)
   - Contrôle du contenu ZIP (`unzip -l`) et des exclusions de production (PASS - 61 fichiers, 0 fuite test/preview)
   - Suite de tests unitaire pour le nouveau stockage PSS-10 (`backend-logic.test.js`: PASS)
   - Tests de caractérisation et responsives PSS-10 (`pss10-frontend-characterization.test.js`, `pss10-browser-responsive.test.js`: ALL PASS)
+  - Tests de soumission REST et résilience typographique (`rest-backend-submission.test.php`: ALL PASS)
+  - Tests de format physique et résilience typographique Google Sheets (`google-sheets-storage-format.test.js`: ALL PASS)
   - Régression globale 42/42 suites (23 PHP, 19 JS : 100% PASS)
-  - Checklist WordPress local + Apps Script + Google Sheets (10 onglets dont Risque_Nutritionnel et Bien_Etre) exécutée sur le ZIP produit (EN COURS)
+  - Checklist WordPress local + Apps Script + Google Sheets exécutée sur le ZIP produit (EN COURS - PSS-10 et Sédentarité PASS de bout en bout)
 - Critères de validation :
   - Archive ZIP propre générée ; audit de packaging PASS. [RÉALISÉ]
   - Stockage Google Sheets PSS-10 enrichi (libellés + points) sans modification UI ni scoring ni fusion backend. [RÉALISÉ LOCALEMENT]
@@ -1014,19 +1024,19 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - WordPress local MAMP isolé préparé sans modification de la production. [RÉALISÉ]
   - ZIP installé et activé dans WordPress local sans erreur. [RÉALISÉ]
   - Rétablissement visuel PSS-10 conforme sans régression méthodologique ni scoring. [RÉALISÉ]
+  - Pipeline générique réparé et certifié (REST HTTP 200, écriture onglet `Sedentarite`, déduplication OK). [RÉALISÉ]
   - Les 10 questionnaires fonctionnent de bout en bout et écrivent dans les onglets attendus. [EN COURS]
-  - La déduplication par `session_id` est confirmée sur le déploiement utilisé. [EN ATTENTE]
   - Le rapport de validation manuelle est complet et transmissible à Camille. [EN ATTENTE]
 - Livrables à fournir :
   - Chemin exact du ZIP et taille : `lifemetrics-questionnaires.zip` ;
   - Résumé du contenu vérifié : 61 fichiers conformes, packaging audité ;
   - Checklist de validation manuelle WordPress local : en cours d'exécution.
 
-- Fichiers réellement modifiés : `lifemetrics-questionnaires/backend/google-apps-script.gs`, `lifemetrics-questionnaires/tests/backend-logic.test.js`, `lifemetrics-questionnaires/questionnaires/pss10/assets/css/style.css`, `lifemetrics-questionnaires/assets/css/questionnaire.css`, `lifemetrics-questionnaires/assets/js/questionnaire-ui.js`, `.gitignore`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
-- Tests exécutés : `node lifemetrics-questionnaires/tests/backend-logic.test.js` (PASS), `node lifemetrics-questionnaires/tests/pss10-frontend-characterization.test.js` (PASS - 13 mutation guards), `node lifemetrics-questionnaires/tests/pss10-browser-responsive.test.js` (PASS - Mobile/Tablet/Desktop), `node lifemetrics-questionnaires/tests/frontend-restitution-phase13.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
-- Résultat : Stockage PSS-10 enrichi implémenté et testé. Corrections visuelles PSS-10 validées sans régression. Packaging ZIP reconstruit et audité. WordPress local MAMP opérationnel. Phase 16 en cours (poursuite des tests manuels des 10 questionnaires et Google Sheets).
+- Fichiers réellement modifiés : `lifemetrics-questionnaires/includes/class-submission-service.php`, `lifemetrics-questionnaires/questionnaires/sedentarite/questionnaire.php`, `lifemetrics-questionnaires/backend/generic-google-apps-script.gs`, `lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js`, `lifemetrics-questionnaires/tests/rest-backend-submission.test.php`, `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md`
+- Tests exécutés : `php lifemetrics-questionnaires/tests/rest-backend-submission.test.php` (PASS), `node lifemetrics-questionnaires/tests/google-sheets-storage-format.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
+- Résultat : Pipeline générique réparé avec succès. Sédentarité validée de bout en bout en conditions WordPress réelles (UI, calcul 21/60, REST 200, écriture onglet `Sedentarite` et déduplication). Phase 16 en cours.
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : dédié pour les corrections visuelles PSS-10 et l'état de validation WordPress locale.
+- Commit : dédié pour la réparation du pipeline générique et la résilience typographique.
 - Date : 2026-09-16
 
 

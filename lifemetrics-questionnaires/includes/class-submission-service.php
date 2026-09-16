@@ -223,7 +223,7 @@ final class LifeMetrics_Submission_Service
             foreach ($config['questions'] as $q) {
                 $scored_schema[] = array(
                     'id' => $q['id'],
-                    'text' => $q['text'],
+                    'text' => str_replace(array("\xE2\x80\x99", "\u{2019}"), "'", $q['text']),
                 );
             }
 
@@ -232,7 +232,7 @@ final class LifeMetrics_Submission_Service
                 foreach ($config['safety_questions'] as $sq) {
                     $safety_schema[] = array(
                         'id' => $sq['id'],
-                        'text' => $sq['text'],
+                        'text' => str_replace(array("\xE2\x80\x99", "\u{2019}"), "'", $sq['text']),
                     );
                 }
             }

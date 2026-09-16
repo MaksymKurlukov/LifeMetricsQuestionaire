@@ -23,7 +23,7 @@ return array(
         array(
             'id' => 'SD01',
             'dimension' => 'temps-sedentaire-quotidien',
-            'text' => 'Au cours des 14 derniers jours, combien de temps avez-vous passé en moyenne assis ou allongé pendant vos heures d’éveil ?',
+            'text' => 'Au cours des 14 derniers jours, combien de temps avez-vous passé en moyenne assis ou allongé pendant vos heures d\'éveil ?',
             'help' => 'Inclure travail/études, repas, déplacements, télévision, ordinateur, jeux vidéo, téléphone et autres loisirs assis. Ne pas compter le sommeil. Les seuils constituent une gradation LifeMetrics.',
             'required' => true,
             'answers' => array(
@@ -107,7 +107,7 @@ return array(
         array(
             'id' => 'SD07',
             'dimension' => 'travail-etudes-deplacements',
-            'text' => 'Pendant vos périodes de travail ou d’études, à quelle fréquence alternez-vous volontairement les périodes assises avec des moments debout ou en mouvement ?',
+            'text' => 'Pendant vos périodes de travail ou d\'études, à quelle fréquence alternez-vous volontairement les périodes assises avec des moments debout ou en mouvement ?',
             'help' => '« Non concerné actuellement » reste hors score.',
             'required' => true,
             'answers' => array(
@@ -137,7 +137,7 @@ return array(
         array(
             'id' => 'SD09',
             'dimension' => 'loisirs-sedentaires',
-            'text' => 'En dehors du travail ou des études, combien de temps passez-vous généralement assis devant un écran au cours d’une journée ?',
+            'text' => 'En dehors du travail ou des études, combien de temps passez-vous généralement assis devant un écran au cours d\'une journée ?',
             'help' => 'Gradation comportementale LifeMetrics ; il ne s’agit pas d’un seuil médical universel de screen time.',
             'required' => true,
             'answers' => array(
@@ -151,7 +151,7 @@ return array(
         array(
             'id' => 'SD10',
             'dimension' => 'loisirs-sedentaires',
-            'text' => 'Lorsque vous regardez un écran ou réalisez une activité de loisir assise pendant longtemps, à quelle fréquence profitez-vous d’une occasion pour vous lever ou bouger ?',
+            'text' => 'Lorsque vous regardez un écran ou réalisez une activité de loisir assise pendant longtemps, à quelle fréquence profitez-vous d\'une occasion pour vous lever ou bouger ?',
             'help' => 'Exemples : entre deux épisodes, pendant une pause, entre deux parties ou pendant un appel.',
             'required' => true,
             'answers' => array(
@@ -179,7 +179,7 @@ return array(
         array(
             'id' => 'SD12',
             'dimension' => 'mouvement-quotidien-regularite',
-            'text' => 'Au cours des 14 derniers jours, avez-vous réussi à limiter et interrompre régulièrement les longues périodes assises, y compris les jours de travail, d’études et les week-ends ?',
+            'text' => 'Au cours des 14 derniers jours, avez-vous réussi à limiter et interrompre régulièrement les longues périodes assises, y compris les jours de travail, d\'études et les week-ends ?',
             'help' => 'Question intégrative LifeMetrics sur la stabilité des habitudes.',
             'required' => true,
             'answers' => array(

@@ -261,6 +261,7 @@ function getHeaderList(schema, payloadQuestionsSchema) {
     if (!qText && typeof schema.scoredQuestions[i] === 'object') {
       qText = schema.scoredQuestions[i].text;
     }
+    qText = String(qText).replace(/[\u2018\u2019\u0060\u00B4]/g, "'");
     headers.push(qId + ' - ' + qText);
     headers.push(qId + ' — Points');
   }
@@ -277,6 +278,7 @@ function getHeaderList(schema, payloadQuestionsSchema) {
     if (!sqText && typeof schema.safetyQuestions[j] === 'object') {
       sqText = schema.safetyQuestions[j].text;
     }
+    sqText = String(sqText).replace(/[\u2018\u2019\u0060\u00B4]/g, "'");
     headers.push(sqId + ' - ' + sqText);
   }
 
@@ -435,7 +437,9 @@ function doPost(e) {
       var isCompatible = existingHeaders.length === expectedHeaders.length;
       if (isCompatible) {
         for (var hIdx = 0; hIdx < expectedHeaders.length; hIdx++) {
-          if (String(existingHeaders[hIdx]).trim() !== String(expectedHeaders[hIdx]).trim()) {
+          var cleanExisting = String(existingHeaders[hIdx]).trim().replace(/[\u2018\u2019\u0060\u00B4]/g, "'");
+          var cleanExpected = String(expectedHeaders[hIdx]).trim().replace(/[\u2018\u2019\u0060\u00B4]/g, "'");
+          if (cleanExisting !== cleanExpected) {
             isCompatible = false;
             break;
           }
