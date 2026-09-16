@@ -1,6 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
+$gradient_id = $instance_id . '-gauge-gradient';
 $modal_title_id = $instance_id . '-modal-title';
 $question_title_id = $instance_id . '-question-title';
 $progress_label_id = $instance_id . '-progress-label';
@@ -57,7 +58,10 @@ $progress_label_id = $instance_id . '-progress-label';
               <span class="result-score__value">0</span><span class="gauge-score__max"></span>
             </div>
             <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
-              <g data-lmq-role="gauge-zones"></g>
+              <defs>
+                <linearGradient id="<?php echo esc_attr($gradient_id); ?>" data-lmq-role="gauge-gradient" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="180" y2="0"></linearGradient>
+              </defs>
+              <path class="gauge-track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" />
               <circle class="gauge-marker gauge-marker--favorable" data-lmq-role="gauge-marker" cx="20" cy="100" r="6" />
             </svg>
           </div>

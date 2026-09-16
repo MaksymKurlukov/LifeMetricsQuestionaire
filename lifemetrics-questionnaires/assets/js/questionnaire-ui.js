@@ -53,7 +53,7 @@
       .find(level => numericScore >= Number(level.min) && numericScore <= Number(level.max));
   }
 
-  function resolveGaugeZones(config, min, max) {
+  function resolveGaugeGradientStops(config, min, max) {
     const levels = Array.isArray(config.result_levels)
       ? config.result_levels
         .filter(level => Number.isFinite(Number(level.min)) && Number.isFinite(Number(level.max)))
@@ -64,15 +64,29 @@
 
     if (levels.length === 0 || max <= min) return [];
 
-    const starts = levels.map((level, index) => {
-      return index === 0 ? 0 : clamp((Number(level.min) - min) / (max - min));
+    const colors = {
+      favorable: '#4ade80',
+      intermediate: '#fbbf24',
+      unfavorable: '#ef4444'
+    };
+    const stops = levels.map((level, index) => {
+      const scoreRatio = index === 0
+        ? 0
+        : clamp((Number(level.min) - min) / (max - min));
+      const point = gaugePoint(scoreRatio);
+
+      // The SVG gradient is horizontal while the scale follows a semicircle.
+      // Map each score threshold to its real horizontal position on the arc.
+      const offset = clamp((point.x - 20) / 160);
+      return {
+        offset,
+        color: colors[resolveSemanticType(config, level.code)] || colors.favorable
+      };
     });
 
-    return levels.map((level, index) => ({
-      start: starts[index],
-      end: index === levels.length - 1 ? 1 : starts[index + 1],
-      semanticType: resolveSemanticType(config, level.code)
-    }));
+    const finalColor = stops[stops.length - 1].color;
+    stops.push({ offset: 1, color: finalColor });
+    return stops;
   }
 
   function gaugePoint(ratio) {
@@ -83,24 +97,18 @@
     };
   }
 
-  function renderGaugeZones(rootEl, config, min, max) {
-    const container = rootEl.querySelector('[data-lmq-role="gauge-zones"]');
-    if (!container || typeof container.appendChild !== 'function') return;
+  function renderGaugeGradient(rootEl, config, min, max) {
+    const gradient = rootEl.querySelector('[data-lmq-role="gauge-gradient"]');
+    if (!gradient || typeof gradient.appendChild !== 'function') return;
 
-    container.innerHTML = '';
-    resolveGaugeZones(config, min, max).forEach(zone => {
-      const start = gaugePoint(zone.start);
-      const end = gaugePoint(zone.end);
-      const path = typeof document.createElementNS === 'function'
-        ? document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        : document.createElement('path');
-      path.setAttribute('d', `M ${start.x.toFixed(3)} ${start.y.toFixed(3)} A 80 80 0 0 1 ${end.x.toFixed(3)} ${end.y.toFixed(3)}`);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke-width', '12');
-      path.setAttribute('data-zone-start', String(zone.start));
-      path.setAttribute('data-zone-end', String(zone.end));
-      path.classList.add('gauge-zone', `gauge-zone--${zone.semanticType}`);
-      container.appendChild(path);
+    gradient.innerHTML = '';
+    resolveGaugeGradientStops(config, min, max).forEach(stop => {
+      const element = typeof document.createElementNS === 'function'
+        ? document.createElementNS('http://www.w3.org/2000/svg', 'stop')
+        : document.createElement('stop');
+      element.setAttribute('offset', `${(stop.offset * 100).toFixed(4)}%`);
+      element.setAttribute('stop-color', stop.color);
+      gradient.appendChild(element);
     });
   }
 
@@ -543,13 +551,13 @@
         analysisBlock.hidden = true;
       }
 
-      const gaugeZones = rootEl.querySelector('[data-lmq-role="gauge-zones"]');
+      const gaugeGradient = rootEl.querySelector('[data-lmq-role="gauge-gradient"]');
       const gaugeMarker = rootEl.querySelector('[data-lmq-role="gauge-marker"]');
-      if (gaugeZones && gaugeMarker && config.score && config.score.target_max > config.score.target_min) {
+      if (gaugeGradient && gaugeMarker && config.score && config.score.target_max > config.score.target_min) {
         const min = config.score.target_min || 0;
         const max = config.score.target_max;
         const scoreRatio = resolveGaugeRatio(scoreResult.final_score, min, max);
-        renderGaugeZones(rootEl, config, min, max);
+        renderGaugeGradient(rootEl, config, min, max);
         renderGaugeMarker(gaugeMarker, scoreRatio, gaugeSemanticType);
 
         const gaugeWrap = rootEl.querySelector('[data-lmq-role="gauge-wrap"]');

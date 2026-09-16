@@ -71,7 +71,7 @@ function createMockElement(tag, customProps = {}) {
 }
 
 function createMockRoot(id, qConfig) {
-  const gaugeZones = createMockElement("g");
+  const gaugeGradient = createMockElement("linearGradient");
   const elements = {
     "[data-lmq-config]": { textContent: JSON.stringify(qConfig) },
     "[data-lmq-submit-url]": null,
@@ -96,7 +96,7 @@ function createMockRoot(id, qConfig) {
     '[data-lmq-role="interpretation-title"]': createMockElement("h3"),
     '[data-lmq-role="score-meta"]': createMockElement("p"),
     '[data-lmq-role="gauge-wrap"]': createMockElement("div"),
-    '[data-lmq-role="gauge-zones"]': gaugeZones,
+    '[data-lmq-role="gauge-gradient"]': gaugeGradient,
     '[data-lmq-role="gauge-marker"]': createMockElement("circle", { classes: ["gauge-marker", "gauge-marker--favorable"] }),
     '[data-lmq-role="analysis-text"]': createMockElement("p"),
     '[data-lmq-role="safety-messages"]': createMockElement("div"),
@@ -185,7 +185,7 @@ assert.ok(cssContent.includes(".lmq-questionnaire [tabindex=\"-1\"]:focus"), "CS
 assert.ok(cssContent.includes(".lmq-questionnaire .analysis-toggle:focus-visible") && cssContent.includes(".lmq-questionnaire button:focus-visible"), "CSS defines accessible focus-visible for analysis toggle and buttons");
 assert.ok(cssContent.includes("outline: 2px solid var(--color-primary);") && cssContent.includes("outline-offset: 2px;"), "CSS applies 2px solid orange outline with 2px offset for keyboard accessibility");
 assert.ok(templateContent.includes('data-lmq-role="gauge-marker"'), "Generic V2 template includes a score marker on the gauge arc");
-assert.ok(templateContent.includes('data-lmq-role="gauge-zones"'), "Generic V2 template includes the complete score-scale zones");
+assert.ok(templateContent.includes('data-lmq-role="gauge-gradient"'), "Generic V2 template includes a dynamic smooth score gradient");
 assert.ok(!templateContent.includes('stroke-dasharray') && !uiSource.includes('stroke-dashoffset'), "Generic V2 gauge has no progress masking or unfilled remainder");
 assert.ok(!templateContent.includes('data-lmq-role="classification-messages"'), "Generic V2 template does not generate attention-card markup");
 assert.ok(cssContent.includes(".lmq-questionnaire .classification-message") && cssContent.includes("display: none !important;"), "Cached attention-card markup has a defensive CSS fallback");
@@ -253,17 +253,16 @@ gaugeSnapshots.forEach(snapshot => {
   assert.ok(Math.abs(snapshot.cy - expectedY) < 0.001, `${snapshot.score}/60 marker has the exact score-derived vertical position`);
 });
 
-const gaugeZones = rootGreen.querySelector('[data-lmq-role="gauge-zones"]').children;
-assert.equal(gaugeZones.length, 3, "Gauge renders the complete three-zone score scale");
-assert.deepEqual(gaugeZones.map(zone => zone.classes.find(className => className.startsWith("gauge-zone--"))), [
-  "gauge-zone--favorable", "gauge-zone--intermediate", "gauge-zone--unfavorable"
-], "Gauge renders green, orange and red zones in score order");
-assert.ok(Math.abs(Number(gaugeZones[0].getAttribute("data-zone-start")) - 0) < 0.0001, "Green zone starts at the scale minimum");
-assert.ok(Math.abs(Number(gaugeZones[0].getAttribute("data-zone-end")) - 0.2708333333) < 0.0001, "Green zone ends at the configured 25 threshold");
-assert.ok(Math.abs(Number(gaugeZones[1].getAttribute("data-zone-start")) - 0.2708333333) < 0.0001, "Orange zone starts at the configured 25 threshold");
-assert.ok(Math.abs(Number(gaugeZones[1].getAttribute("data-zone-end")) - 0.4375) < 0.0001, "Orange zone ends at the configured 33 threshold");
-assert.ok(Math.abs(Number(gaugeZones[2].getAttribute("data-zone-start")) - 0.4375) < 0.0001, "Red zone starts at the configured 33 threshold");
-assert.ok(Math.abs(Number(gaugeZones[2].getAttribute("data-zone-end")) - 1) < 0.0001, "Red zone reaches the scale maximum without a grey remainder");
+const gaugeStops = rootGreen.querySelector('[data-lmq-role="gauge-gradient"]').children;
+assert.equal(gaugeStops.length, 4, "Gauge renders a continuous three-color gradient across the complete scale");
+assert.deepEqual(gaugeStops.map(stop => stop.getAttribute("stop-color")), [
+  "#4ade80", "#fbbf24", "#ef4444", "#ef4444"
+], "Gauge gradient transitions smoothly from green to orange to red");
+const scoreRatioToGradientOffset = ratio => (0.5 - 0.5 * Math.cos(Math.PI * ratio)) * 100;
+assert.ok(Math.abs(parseFloat(gaugeStops[0].getAttribute("offset")) - 0) < 0.0001, "Green starts at the scale minimum");
+assert.ok(Math.abs(parseFloat(gaugeStops[1].getAttribute("offset")) - scoreRatioToGradientOffset((25 - 12) / 48)) < 0.0001, "Orange anchor matches the configured 25 threshold on the curved gauge");
+assert.ok(Math.abs(parseFloat(gaugeStops[2].getAttribute("offset")) - scoreRatioToGradientOffset((33 - 12) / 48)) < 0.0001, "Red anchor matches the configured 33 threshold on the curved gauge");
+assert.ok(Math.abs(parseFloat(gaugeStops[3].getAttribute("offset")) - 100) < 0.0001, "Red continues to the scale maximum without a grey remainder");
 
 assert.deepEqual(
   gaugeSnapshots.map(snapshot => snapshot.semanticClass),

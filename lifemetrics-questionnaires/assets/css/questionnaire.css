@@ -640,20 +640,8 @@
   vertical-align: top;
 }
 
-.lmq-questionnaire .gauge-zone {
+.lmq-questionnaire .gauge-track {
   stroke-linecap: butt;
-}
-
-.lmq-questionnaire .gauge-zone--favorable {
-  stroke: var(--color-success);
-}
-
-.lmq-questionnaire .gauge-zone--intermediate {
-  stroke: var(--color-warning);
-}
-
-.lmq-questionnaire .gauge-zone--unfavorable {
-  stroke: var(--color-high);
 }
 
 .lmq-questionnaire .gauge-marker {
