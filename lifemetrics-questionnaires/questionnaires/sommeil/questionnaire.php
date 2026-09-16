@@ -289,6 +289,10 @@ return array(
             'text' => 'Certaines réponses concernant votre respiration, votre somnolence ou la persistance de vos difficultés de sommeil méritent d’être discutées avec un professionnel de santé.',
         ),
     ),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue vos habitudes de sommeil et votre récupération à partir de vos réponses. Il ne constitue pas une mesure clinique du sommeil. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

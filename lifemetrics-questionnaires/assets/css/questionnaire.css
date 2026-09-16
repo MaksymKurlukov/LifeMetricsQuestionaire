@@ -873,6 +873,30 @@
   margin: 0;
 }
 
+/* Bloc Compléter votre résultat */
+.lmq-questionnaire .completion-block {
+  background: var(--color-cream);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  text-align: left;
+}
+
+.lmq-questionnaire .completion-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 var(--space-xs);
+}
+
+.lmq-questionnaire .completion-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
 /* Alerte Sauvegarde */
 .lmq-questionnaire .result-save-alert {
   background: rgba(239, 68, 68, 0.1);

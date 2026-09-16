@@ -300,6 +300,10 @@ return array(
     ),
     'safety_questions' => array(),
     'safety_messages' => array(),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue vos habitudes de sédentarité déclarées. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics pour compléter cette auto-évaluation.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

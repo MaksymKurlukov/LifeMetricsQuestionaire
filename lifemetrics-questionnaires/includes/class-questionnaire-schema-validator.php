@@ -9,7 +9,7 @@ final class LifeMetrics_Questionnaire_Schema_Validator
         'population', 'recall_period', 'estimated_duration', 'scoring_direction', 'score', 'questions',
         'dimensions', 'result_levels', 'classification_rules', 'classification_messages',
         'weakest_dimensions', 'safety_questions', 'safety_messages', 'result_ctas', 'disclaimer',
-        'attribution', 'content_revision', 'approvals',
+        'attribution', 'content_revision', 'approvals', 'result_completion',
     );
 
     /** @return list<string> */
@@ -305,6 +305,15 @@ final class LifeMetrics_Questionnaire_Schema_Validator
                 if (!is_array($approvals) || ($approvals[$gate] ?? null) !== true) {
                     $errors[] = 'approval_required:' . $gate;
                 }
+            }
+        }
+        if (array_key_exists('result_completion', $config)) {
+            $completion = $config['result_completion'];
+            if ($status === 'ready' && is_array($completion) && self::has_unknown($completion, array('title', 'text'))) {
+                $errors[] = 'unknown_field:result_completion';
+            }
+            if (!is_array($completion) || !self::text($completion['title'] ?? null) || !self::text($completion['text'] ?? null)) {
+                $errors[] = 'invalid_result_completion';
             }
         }
         return array_values(array_unique($errors));

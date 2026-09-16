@@ -298,6 +298,10 @@ return array(
             'text' => 'Certaines de vos réponses peuvent nécessiter un avis professionnel, notamment en cas de symptômes importants, de pertes inhabituelles de liquides ou de consignes médicales spécifiques.',
         ),
     ),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue vos habitudes d’hydratation déclarées. Un bilan VitaScan peut compléter cette auto-évaluation par des mesures corporelles objectives, notamment des indicateurs liés à l’eau corporelle et à la composition corporelle. Vous pouvez trouver une pharmacie partenaire LifeMetrics proposant VitaScan.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

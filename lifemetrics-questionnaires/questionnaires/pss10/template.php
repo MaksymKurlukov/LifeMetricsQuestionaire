@@ -91,6 +91,10 @@ $modal_title_id = $instance_id . '-modal-title';
         <div class="analysis-block">
           <p class="analysis-text" data-lmq-role="analysis-text"></p>
         </div>
+        <div class="completion-block" data-lmq-role="completion-block">
+          <h3 class="completion-title" data-lmq-role="completion-title">Compléter votre résultat</h3>
+          <p class="completion-text" data-lmq-role="completion-text">Ce questionnaire évalue votre niveau de stress perçu à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.</p>
+        </div>
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>
           <p class="result-save-alert__text" data-lmq-role="save-alert-text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>
           <button type="button" class="btn btn--secondary btn--retry" data-lmq-role="retry">Réessayer</button>

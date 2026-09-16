@@ -532,6 +532,25 @@
         }
       }
 
+      // Completion block (Compléter votre résultat)
+      const completionBlock = rootEl.querySelector('[data-lmq-role="completion-block"]');
+      if (completionBlock) {
+        const rc = config.result_completion;
+        if (rc && typeof rc.text === 'string' && rc.text.trim() !== '') {
+          completionBlock.hidden = false;
+          const titleEl = completionBlock.querySelector('[data-lmq-role="completion-title"]');
+          const textEl = completionBlock.querySelector('[data-lmq-role="completion-text"]');
+          if (titleEl) {
+            titleEl.textContent = rc.title || 'Compléter votre résultat';
+          }
+          if (textEl) {
+            textEl.textContent = rc.text;
+          }
+        } else {
+          completionBlock.hidden = true;
+        }
+      }
+
       // CTAs with strict hierarchy (Primary orange dominant, Secondary outline ghost)
       const ctasContainer = rootEl.querySelector('[data-lmq-role="ctas"]');
       if (ctasContainer && config.result_ctas && config.result_ctas.length > 0) {

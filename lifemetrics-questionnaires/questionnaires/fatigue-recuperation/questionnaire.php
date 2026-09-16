@@ -317,6 +317,10 @@ return array(
             'text' => 'Une fatigue persistante, très invalidante ou accompagnée de signes inhabituels mérite d’être discutée avec un professionnel de santé.',
         ),
     ),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue votre fatigue et votre récupération à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics pour compléter cette auto-évaluation.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

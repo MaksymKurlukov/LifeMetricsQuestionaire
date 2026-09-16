@@ -541,6 +541,11 @@ return array (
       'text' => '27 ou plus : vous êtes très affecté par le stress. Vous avez également très souvent le sentiment de ne pas contrôler certaines situations et que vos émotions prennent le dessus. Pas d\'inquiétude, nous allons vous accompagner vers le mieux-être grâce au programme personnalisé conçu sur mesure pour gérer cette problématique qui importune votre quotidien. Pensez également à contacter un de nos praticiens certifiés.',
     ),
   ),
+  'result_completion' => 
+  array (
+    'title' => 'Compléter votre résultat',
+    'text' => 'Ce questionnaire évalue votre niveau de stress perçu à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.',
+  ),
   'result_ctas' => 
   array (
     0 => 

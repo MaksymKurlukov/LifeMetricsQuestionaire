@@ -404,6 +404,10 @@ return array(
             "text" => "Une perte de poids involontaire importante, une forte diminution des apports ou des difficultés à vous alimenter normalement justifient de demander conseil à un professionnel de santé.",
         ),
     ),
+    "result_completion" => array(
+        "title" => "Compléter votre résultat",
+        "text" => "Ce questionnaire évalue plusieurs facteurs déclarés associés au risque nutritionnel. Un bilan VitaScan peut compléter cette auto-évaluation par des mesures objectives de composition corporelle, notamment des indicateurs liés à la masse musculaire et à la masse maigre. Vous pouvez trouver une pharmacie partenaire LifeMetrics proposant VitaScan.",
+    ),
     "result_ctas" => array(
         array(
             "label" => "Je veux faire un bilan",

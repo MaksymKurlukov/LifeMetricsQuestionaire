@@ -336,6 +336,10 @@ return array(
             'text' => 'Une douleur importante, un traumatisme, une perte de sensibilité, une plaie ou une modification inhabituelle du pied mérite un avis professionnel.',
         ),
     ),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue votre confort des pieds et votre ressenti postural. Un bilan Podos360 peut compléter cette auto-évaluation par une analyse instrumentale des appuis et de la posture. Vous pouvez trouver une pharmacie partenaire LifeMetrics proposant Podos360.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

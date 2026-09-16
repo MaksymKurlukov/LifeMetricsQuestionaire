@@ -293,6 +293,10 @@ return array(
             'text' => 'Certaines situations médicales, variations de poids importantes ou difficultés à vous alimenter peuvent nécessiter des conseils personnalisés d’un professionnel de santé ou de la nutrition.',
         ),
     ),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue vos habitudes alimentaires déclarées. Un bilan VitaScan peut compléter cette auto-évaluation par des mesures objectives de composition corporelle, notamment la masse grasse, la masse musculaire et d’autres indicateurs corporels. Vous pouvez trouver une pharmacie partenaire LifeMetrics proposant VitaScan.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

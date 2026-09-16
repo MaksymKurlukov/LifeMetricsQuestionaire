@@ -254,6 +254,10 @@ return array(
     'classification_messages' => array(),
     'safety_questions' => array(),
     'safety_messages' => array(),
+    'result_completion' => array(
+        'title' => 'Compléter votre résultat',
+        'text' => 'Ce questionnaire évalue votre niveau d’activité physique déclaré. Un bilan VitaScan peut compléter cette auto-évaluation par des mesures de composition corporelle, notamment des indicateurs liés à la masse musculaire et à la condition corporelle. Vous pouvez trouver une pharmacie partenaire LifeMetrics proposant VitaScan.',
+    ),
     'result_ctas' => array(
         array(
             'label' => 'Je veux faire un bilan',

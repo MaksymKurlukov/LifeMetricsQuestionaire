@@ -93,6 +93,12 @@ $progress_label_id = $instance_id . '-progress-label';
         <!-- Priority Improvement Axes Cards Grid -->
         <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
 
+        <!-- Result Completion Block -->
+        <div class="completion-block" data-lmq-role="completion-block" hidden>
+          <h3 class="completion-title" data-lmq-role="completion-title">Compléter votre résultat</h3>
+          <p class="completion-text" data-lmq-role="completion-text"></p>
+        </div>
+
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>
           <p class="result-save-alert__text" data-lmq-role="save-alert-text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>
           <button type="button" class="btn btn--secondary btn--retry" data-lmq-role="retry">Réessayer</button>
