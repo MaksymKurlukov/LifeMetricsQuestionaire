@@ -648,20 +648,6 @@
   transition: stroke-dashoffset 0.6s ease;
 }
 
-/* A guardrail changes the displayed category without changing the score. Keep
-   the score position while using the displayed category for the visible arc. */
-.lmq-questionnaire .gauge-fill--guardrail.gauge-fill--favorable {
-  stroke: var(--color-success);
-}
-
-.lmq-questionnaire .gauge-fill--guardrail.gauge-fill--intermediate {
-  stroke: var(--color-warning);
-}
-
-.lmq-questionnaire .gauge-fill--guardrail.gauge-fill--unfavorable {
-  stroke: var(--color-high);
-}
-
 .lmq-questionnaire .gauge-needle {
   transform-origin: 100px 100px;
   transition: transform 0.6s ease;

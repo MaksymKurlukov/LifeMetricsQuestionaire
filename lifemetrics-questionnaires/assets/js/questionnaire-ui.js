@@ -1,6 +1,8 @@
 
 (function (engine) {
 
+  const MINIMUM_VISIBLE_GAUGE_RATIO = 0.08;
+
   function resolveSemanticType(config, categoryCode) {
     const levels = Array.isArray(config.result_levels) ? config.result_levels.slice() : [];
     if (levels.length === 0) return 'favorable';
@@ -42,11 +44,75 @@
 
   function resolveGaugeRatios(score, min, max) {
     const scoreRatio = Math.max(0, Math.min(1, (score - min) / (max - min)));
-    const minimumVisibleRatio = 0.08;
     const fillRatio = scoreRatio >= 1
       ? 1
-      : minimumVisibleRatio + scoreRatio * (1 - minimumVisibleRatio);
+      : MINIMUM_VISIBLE_GAUGE_RATIO + scoreRatio * (1 - MINIMUM_VISIBLE_GAUGE_RATIO);
     return { scoreRatio, fillRatio };
+  }
+
+  function resolveGaugeLevel(config, score) {
+    const levels = Array.isArray(config.result_levels) ? config.result_levels.slice() : [];
+    const numericScore = Number(score);
+    return levels
+      .sort((left, right) => Number(left.min) - Number(right.min))
+      .find(level => numericScore >= Number(level.min) && numericScore <= Number(level.max));
+  }
+
+  function resolveGaugeGradientStops(config, min, max) {
+    const levels = Array.isArray(config.result_levels)
+      ? config.result_levels
+        .filter(level => Number.isFinite(Number(level.min)) && Number.isFinite(Number(level.max)))
+        .slice()
+        .sort((left, right) => Number(left.min) - Number(right.min))
+      : [];
+    const colors = {
+      favorable: '#4ade80',
+      intermediate: '#fbbf24',
+      unfavorable: '#ef4444'
+    };
+    const clamp = value => Math.max(0, Math.min(1, value));
+
+    if (levels.length === 0 || max <= min) {
+      return [
+        { offset: 0, color: colors.favorable },
+        { offset: 1, color: colors.unfavorable }
+      ];
+    }
+
+    const stops = [];
+    let previousColor = null;
+    levels.forEach((level, index) => {
+      const scoreRatio = clamp((Number(level.min) - min) / (max - min));
+      const offset = scoreRatio >= 1
+        ? 1
+        : MINIMUM_VISIBLE_GAUGE_RATIO + scoreRatio * (1 - MINIMUM_VISIBLE_GAUGE_RATIO);
+      const color = colors[resolveSemanticType(config, level.code)] || colors.favorable;
+      if (index === 0) {
+        stops.push({ offset: 0, color });
+      } else {
+        // Duplicate the boundary so each discrete score zone keeps its own color.
+        stops.push({ offset, color: previousColor });
+        stops.push({ offset, color });
+      }
+      previousColor = color;
+    });
+    stops.push({ offset: 1, color: previousColor || colors.favorable });
+    return stops;
+  }
+
+  function renderGaugeGradient(rootEl, config, min, max) {
+    const gradient = rootEl.querySelector('[data-lmq-role="gauge-gradient"]');
+    if (!gradient || typeof gradient.appendChild !== 'function') return;
+
+    gradient.innerHTML = '';
+    resolveGaugeGradientStops(config, min, max).forEach(stop => {
+      const element = typeof document.createElementNS === 'function'
+        ? document.createElementNS('http://www.w3.org/2000/svg', 'stop')
+        : document.createElement('stop');
+      element.setAttribute('offset', `${stop.offset * 100}%`);
+      element.setAttribute('stop-color', stop.color);
+      gradient.appendChild(element);
+    });
   }
 
   function initQuestionnaire(rootEl) {
@@ -317,6 +383,8 @@
       const level = config.result_levels ? config.result_levels.find(l => l.code === scoreResult.displayed_category) : null;
       const rank = level && level.rank !== undefined ? level.rank : 1;
       const semanticType = resolveSemanticType(config, scoreResult.displayed_category);
+      const gaugeLevel = resolveGaugeLevel(config, scoreResult.final_score);
+      const gaugeSemanticType = gaugeLevel ? resolveSemanticType(config, gaugeLevel.code) : semanticType;
       const guardrailApplied = typeof scoreResult.calculated_category === 'string'
         && scoreResult.calculated_category !== scoreResult.displayed_category;
 
@@ -485,10 +553,11 @@
         const min = config.score.target_min || 0;
         const max = config.score.target_max;
         const gaugeRatios = resolveGaugeRatios(scoreResult.final_score, min, max);
+        renderGaugeGradient(rootEl, config, min, max);
         gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - gaugeRatios.fillRatio));
         gaugeNeedle.setAttribute('transform', `rotate(${180 - gaugeRatios.scoreRatio * 180}, 100, 100)`);
         gaugeFill.classList.remove('gauge-fill--favorable', 'gauge-fill--intermediate', 'gauge-fill--unfavorable', 'gauge-fill--guardrail');
-        gaugeFill.classList.add(`gauge-fill--${semanticType}`);
+        gaugeFill.classList.add(`gauge-fill--${gaugeSemanticType}`);
         if (guardrailApplied) gaugeFill.classList.add('gauge-fill--guardrail');
 
         const gaugeWrap = rootEl.querySelector('[data-lmq-role="gauge-wrap"]');

@@ -59,11 +59,7 @@ $progress_label_id = $instance_id . '-progress-label';
             </div>
             <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
               <defs>
-                <linearGradient id="<?php echo esc_attr($gradient_id); ?>" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#4ade80" />
-                  <stop offset="50%" stop-color="#fbbf24" />
-                  <stop offset="100%" stop-color="#ef4444" />
-                </linearGradient>
+                <linearGradient id="<?php echo esc_attr($gradient_id); ?>" data-lmq-role="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%"></linearGradient>
               </defs>
               <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#eee" stroke-width="12" />
               <path class="gauge-fill" data-lmq-role="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" />

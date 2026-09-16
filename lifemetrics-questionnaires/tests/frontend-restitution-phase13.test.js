@@ -69,6 +69,10 @@ function createMockElement(tag, customProps = {}) {
 }
 
 function createMockRoot(id, qConfig) {
+  const gaugeGradient = createMockElement("linearGradient");
+  gaugeGradient.querySelectorAll = function(sel) {
+    return sel === "stop" ? this.children : [];
+  };
   const elements = {
     "[data-lmq-config]": { textContent: JSON.stringify(qConfig) },
     "[data-lmq-submit-url]": null,
@@ -93,6 +97,7 @@ function createMockRoot(id, qConfig) {
     '[data-lmq-role="interpretation-title"]': createMockElement("h3"),
     '[data-lmq-role="score-meta"]': createMockElement("p"),
     '[data-lmq-role="gauge-wrap"]': createMockElement("div"),
+    '[data-lmq-role="gauge-gradient"]': gaugeGradient,
     '[data-lmq-role="gauge-fill"]': createMockElement("path"),
     '[data-lmq-role="gauge-needle"]': createMockElement("line"),
     '[data-lmq-role="analysis-text"]': createMockElement("p"),
@@ -134,7 +139,8 @@ function runSimulatedTest(config, answerValues) {
         if (sel === ".lmq-questionnaire-root") return [mockRoot];
         return [];
       },
-      createElement: function(tag) { return createMockElement(tag); }
+      createElement: function(tag) { return createMockElement(tag); },
+      createElementNS: function(namespace, tag) { return createMockElement(tag); }
     },
     LifeMetricsQuestionnaireEngine: engine,
     window: {},
@@ -231,6 +237,41 @@ for (let i = 1; i < gaugeOffsets.length; i++) {
 }
 assert.equal(gaugeOffsets.at(-1), 0, "60/60 fills the complete semicircle");
 
+const gaugeStops = rootGreen.querySelector('[data-lmq-role="gauge-gradient"]').children;
+assert.deepEqual(gaugeStops.map(stop => stop.getAttribute("stop-color")), [
+  "#4ade80", "#4ade80", "#fbbf24",
+  "#fbbf24", "#ef4444", "#ef4444"
+], "Gauge gradient keeps one color pair per configured zone");
+assert.ok(Math.abs(parseFloat(gaugeStops[1].getAttribute("offset")) - 32.9166667) < 0.0001, "25 threshold maps to the visible gauge boundary");
+assert.ok(Math.abs(parseFloat(gaugeStops[2].getAttribute("offset")) - 32.9166667) < 0.0001, "25 threshold starts the orange zone");
+assert.ok(Math.abs(parseFloat(gaugeStops[3].getAttribute("offset")) - 48.25) < 0.0001, "33 threshold maps to the visible gauge boundary");
+assert.ok(Math.abs(parseFloat(gaugeStops[4].getAttribute("offset")) - 48.25) < 0.0001, "33 threshold starts the red zone");
+
+const gaugeSemanticByScore = gaugeScores.map(targetScore => {
+  const answers = {};
+  let remaining = targetScore - 12;
+  for (let layer = 1; layer <= 4; layer++) {
+    for (let i = 1; i <= 12; i++) {
+      const id = "BE" + (i < 10 ? "0" + i : i);
+      const current = Number(answers[id] || "1");
+      if (remaining > 0) {
+        answers[id] = String(current + 1);
+        remaining--;
+      } else if (!answers[id]) {
+        answers[id] = "1";
+      }
+    }
+  }
+  return runSimulatedTest(configBE, answers)
+    .querySelector('[data-lmq-role="gauge-fill"]')
+    .classes.find(className => /^gauge-fill--(?:favorable|intermediate|unfavorable)$/.test(className));
+});
+assert.deepEqual(
+  gaugeSemanticByScore,
+  ["gauge-fill--favorable", "gauge-fill--favorable", "gauge-fill--favorable", "gauge-fill--intermediate", "gauge-fill--intermediate", "gauge-fill--unfavorable", "gauge-fill--unfavorable"],
+  "Gauge semantic color follows numeric score zones at every configured boundary"
+);
+
 // ----------------------------------------------------
 // 3. Mock DOM: Orange Result (Rank 2)
 // ----------------------------------------------------
@@ -285,9 +326,10 @@ assert.ok(badgeGuardrail.className.includes("result-badge--intermediate"), "Guar
 const titleGuardrail = rootGuardrail.querySelector('[data-lmq-role="interpretation-title"]');
 assert.ok(titleGuardrail.className.includes("interpretation-title--intermediate"), "Guardrail-capped interpretation title gets intermediate class");
 const guardrailGauge = rootGuardrail.querySelector('[data-lmq-role="gauge-fill"]');
-assert.ok(guardrailGauge.classes.includes("gauge-fill--intermediate"), "Guardrail gauge uses displayed intermediate category");
+assert.ok(guardrailGauge.classes.includes("gauge-fill--favorable"), "Guardrail gauge keeps the raw score color zone");
 assert.ok(guardrailGauge.classes.includes("gauge-fill--guardrail"), "Guardrail gauge keeps a distinct displayed-category treatment");
 assert.ok(Number(guardrailGauge.getAttribute('stroke-dashoffset')) < expectedMinimumOffset, "Guardrail gauge keeps the raw score position above the minimum segment");
+assert.ok(!cssContent.includes(".gauge-fill--guardrail.gauge-fill--intermediate"), "Guardrail does not override numeric gauge colors");
 
 // ----------------------------------------------------
 // 6. Badges & CTA verification
