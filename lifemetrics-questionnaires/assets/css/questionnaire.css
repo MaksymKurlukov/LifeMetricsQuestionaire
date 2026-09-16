@@ -695,6 +695,10 @@
   gap: var(--space-sm);
 }
 
+.lmq-questionnaire[data-lmq-questionnaire="risque-nutritionnel"] .classification-messages {
+  display: none !important;
+}
+
 .lmq-questionnaire .safety-card,
 .lmq-questionnaire .safety-message {
   background: rgba(239, 68, 68, 0.08);

@@ -542,7 +542,7 @@
       const classContainer = rootEl.querySelector('[data-lmq-role="classification-messages"]');
       if (classContainer) {
         classContainer.innerHTML = '';
-        if (scoreResult.classification_message_codes && scoreResult.classification_message_codes.length > 0) {
+        if (config.id !== 'risque-nutritionnel' && scoreResult.classification_message_codes && scoreResult.classification_message_codes.length > 0) {
           classContainer.hidden = false;
           scoreResult.classification_message_codes.forEach(code => {
              const msg = config.classification_messages ? config.classification_messages[code] : null;

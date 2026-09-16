@@ -1017,6 +1017,11 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
     * À l'état ouvert : volet déplié présentant le détail de l'analyse suivi immédiatement du paragraphe de complétion (`.analysis-completion`), suivi du bouton « Masquer l'analyse » ;
     * Suppression stricte du titre « Compléter votre résultat », de la carte séparée, des bordures et fonds distincts dans les gabarits générique et legacy PSS-10 ;
     * Parité comportementale et visuelle assurée sur les 10 questionnaires (9 génériques + PSS-10 legacy), sans fusion des runtimes, avec réinitialisation de l'accordéon à la fermeture ou au redémarrage du test. [RÉALISÉ]
+  - [x] Suppression des cartes visuelles « Point de vigilance » sur l'écran résultat de `risque-nutritionnel` :
+    * Suppression ciblée du rendu des cartes intermédiaires `Point de vigilance` (`RN_GUARDRAIL_APPORT_REDUIT`, `RN_GUARDRAIL_REPAS_SAUTES`, `RN_GUARDRAIL_PERTE_POIDS`, `RN_GUARDRAIL_DEGLUTITION`) pour aller directement de Safety éventuel vers le bloc Analyse ;
+    * Préservation intégrale et stricte de la logique métier : calcul du score, thresholds, guardrail RN03/RN04/RN05/RN08, rehaussement de la catégorie affichée (`RISQUE_A_SURVEILLER`), Safety, final_score, Google Sheets, REST, payload, Apps Script et déduplication ;
+    * Règle CSS ciblée `.lmq-questionnaire[data-lmq-questionnaire="risque-nutritionnel"] .classification-messages { display: none !important; }` et conditionnement dans `questionnaire-ui.js` ;
+    * Tous les autres questionnaires conservent leurs messages de classification sans aucune altération. [RÉALISÉ]
   - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.
