@@ -83,6 +83,7 @@ $progress_label_id = $instance_id . '-progress-label';
           <div class="analysis-lead" data-lmq-role="analysis-lead"></div>
           <div class="analysis-details" data-lmq-role="analysis-details" id="<?php echo esc_attr($instance_id . '-analysis-details'); ?>" hidden>
             <p class="analysis-text" data-lmq-role="analysis-text"></p>
+            <p class="analysis-completion" data-lmq-role="analysis-completion" hidden></p>
           </div>
           <button type="button" class="analysis-toggle" data-lmq-role="analysis-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr($instance_id . '-analysis-details'); ?>">
             <span class="toggle-text">Lire l'analyse détaillée</span>
@@ -92,12 +93,6 @@ $progress_label_id = $instance_id . '-progress-label';
 
         <!-- Priority Improvement Axes Cards Grid -->
         <div data-lmq-role="dimensions" class="dimensions-wrap"></div>
-
-        <!-- Result Completion Block -->
-        <div class="completion-block" data-lmq-role="completion-block" hidden>
-          <h3 class="completion-title" data-lmq-role="completion-title">Compléter votre résultat</h3>
-          <p class="completion-text" data-lmq-role="completion-text"></p>
-        </div>
 
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>
           <p class="result-save-alert__text" data-lmq-role="save-alert-text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>

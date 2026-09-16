@@ -54,6 +54,8 @@
     const gaugeNeedle = find('[data-lmq-role="gauge-needle"]');
     const interpretationTitle = find('[data-lmq-role="interpretation-title"]');
     const analysisText = find('[data-lmq-role="analysis-text"]');
+    const analysisDetails = find('[data-lmq-role="analysis-details"]');
+    const analysisToggle = find('[data-lmq-role="analysis-toggle"]');
     const toast = find('[data-lmq-role="toast"]');
     const modalOverlay = find('[data-lmq-role="modal-overlay"]');
     const linkEnSavoirPlus = find('[data-lmq-role="learn-more"]');
@@ -327,6 +329,17 @@
       gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
       gaugeNeedle.setAttribute('transform', 'rotate(' + (180 - ratio * 180) + ', 100, 100)');
       if (resultSaveAlert) resultSaveAlert.hidden = !state.saveFailed;
+
+      if (analysisToggle) {
+        analysisToggle.setAttribute('aria-expanded', 'false');
+        var toggleText = analysisToggle.querySelector('.toggle-text');
+        if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
+        var toggleIcon = analysisToggle.querySelector('.toggle-icon');
+        if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+      }
+      if (analysisDetails) {
+        analysisDetails.hidden = true;
+      }
     }
 
     function cancelAutoAdvance() {
@@ -361,6 +374,16 @@
       state.lastPayload = null;
       state.saveFailed = false;
       if (resultSaveAlert) resultSaveAlert.hidden = true;
+      if (analysisToggle) {
+        analysisToggle.setAttribute('aria-expanded', 'false');
+        var toggleText = analysisToggle.querySelector('.toggle-text');
+        if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
+        var toggleIcon = analysisToggle.querySelector('.toggle-icon');
+        if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+      }
+      if (analysisDetails) {
+        analysisDetails.hidden = true;
+      }
       showSection('intro');
     }
 
@@ -378,6 +401,22 @@
       if (focusBeforeModal && focusBeforeModal.focus) focusBeforeModal.focus();
     }
 
+    function toggleAnalysis() {
+      if (!analysisToggle) return;
+      var isExpanded = analysisToggle.getAttribute('aria-expanded') === 'true';
+      var nextState = !isExpanded;
+      analysisToggle.setAttribute('aria-expanded', String(nextState));
+      if (analysisDetails) analysisDetails.hidden = !nextState;
+      var toggleText = analysisToggle.querySelector('.toggle-text');
+      if (toggleText) {
+        toggleText.textContent = nextState ? "Masquer l'analyse" : "Lire l'analyse détaillée";
+      }
+      var toggleIcon = analysisToggle.querySelector('.toggle-icon');
+      if (toggleIcon) {
+        toggleIcon.style.transform = nextState ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    }
+
     btnStart.addEventListener('click', startTest);
     btnBack.addEventListener('click', goBack);
     if (linkEnSavoirPlus) {
@@ -392,6 +431,7 @@
     });
     if (btnRetrySend) btnRetrySend.addEventListener('click', retrySend);
     if (btnRefaireTest) btnRefaireTest.addEventListener('click', restartTest);
+    if (analysisToggle) analysisToggle.addEventListener('click', toggleAnalysis);
     root.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') closeModal();
     });

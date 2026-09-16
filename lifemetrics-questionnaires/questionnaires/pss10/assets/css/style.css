@@ -612,28 +612,40 @@
   color: var(--color-text);
 }
 
-/* Bloc Compléter votre résultat */
-.lmq-pss10 .completion-block {
-  background: var(--color-cream);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-  text-align: left;
+.lmq-pss10 .analysis-details {
+  margin-top: var(--space-xs);
 }
 
-.lmq-pss10 .completion-title {
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0 0 var(--space-xs);
-}
-
-.lmq-pss10 .completion-text {
-  margin: 0;
+.lmq-pss10 .analysis-completion {
+  margin: var(--space-sm) 0 0;
   font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--color-text);
+}
+
+.lmq-pss10 .analysis-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: var(--space-xs);
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.2s;
+  outline: none;
+}
+
+.lmq-pss10 .analysis-toggle:hover {
+  text-decoration: underline;
+}
+
+.lmq-pss10 .analysis-toggle .toggle-icon {
+  transition: transform 0.25s ease;
 }
 
 .lmq-pss10 .result-save-alert {

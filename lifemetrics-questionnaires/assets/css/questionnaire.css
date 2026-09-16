@@ -873,28 +873,17 @@
   margin: 0;
 }
 
-/* Bloc Compléter votre résultat */
-.lmq-questionnaire .completion-block {
-  background: var(--color-cream);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-  text-align: left;
-}
-
-.lmq-questionnaire .completion-title {
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0 0 var(--space-xs);
-}
-
-.lmq-questionnaire .completion-text {
-  margin: 0;
+/* Paragraphe final de complétion dans l'analyse détaillée */
+.lmq-questionnaire .analysis-completion {
+  margin: var(--space-sm) 0 0;
   font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--color-text);
+}
+
+.lmq-questionnaire .analysis-text:empty + .analysis-completion,
+.lmq-questionnaire .analysis-text[hidden] + .analysis-completion {
+  margin-top: 0;
 }
 
 /* Alerte Sauvegarde */

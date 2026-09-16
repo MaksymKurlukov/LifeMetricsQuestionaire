@@ -1009,9 +1009,14 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
   - [x] Ajout du bloc de restitution « Compléter votre résultat » sur les 10 questionnaires :
     * Intégration dans la configuration des 10 questionnaires d'une propriété dédiée `result_completion` avec le titre exact « Compléter votre résultat » et des textes d'orientation spécifiques (VitaScan, Podos360 ou pharmacies partenaires) ;
     * Validation stricte du schéma 2.0.0 (`TOP_LEVEL` et validation textuelle sans balises) via `LifeMetrics_Questionnaire_Schema_Validator` ;
-    * Respect rigoureux de l'ordre DOM dans les gabarits générique et legacy PSS-10 : `Mon résultat` → `catégorie` → `gauge` → `Safety (si actif)` → `Analyse` → `Compléter votre résultat` → `CTA (Je veux faire un bilan)` → `Découvrir les autres tests` → `Refaire le test` ;
-    * Style sobre, lisible et harmonisé (`.completion-block`, fond crème, bordure douce, sans rouge ni jaune, sans icône ni emoji) introduisant naturellement le bouton de bilan ;
+    * Style sobre, lisible et harmonisé introduisant naturellement le bouton de bilan ;
     * Séparation architecturale legacy préservée pour PSS-10 sans fusion avec le runtime générique. [RÉALISÉ]
+  - [x] Intégration du texte de complétion dans l'analyse détaillée (suppression du bloc séparé et du titre) :
+    * Évolution ergonomique validée : le texte de `result_completion` devient le dernier paragraphe de l'analyse détaillée et s'affiche uniquement lorsque l'accordéon « Lire l'analyse détaillée » est déplié ;
+    * À l'état initial fermé : affichage exclusif du résumé / chapeau (`analysis-lead`) avec le toggle « Lire l'analyse détaillée », le texte de complétion est masqué ;
+    * À l'état ouvert : volet déplié présentant le détail de l'analyse suivi immédiatement du paragraphe de complétion (`.analysis-completion`), suivi du bouton « Masquer l'analyse » ;
+    * Suppression stricte du titre « Compléter votre résultat », de la carte séparée, des bordures et fonds distincts dans les gabarits générique et legacy PSS-10 ;
+    * Parité comportementale et visuelle assurée sur les 10 questionnaires (9 génériques + PSS-10 legacy), sans fusion des runtimes, avec réinitialisation de l'accordéon à la fermeture ou au redémarrage du test. [RÉALISÉ]
   - [ ] Tester le shortcode et le parcours complet des 8 autres questionnaires propriétaires : intro, questions, écran de résultat, appel REST et synchronisation Google Apps Script. [EN COURS]
   - [ ] Vérifier la bonne écriture d'une seule ligne par soumission dans l'onglet correspondant pour chacun des 10 questionnaires (dont PSS-10 en 24 colonnes, `Risque_Nutritionnel` et `Bien_Etre`).
   - [ ] Tester la déduplication : renvoyer une requête avec le même `session_id` et vérifier qu'aucun doublon n'est inséré.

@@ -382,42 +382,65 @@
       const analysisLead = rootEl.querySelector('[data-lmq-role="analysis-lead"]');
       const analysisDetails = rootEl.querySelector('[data-lmq-role="analysis-details"]');
       const analysisText = rootEl.querySelector('[data-lmq-role="analysis-text"]');
+      const analysisCompletion = rootEl.querySelector('[data-lmq-role="analysis-completion"]');
       const analysisToggle = rootEl.querySelector('[data-lmq-role="analysis-toggle"]');
+
+      const rc = config.result_completion;
+      const completionText = (rc && typeof rc.text === 'string') ? rc.text.trim() : '';
 
       const fullText = (classMsg && typeof classMsg.text === 'string' && classMsg.text.trim() !== '')
         ? classMsg.text.trim()
         : (level && level.description ? level.description : '');
 
-      if (fullText) {
+      if (fullText || completionText) {
         let lead = '';
         let details = '';
 
         if (analysisLead) {
-          if (fullText.includes('\n\n')) {
-            const parts = fullText.split(/\n\n+/);
-            lead = parts[0];
-            details = parts.slice(1).join('\n\n');
-          } else {
-            const match = fullText.match(/^([^.!?]+[.!?])\s+([A-ZÀ-Ÿ].*)$/s);
-            if (match && match[2].length > 40) {
-              lead = match[1];
-              details = match[2];
+          if (fullText) {
+            if (fullText.includes('\n\n')) {
+              const parts = fullText.split(/\n\n+/);
+              lead = parts[0];
+              details = parts.slice(1).join('\n\n');
             } else {
-              lead = fullText;
-              details = '';
+              const match = fullText.match(/^([^.!?]+[.!?])\s+([A-ZÀ-Ÿ0-9].*)$/s);
+              if (match && match[2].length > 40) {
+                lead = match[1];
+                details = match[2];
+              } else {
+                lead = fullText;
+                details = '';
+              }
             }
           }
 
           analysisLead.textContent = lead;
-          if (analysisText) analysisText.textContent = details;
+          if (analysisText) {
+            analysisText.textContent = details;
+            analysisText.hidden = !details;
+          }
+
+          if (analysisCompletion) {
+            if (completionText) {
+              analysisCompletion.textContent = completionText;
+              analysisCompletion.hidden = false;
+            } else {
+              analysisCompletion.textContent = '';
+              analysisCompletion.hidden = true;
+            }
+          }
+
+          const hasDetails = (details.trim().length > 0 || completionText.length > 0);
 
           if (analysisToggle) {
-            if (details.trim().length > 0) {
+            if (hasDetails) {
               analysisToggle.hidden = false;
               analysisToggle.setAttribute('aria-expanded', 'false');
               if (analysisDetails) analysisDetails.hidden = true;
               const toggleText = analysisToggle.querySelector('.toggle-text');
               if (toggleText) toggleText.textContent = "Lire l'analyse détaillée";
+              const toggleIcon = analysisToggle.querySelector('.toggle-icon');
+              if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
 
               analysisToggle.onclick = () => {
                 const isExpanded = analysisToggle.getAttribute('aria-expanded') === 'true';
@@ -427,7 +450,6 @@
                 if (toggleText) {
                   toggleText.textContent = nextState ? "Masquer l'analyse" : "Lire l'analyse détaillée";
                 }
-                const toggleIcon = analysisToggle.querySelector('.toggle-icon');
                 if (toggleIcon) {
                   toggleIcon.style.transform = nextState ? 'rotate(180deg)' : 'rotate(0deg)';
                 }
@@ -438,8 +460,17 @@
             }
           }
         } else if (analysisText) {
-          // Template without progressive disclosure lead (e.g. legacy PSS-10 template)
+          // Template without progressive disclosure lead (fallback)
           analysisText.textContent = fullText;
+          if (analysisCompletion) {
+            if (completionText) {
+              analysisCompletion.textContent = completionText;
+              analysisCompletion.hidden = false;
+            } else {
+              analysisCompletion.textContent = '';
+              analysisCompletion.hidden = true;
+            }
+          }
         }
 
         if (analysisBlock) analysisBlock.hidden = false;
@@ -532,24 +563,6 @@
         }
       }
 
-      // Completion block (Compléter votre résultat)
-      const completionBlock = rootEl.querySelector('[data-lmq-role="completion-block"]');
-      if (completionBlock) {
-        const rc = config.result_completion;
-        if (rc && typeof rc.text === 'string' && rc.text.trim() !== '') {
-          completionBlock.hidden = false;
-          const titleEl = completionBlock.querySelector('[data-lmq-role="completion-title"]');
-          const textEl = completionBlock.querySelector('[data-lmq-role="completion-text"]');
-          if (titleEl) {
-            titleEl.textContent = rc.title || 'Compléter votre résultat';
-          }
-          if (textEl) {
-            textEl.textContent = rc.text;
-          }
-        } else {
-          completionBlock.hidden = true;
-        }
-      }
 
       // CTAs with strict hierarchy (Primary orange dominant, Secondary outline ghost)
       const ctasContainer = rootEl.querySelector('[data-lmq-role="ctas"]');

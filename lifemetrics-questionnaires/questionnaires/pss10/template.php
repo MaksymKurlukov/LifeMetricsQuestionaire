@@ -88,12 +88,17 @@ $modal_title_id = $instance_id . '-modal-title';
         <h3 class="interpretation-title" data-lmq-role="interpretation-title"></h3>
         <p class="analysis-meta">Le score est compris entre 10 et 50, sachant que 10 est le meilleur score possible et 50 le plus mauvais.</p>
         <p class="analysis-meta">D'après vos réponses,</p>
-        <div class="analysis-block">
+        <div class="analysis-block" data-lmq-role="analysis-block">
           <p class="analysis-text" data-lmq-role="analysis-text"></p>
-        </div>
-        <div class="completion-block" data-lmq-role="completion-block">
-          <h3 class="completion-title" data-lmq-role="completion-title">Compléter votre résultat</h3>
-          <p class="completion-text" data-lmq-role="completion-text">Ce questionnaire évalue votre niveau de stress perçu à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.</p>
+          <div class="analysis-details" data-lmq-role="analysis-details" id="<?php echo esc_attr($instance_id . '-analysis-details'); ?>" hidden>
+            <p class="analysis-completion" data-lmq-role="analysis-completion">Ce questionnaire évalue votre niveau de stress perçu à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.</p>
+          </div>
+          <button type="button" class="analysis-toggle" data-lmq-role="analysis-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr($instance_id . '-analysis-details'); ?>">
+            <span class="toggle-text">Lire l'analyse détaillée</span>
+            <svg class="toggle-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16" aria-hidden="true">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
         </div>
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>
           <p class="result-save-alert__text" data-lmq-role="save-alert-text">La sauvegarde a échoué. Vérifiez votre connexion et réessayez.</p>
