@@ -640,18 +640,38 @@
   vertical-align: top;
 }
 
-.lmq-questionnaire .gauge-bg {
-  stroke: var(--color-cream);
+.lmq-questionnaire .gauge-zone {
+  stroke-linecap: butt;
 }
 
-.lmq-questionnaire .gauge-fill {
-  transition: stroke-dashoffset 0.6s ease;
+.lmq-questionnaire .gauge-zone--favorable {
+  stroke: var(--color-success);
 }
 
-.lmq-questionnaire .gauge-needle {
-  transform-origin: 100px 100px;
-  transition: transform 0.6s ease;
-  display: none;
+.lmq-questionnaire .gauge-zone--intermediate {
+  stroke: var(--color-warning);
+}
+
+.lmq-questionnaire .gauge-zone--unfavorable {
+  stroke: var(--color-high);
+}
+
+.lmq-questionnaire .gauge-marker {
+  stroke: var(--color-card);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+}
+
+.lmq-questionnaire .gauge-marker--favorable {
+  fill: var(--color-success);
+}
+
+.lmq-questionnaire .gauge-marker--intermediate {
+  fill: var(--color-warning);
+}
+
+.lmq-questionnaire .gauge-marker--unfavorable {
+  fill: var(--color-high);
 }
 
 .lmq-questionnaire .interpretation-title {
@@ -672,8 +692,7 @@
 }
 
 /* Alertes Safety prioritaires (Harmonisees avec le style sobre de main) */
-.lmq-questionnaire .safety-messages,
-.lmq-questionnaire .classification-messages {
+.lmq-questionnaire .safety-messages {
   margin: 0 auto var(--space-md);
   width: 100%;
   display: flex;
@@ -681,7 +700,9 @@
   gap: var(--space-sm);
 }
 
-.lmq-questionnaire[data-lmq-questionnaire="risque-nutritionnel"] .classification-messages {
+/* Defensive fallback for cached/legacy Generic V2 markup. */
+.lmq-questionnaire .classification-messages,
+.lmq-questionnaire .classification-message {
   display: none !important;
 }
 
@@ -710,29 +731,6 @@
   margin: 0;
   font-size: var(--text-xs);
   color: #7f1d1d;
-  line-height: 1.55;
-}
-
-.lmq-questionnaire .classification-message {
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: var(--radius);
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-}
-
-.lmq-questionnaire .classification-message strong {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: var(--space-xs);
-}
-
-.lmq-questionnaire .classification-message p {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: #78350f;
   line-height: 1.55;
 }
 
@@ -1112,8 +1110,7 @@
   }
 
   .lmq-questionnaire .analysis-block,
-  .lmq-questionnaire .safety-messages,
-  .lmq-questionnaire .classification-messages {
+  .lmq-questionnaire .safety-messages {
     margin-bottom: 0.75rem;
   }
 

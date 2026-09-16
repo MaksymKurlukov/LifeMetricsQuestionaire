@@ -1,7 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
 
-$gradient_id = $instance_id . '-gauge-gradient';
 $modal_title_id = $instance_id . '-modal-title';
 $question_title_id = $instance_id . '-question-title';
 $progress_label_id = $instance_id . '-progress-label';
@@ -58,12 +57,8 @@ $progress_label_id = $instance_id . '-progress-label';
               <span class="result-score__value">0</span><span class="gauge-score__max"></span>
             </div>
             <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
-              <defs>
-                <linearGradient id="<?php echo esc_attr($gradient_id); ?>" data-lmq-role="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%"></linearGradient>
-              </defs>
-              <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#eee" stroke-width="12" />
-              <path class="gauge-fill" data-lmq-role="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
-              <line class="gauge-needle" data-lmq-role="gauge-needle" x1="100" y1="100" x2="100" y2="30" stroke="#333" stroke-width="2" stroke-linecap="round" />
+              <g data-lmq-role="gauge-zones"></g>
+              <circle class="gauge-marker gauge-marker--favorable" data-lmq-role="gauge-marker" cx="20" cy="100" r="6" />
             </svg>
           </div>
           <h3 class="interpretation-title" data-lmq-role="interpretation-title"></h3>
@@ -72,7 +67,6 @@ $progress_label_id = $instance_id . '-progress-label';
 
         <!-- Safety alert placed BEFORE analysis and axes in priority -->
         <div data-lmq-role="safety-messages" class="safety-messages"></div>
-        <div data-lmq-role="classification-messages" class="classification-messages"></div>
 
         <!-- Progressive Disclosure Analysis -->
         <div class="analysis-block" data-lmq-role="analysis-block">

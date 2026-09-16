@@ -1,8 +1,6 @@
 
 (function (engine) {
 
-  const MINIMUM_VISIBLE_GAUGE_RATIO = 0.08;
-
   function resolveSemanticType(config, categoryCode) {
     const levels = Array.isArray(config.result_levels) ? config.result_levels.slice() : [];
     if (levels.length === 0) return 'favorable';
@@ -42,12 +40,9 @@
       .replace(/(\d)\s*-\s*(\d)/g, '$1–$2');
   }
 
-  function resolveGaugeRatios(score, min, max) {
-    const scoreRatio = Math.max(0, Math.min(1, (score - min) / (max - min)));
-    const fillRatio = scoreRatio >= 1
-      ? 1
-      : MINIMUM_VISIBLE_GAUGE_RATIO + scoreRatio * (1 - MINIMUM_VISIBLE_GAUGE_RATIO);
-    return { scoreRatio, fillRatio };
+  function resolveGaugeRatio(score, min, max) {
+    if (max <= min) return 0;
+    return Math.max(0, Math.min(1, (score - min) / (max - min)));
   }
 
   function resolveGaugeLevel(config, score) {
@@ -58,61 +53,63 @@
       .find(level => numericScore >= Number(level.min) && numericScore <= Number(level.max));
   }
 
-  function resolveGaugeGradientStops(config, min, max) {
+  function resolveGaugeZones(config, min, max) {
     const levels = Array.isArray(config.result_levels)
       ? config.result_levels
         .filter(level => Number.isFinite(Number(level.min)) && Number.isFinite(Number(level.max)))
         .slice()
         .sort((left, right) => Number(left.min) - Number(right.min))
       : [];
-    const colors = {
-      favorable: '#4ade80',
-      intermediate: '#fbbf24',
-      unfavorable: '#ef4444'
-    };
     const clamp = value => Math.max(0, Math.min(1, value));
 
-    if (levels.length === 0 || max <= min) {
-      return [
-        { offset: 0, color: colors.favorable },
-        { offset: 1, color: colors.unfavorable }
-      ];
-    }
+    if (levels.length === 0 || max <= min) return [];
 
-    const stops = [];
-    let previousColor = null;
-    levels.forEach((level, index) => {
-      const scoreRatio = clamp((Number(level.min) - min) / (max - min));
-      const offset = scoreRatio >= 1
-        ? 1
-        : MINIMUM_VISIBLE_GAUGE_RATIO + scoreRatio * (1 - MINIMUM_VISIBLE_GAUGE_RATIO);
-      const color = colors[resolveSemanticType(config, level.code)] || colors.favorable;
-      if (index === 0) {
-        stops.push({ offset: 0, color });
-      } else {
-        // Duplicate the boundary so each discrete score zone keeps its own color.
-        stops.push({ offset, color: previousColor });
-        stops.push({ offset, color });
-      }
-      previousColor = color;
+    const starts = levels.map((level, index) => {
+      return index === 0 ? 0 : clamp((Number(level.min) - min) / (max - min));
     });
-    stops.push({ offset: 1, color: previousColor || colors.favorable });
-    return stops;
+
+    return levels.map((level, index) => ({
+      start: starts[index],
+      end: index === levels.length - 1 ? 1 : starts[index + 1],
+      semanticType: resolveSemanticType(config, level.code)
+    }));
   }
 
-  function renderGaugeGradient(rootEl, config, min, max) {
-    const gradient = rootEl.querySelector('[data-lmq-role="gauge-gradient"]');
-    if (!gradient || typeof gradient.appendChild !== 'function') return;
+  function gaugePoint(ratio) {
+    const angle = Math.PI * (1 - ratio);
+    return {
+      x: 100 + 80 * Math.cos(angle),
+      y: 100 - 80 * Math.sin(angle)
+    };
+  }
 
-    gradient.innerHTML = '';
-    resolveGaugeGradientStops(config, min, max).forEach(stop => {
-      const element = typeof document.createElementNS === 'function'
-        ? document.createElementNS('http://www.w3.org/2000/svg', 'stop')
-        : document.createElement('stop');
-      element.setAttribute('offset', `${stop.offset * 100}%`);
-      element.setAttribute('stop-color', stop.color);
-      gradient.appendChild(element);
+  function renderGaugeZones(rootEl, config, min, max) {
+    const container = rootEl.querySelector('[data-lmq-role="gauge-zones"]');
+    if (!container || typeof container.appendChild !== 'function') return;
+
+    container.innerHTML = '';
+    resolveGaugeZones(config, min, max).forEach(zone => {
+      const start = gaugePoint(zone.start);
+      const end = gaugePoint(zone.end);
+      const path = typeof document.createElementNS === 'function'
+        ? document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        : document.createElement('path');
+      path.setAttribute('d', `M ${start.x.toFixed(3)} ${start.y.toFixed(3)} A 80 80 0 0 1 ${end.x.toFixed(3)} ${end.y.toFixed(3)}`);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-width', '12');
+      path.setAttribute('data-zone-start', String(zone.start));
+      path.setAttribute('data-zone-end', String(zone.end));
+      path.classList.add('gauge-zone', `gauge-zone--${zone.semanticType}`);
+      container.appendChild(path);
     });
+  }
+
+  function renderGaugeMarker(marker, scoreRatio, semanticType) {
+    const point = gaugePoint(scoreRatio);
+    marker.setAttribute('cx', point.x.toFixed(3));
+    marker.setAttribute('cy', point.y.toFixed(3));
+    marker.classList.remove('gauge-marker--favorable', 'gauge-marker--intermediate', 'gauge-marker--unfavorable');
+    marker.classList.add(`gauge-marker--${semanticType}`);
   }
 
   function initQuestionnaire(rootEl) {
@@ -546,19 +543,14 @@
         analysisBlock.hidden = true;
       }
 
-      const gaugeFill = rootEl.querySelector('[data-lmq-role="gauge-fill"]');
-      const gaugeNeedle = rootEl.querySelector('[data-lmq-role="gauge-needle"]');
-      if (gaugeFill && gaugeNeedle && config.score && config.score.target_max > 0) {
-        const circumference = Math.PI * 80;
+      const gaugeZones = rootEl.querySelector('[data-lmq-role="gauge-zones"]');
+      const gaugeMarker = rootEl.querySelector('[data-lmq-role="gauge-marker"]');
+      if (gaugeZones && gaugeMarker && config.score && config.score.target_max > config.score.target_min) {
         const min = config.score.target_min || 0;
         const max = config.score.target_max;
-        const gaugeRatios = resolveGaugeRatios(scoreResult.final_score, min, max);
-        renderGaugeGradient(rootEl, config, min, max);
-        gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - gaugeRatios.fillRatio));
-        gaugeNeedle.setAttribute('transform', `rotate(${180 - gaugeRatios.scoreRatio * 180}, 100, 100)`);
-        gaugeFill.classList.remove('gauge-fill--favorable', 'gauge-fill--intermediate', 'gauge-fill--unfavorable', 'gauge-fill--guardrail');
-        gaugeFill.classList.add(`gauge-fill--${gaugeSemanticType}`);
-        if (guardrailApplied) gaugeFill.classList.add('gauge-fill--guardrail');
+        const scoreRatio = resolveGaugeRatio(scoreResult.final_score, min, max);
+        renderGaugeZones(rootEl, config, min, max);
+        renderGaugeMarker(gaugeMarker, scoreRatio, gaugeSemanticType);
 
         const gaugeWrap = rootEl.querySelector('[data-lmq-role="gauge-wrap"]');
         if (gaugeWrap && level) {
@@ -610,26 +602,10 @@
 
       const classContainer = rootEl.querySelector('[data-lmq-role="classification-messages"]');
       if (classContainer) {
+        // Classification signals remain available to scoring, analysis and REST,
+        // but Generic V2 no longer renders separate attention cards.
         classContainer.innerHTML = '';
-        if (config.id !== 'risque-nutritionnel' && scoreResult.classification_message_codes && scoreResult.classification_message_codes.length > 0) {
-          classContainer.hidden = false;
-          scoreResult.classification_message_codes.forEach(code => {
-             const msg = config.classification_messages ? config.classification_messages[code] : null;
-             if (msg) {
-               const el = document.createElement('div');
-               el.className = 'classification-message';
-               const strong = document.createElement('strong');
-               strong.textContent = msg.title;
-               const p = document.createElement('p');
-               p.textContent = msg.text;
-               el.appendChild(strong);
-               el.appendChild(p);
-               classContainer.appendChild(el);
-             }
-          });
-        } else {
-          classContainer.hidden = true;
-        }
+        classContainer.hidden = true;
       }
 
 

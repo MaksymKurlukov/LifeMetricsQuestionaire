@@ -7,10 +7,12 @@ const { execFileSync } = require("node:child_process");
 const cssPath = path.resolve(__dirname, "..", "assets", "css", "questionnaire.css");
 const uiPath = path.resolve(__dirname, "..", "assets", "js", "questionnaire-ui.js");
 const enginePath = path.resolve(__dirname, "..", "assets", "js", "questionnaire-engine.js");
+const templatePath = path.resolve(__dirname, "..", "templates", "questionnaire.php");
 
 const cssContent = fs.readFileSync(cssPath, "utf8");
 const uiSource = fs.readFileSync(uiPath, "utf8");
 const engineSource = fs.readFileSync(enginePath, "utf8");
+const templateContent = fs.readFileSync(templatePath, "utf8");
 
 const engineContext = {};
 vm.runInNewContext(engineSource, engineContext);
@@ -69,10 +71,7 @@ function createMockElement(tag, customProps = {}) {
 }
 
 function createMockRoot(id, qConfig) {
-  const gaugeGradient = createMockElement("linearGradient");
-  gaugeGradient.querySelectorAll = function(sel) {
-    return sel === "stop" ? this.children : [];
-  };
+  const gaugeZones = createMockElement("g");
   const elements = {
     "[data-lmq-config]": { textContent: JSON.stringify(qConfig) },
     "[data-lmq-submit-url]": null,
@@ -97,9 +96,8 @@ function createMockRoot(id, qConfig) {
     '[data-lmq-role="interpretation-title"]': createMockElement("h3"),
     '[data-lmq-role="score-meta"]': createMockElement("p"),
     '[data-lmq-role="gauge-wrap"]': createMockElement("div"),
-    '[data-lmq-role="gauge-gradient"]': gaugeGradient,
-    '[data-lmq-role="gauge-fill"]': createMockElement("path"),
-    '[data-lmq-role="gauge-needle"]': createMockElement("line"),
+    '[data-lmq-role="gauge-zones"]': gaugeZones,
+    '[data-lmq-role="gauge-marker"]': createMockElement("circle", { classes: ["gauge-marker", "gauge-marker--favorable"] }),
     '[data-lmq-role="analysis-text"]': createMockElement("p"),
     '[data-lmq-role="safety-messages"]': createMockElement("div"),
     '[data-lmq-role="classification-messages"]': createMockElement("div"),
@@ -155,14 +153,15 @@ function runSimulatedTest(config, answerValues) {
   const startBtn = mockRoot.querySelector('[data-lmq-role="start"]');
   startBtn.onclick();
 
-  for (let i = 0; i < config.questions.length; i++) {
-    const qId = config.questions[i].id;
-    const ansVal = answerValues[qId] || "1";
+  const allQuestions = (config.questions || []).concat(config.safety_questions || []);
+  for (let i = 0; i < allQuestions.length; i++) {
+    const question = allQuestions[i];
+    const qId = question.id;
+    const ansVal = Object.prototype.hasOwnProperty.call(answerValues, qId)
+      ? answerValues[qId]
+      : question.answers[0].value;
     const answersContainer = mockRoot.querySelector('[data-lmq-role="answers"]');
-    const targetBtn = answersContainer.children.find(c => c.textContent.includes(ansVal) || c) || answersContainer.children[0];
-    
-    // find matching answer index
-    const ansIndex = config.questions[i].answers.findIndex(a => a.value === ansVal);
+    const ansIndex = question.answers.findIndex(a => a.value === ansVal);
     const clickIndex = ansIndex >= 0 ? ansIndex : 0;
     answersContainer.children[clickIndex].onclick();
   }
@@ -185,6 +184,11 @@ assert.ok(cssContent.includes(".lmq-questionnaire *:focus") && cssContent.includ
 assert.ok(cssContent.includes(".lmq-questionnaire [tabindex=\"-1\"]:focus"), "CSS suppresses focus outline on programmatic non-interactive targets");
 assert.ok(cssContent.includes(".lmq-questionnaire .analysis-toggle:focus-visible") && cssContent.includes(".lmq-questionnaire button:focus-visible"), "CSS defines accessible focus-visible for analysis toggle and buttons");
 assert.ok(cssContent.includes("outline: 2px solid var(--color-primary);") && cssContent.includes("outline-offset: 2px;"), "CSS applies 2px solid orange outline with 2px offset for keyboard accessibility");
+assert.ok(templateContent.includes('data-lmq-role="gauge-marker"'), "Generic V2 template includes a score marker on the gauge arc");
+assert.ok(templateContent.includes('data-lmq-role="gauge-zones"'), "Generic V2 template includes the complete score-scale zones");
+assert.ok(!templateContent.includes('stroke-dasharray') && !uiSource.includes('stroke-dashoffset'), "Generic V2 gauge has no progress masking or unfilled remainder");
+assert.ok(!templateContent.includes('data-lmq-role="classification-messages"'), "Generic V2 template does not generate attention-card markup");
+assert.ok(cssContent.includes(".lmq-questionnaire .classification-message") && cssContent.includes("display: none !important;"), "Cached attention-card markup has a defensive CSS fallback");
 
 // Also verify PSS-10 global focus strategy
 const pss10CssPath = path.resolve(__dirname, "..", "questionnaires", "pss10", "assets", "css", "style.css");
@@ -210,8 +214,7 @@ assert.equal(titleGreen.hidden, true, "Category title is not repeated below the 
 assert.equal(rootGreen.querySelector('[data-lmq-role="dimensions"]').hidden, true, "Axes without validated user content stay hidden");
 assert.equal(rootGreen.querySelector('[data-lmq-role="safety-badge"]').hidden, true, "Unvalidated safety badge stays hidden on ordinary questions");
 
-const gaugeScores = [12, 14, 24, 25, 32, 33, 60];
-const gaugeOffsets = gaugeScores.map(targetScore => {
+function answersForBienEtreScore(targetScore) {
   const answers = {};
   let remaining = targetScore - 12;
   for (let layer = 1; layer <= 4; layer++) {
@@ -226,50 +229,46 @@ const gaugeOffsets = gaugeScores.map(targetScore => {
       }
     }
   }
-  const root = runSimulatedTest(configBE, answers);
-  return Number(root.querySelector('[data-lmq-role="gauge-fill"]').getAttribute('stroke-dashoffset'));
-});
-const circumference = Math.PI * 80;
-const expectedMinimumOffset = circumference * (1 - 0.08);
-assert.ok(Math.abs(gaugeOffsets[0] - expectedMinimumOffset) < 0.001, "12/60 keeps an 8% visible gauge segment");
-for (let i = 1; i < gaugeOffsets.length; i++) {
-  assert.ok(gaugeOffsets[i] < gaugeOffsets[i - 1], `${gaugeScores[i]}/60 advances the gauge beyond ${gaugeScores[i - 1]}/60`);
+  return answers;
 }
-assert.equal(gaugeOffsets.at(-1), 0, "60/60 fills the complete semicircle");
 
-const gaugeStops = rootGreen.querySelector('[data-lmq-role="gauge-gradient"]').children;
-assert.deepEqual(gaugeStops.map(stop => stop.getAttribute("stop-color")), [
-  "#4ade80", "#4ade80", "#fbbf24",
-  "#fbbf24", "#ef4444", "#ef4444"
-], "Gauge gradient keeps one color pair per configured zone");
-assert.ok(Math.abs(parseFloat(gaugeStops[1].getAttribute("offset")) - 32.9166667) < 0.0001, "25 threshold maps to the visible gauge boundary");
-assert.ok(Math.abs(parseFloat(gaugeStops[2].getAttribute("offset")) - 32.9166667) < 0.0001, "25 threshold starts the orange zone");
-assert.ok(Math.abs(parseFloat(gaugeStops[3].getAttribute("offset")) - 48.25) < 0.0001, "33 threshold maps to the visible gauge boundary");
-assert.ok(Math.abs(parseFloat(gaugeStops[4].getAttribute("offset")) - 48.25) < 0.0001, "33 threshold starts the red zone");
-
-const gaugeSemanticByScore = gaugeScores.map(targetScore => {
-  const answers = {};
-  let remaining = targetScore - 12;
-  for (let layer = 1; layer <= 4; layer++) {
-    for (let i = 1; i <= 12; i++) {
-      const id = "BE" + (i < 10 ? "0" + i : i);
-      const current = Number(answers[id] || "1");
-      if (remaining > 0) {
-        answers[id] = String(current + 1);
-        remaining--;
-      } else if (!answers[id]) {
-        answers[id] = "1";
-      }
-    }
-  }
-  return runSimulatedTest(configBE, answers)
-    .querySelector('[data-lmq-role="gauge-fill"]')
-    .classes.find(className => /^gauge-fill--(?:favorable|intermediate|unfavorable)$/.test(className));
+const gaugeScores = [12, 24, 25, 28, 32, 33, 38, 60];
+const gaugeSnapshots = gaugeScores.map(targetScore => {
+  const root = runSimulatedTest(configBE, answersForBienEtreScore(targetScore));
+  const marker = root.querySelector('[data-lmq-role="gauge-marker"]');
+  return {
+    score: targetScore,
+    cx: Number(marker.getAttribute('cx')),
+    cy: Number(marker.getAttribute('cy')),
+    semanticClass: marker.classes.find(className => /^gauge-marker--(?:favorable|intermediate|unfavorable)$/.test(className))
+  };
 });
+
+gaugeSnapshots.forEach(snapshot => {
+  const ratio = (snapshot.score - 12) / (60 - 12);
+  const angle = Math.PI * (1 - ratio);
+  const expectedX = 100 + 80 * Math.cos(angle);
+  const expectedY = 100 - 80 * Math.sin(angle);
+  assert.ok(Math.abs(snapshot.cx - expectedX) < 0.001, `${snapshot.score}/60 marker has the exact score-derived horizontal position`);
+  assert.ok(Math.abs(snapshot.cy - expectedY) < 0.001, `${snapshot.score}/60 marker has the exact score-derived vertical position`);
+});
+
+const gaugeZones = rootGreen.querySelector('[data-lmq-role="gauge-zones"]').children;
+assert.equal(gaugeZones.length, 3, "Gauge renders the complete three-zone score scale");
+assert.deepEqual(gaugeZones.map(zone => zone.classes.find(className => className.startsWith("gauge-zone--"))), [
+  "gauge-zone--favorable", "gauge-zone--intermediate", "gauge-zone--unfavorable"
+], "Gauge renders green, orange and red zones in score order");
+assert.ok(Math.abs(Number(gaugeZones[0].getAttribute("data-zone-start")) - 0) < 0.0001, "Green zone starts at the scale minimum");
+assert.ok(Math.abs(Number(gaugeZones[0].getAttribute("data-zone-end")) - 0.2708333333) < 0.0001, "Green zone ends at the configured 25 threshold");
+assert.ok(Math.abs(Number(gaugeZones[1].getAttribute("data-zone-start")) - 0.2708333333) < 0.0001, "Orange zone starts at the configured 25 threshold");
+assert.ok(Math.abs(Number(gaugeZones[1].getAttribute("data-zone-end")) - 0.4375) < 0.0001, "Orange zone ends at the configured 33 threshold");
+assert.ok(Math.abs(Number(gaugeZones[2].getAttribute("data-zone-start")) - 0.4375) < 0.0001, "Red zone starts at the configured 33 threshold");
+assert.ok(Math.abs(Number(gaugeZones[2].getAttribute("data-zone-end")) - 1) < 0.0001, "Red zone reaches the scale maximum without a grey remainder");
+
 assert.deepEqual(
-  gaugeSemanticByScore,
-  ["gauge-fill--favorable", "gauge-fill--favorable", "gauge-fill--favorable", "gauge-fill--intermediate", "gauge-fill--intermediate", "gauge-fill--unfavorable", "gauge-fill--unfavorable"],
-  "Gauge semantic color follows numeric score zones at every configured boundary"
+  gaugeSnapshots.map(snapshot => snapshot.semanticClass),
+  ["gauge-marker--favorable", "gauge-marker--favorable", "gauge-marker--intermediate", "gauge-marker--intermediate", "gauge-marker--intermediate", "gauge-marker--unfavorable", "gauge-marker--unfavorable", "gauge-marker--unfavorable"],
+  "Gauge marker color follows numeric score zones at every configured boundary"
 );
 
 // ----------------------------------------------------
@@ -325,11 +324,9 @@ assert.ok(badgeGuardrail.className.includes("result-badge--rank-2"), "Guardrail-
 assert.ok(badgeGuardrail.className.includes("result-badge--intermediate"), "Guardrail-capped displayed category gets intermediate semantic class");
 const titleGuardrail = rootGuardrail.querySelector('[data-lmq-role="interpretation-title"]');
 assert.ok(titleGuardrail.className.includes("interpretation-title--intermediate"), "Guardrail-capped interpretation title gets intermediate class");
-const guardrailGauge = rootGuardrail.querySelector('[data-lmq-role="gauge-fill"]');
-assert.ok(guardrailGauge.classes.includes("gauge-fill--favorable"), "Guardrail gauge keeps the raw score color zone");
-assert.ok(guardrailGauge.classes.includes("gauge-fill--guardrail"), "Guardrail gauge keeps a distinct displayed-category treatment");
-assert.ok(Number(guardrailGauge.getAttribute('stroke-dashoffset')) < expectedMinimumOffset, "Guardrail gauge keeps the raw score position above the minimum segment");
-assert.ok(!cssContent.includes(".gauge-fill--guardrail.gauge-fill--intermediate"), "Guardrail does not override numeric gauge colors");
+const guardrailMarker = rootGuardrail.querySelector('[data-lmq-role="gauge-marker"]');
+assert.ok(guardrailMarker.classes.includes("gauge-marker--favorable"), "Guardrail marker keeps the raw score color zone");
+assert.ok(!guardrailMarker.classes.includes("gauge-marker--intermediate"), "Displayed guardrail category does not move or recolor the score marker");
 
 // ----------------------------------------------------
 // 6. Badges & CTA verification
@@ -352,5 +349,71 @@ assert.equal(links[0].textContent, "Je veux faire un bilan");
 assert.equal(links[0].href, "https://lifemetrics.fr/formulaire-bilan/");
 assert.equal(links[1].textContent, "Découvrir les autres questionnaires");
 assert.equal(links[1].href, "/tests-sante/");
+
+// ----------------------------------------------------
+// 7. Global Generic V2 attention-card suppression
+// ----------------------------------------------------
+const genericSlugs = [
+  "activite-physique",
+  "bien-etre",
+  "fatigue-recuperation",
+  "hydratation",
+  "nutrition",
+  "pieds-confort-postural",
+  "risque-nutritionnel",
+  "sedentarite",
+  "sommeil"
+];
+
+function buildAnswers(config, triggerSafety = false) {
+  const answers = {};
+  (config.questions || []).forEach(question => {
+    const answer = question.answers.find(candidate => candidate.applicable !== false) || question.answers[0];
+    answers[question.id] = answer.value;
+  });
+  (config.safety_questions || []).forEach(question => {
+    const answer = triggerSafety
+      ? (question.answers.find(candidate => Array.isArray(candidate.triggers) && candidate.triggers.length > 0) || question.answers[0])
+      : (question.answers.find(candidate => !candidate.triggers || candidate.triggers.length === 0) || question.answers[0]);
+    answers[question.id] = answer.value;
+  });
+  return answers;
+}
+
+["bien-etre", "risque-nutritionnel", "sedentarite", "pieds-confort-postural"].forEach(slug => {
+  assert.ok(genericSlugs.includes(slug), `${slug} is explicitly covered by the global attention-card regression`);
+});
+
+genericSlugs.forEach(slug => {
+  const config = JSON.parse(JSON.stringify(loadConfig(slug)));
+  const messageCode = `TEST_ATTENTION_${slug}`;
+  config.dimensions[0].attention = {
+    metric: "percentage",
+    operator: ">=",
+    value: -1,
+    message_code: messageCode
+  };
+  config.classification_messages = Object.assign({}, config.classification_messages, {
+    [messageCode]: {
+      title: `Point d'attention : ${config.dimensions[0].label}`,
+      text: "Cette carte ne doit jamais être rendue."
+    }
+  });
+
+  const answers = buildAnswers(config);
+  const scoreResult = engine.score(config, answers);
+  assert.ok(scoreResult.classification_message_codes.includes(messageCode), `${slug} keeps its attention signal in scoring data`);
+
+  const root = runSimulatedTest(config, answers);
+  const container = root.querySelector('[data-lmq-role="classification-messages"]');
+  assert.equal(container.children.length, 0, `${slug} renders no Point d'attention card`);
+  assert.equal(container.hidden, true, `${slug} keeps any legacy attention container hidden`);
+});
+
+const safetyConfig = loadConfig("fatigue-recuperation");
+const safetyRoot = runSimulatedTest(safetyConfig, buildAnswers(safetyConfig, true));
+const safetyContainer = safetyRoot.querySelector('[data-lmq-role="safety-messages"]');
+assert.ok(safetyContainer.children.length > 0, "Safety remains rendered when triggered");
+assert.equal(safetyContainer.children[0].children[0].textContent, "Un point mérite votre attention.", "Validated Safety title remains intact");
 
 console.log("Phase 13 Frontend Restitution & Visual Regression Tests: ALL PASSED.");
