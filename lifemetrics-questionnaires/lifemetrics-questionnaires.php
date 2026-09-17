@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LifeMetrics Questionnaires
  * Description: WordPress wrapper for the LifeMetrics questionnaires.
- * Version: 1.0.0
+ * Version: 2.0.0
  * Requires at least: 6.0
  * Requires PHP: 8.2
  */
