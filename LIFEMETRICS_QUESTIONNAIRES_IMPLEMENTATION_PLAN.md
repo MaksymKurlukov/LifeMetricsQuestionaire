@@ -27,14 +27,14 @@
 
 ## État actuel du projet
 
-- Phase actuelle : PHASE 16 — WordPress Release ZIP (WORK-22) (TERMINÉ)
-- Dernière phase terminée : PHASE 16 — WordPress Release ZIP (WORK-22)
-- Prochaine phase à exécuter : WORK-19 — Réconciliation documentaire (puis WORK-23 — revue finale / remise à Camille)
+- Phase actuelle : WORK-19 — Réconciliation documentaire (TERMINÉ — 17 septembre 2026)
+- Dernière phase terminée : WORK-19 — Réconciliation documentaire (17 septembre 2026)
+- Prochaine étape : WORK-23 — Revue finale / remise à Camille (À FAIRE)
 - Blocages : Aucun
-- Nombre de phases terminées : 16 / 16 (100% du plan de développement validé)
+- Nombre de phases terminées : 16 / 16 (100% du plan de développement validé) + WORK-19 terminé
 - Nombre de phases restantes : 0 (toutes les phases 1 à 16 sont terminées)
-- Dernier commit de phase : 6bb46ee (fix(risque-nutritionnel): remove vigilance cards from result UI)
-- Livrable final : lifemetrics-questionnaires.zip (certifié, audité, testé de bout en bout)
+- Derniers commits de release : 1a479e2 (docs(release): close phase 16 with 10/10 wordpress local validation) et 70be774 (docs(release): correct phase 16 validation summary)
+- Livrable final : lifemetrics-questionnaires.zip (certifié, audité, testé de bout en bout sur WordPress local MAMP)
 - Tableau Notion synchronisé : https://app.notion.com/p/3da507fddb678146b412ffe3a733ea0f
 
 ---
@@ -54,16 +54,18 @@ Le projet s'appuie sur le plugin WordPress existant lifemetrics-questionnaires, 
    - includes/class-questionnaire-registry.php : Résolution stricte par ID canonique, chargement sécurisé, distinction get_internal() / get_public().
 5. Couche Transport & REST API :
    - includes/class-rest-controller.php : Endpoint POST /wp-json/lifemetrics-questionnaires/v1/<id>/submit.
-   - includes/class-submission-service.php : Construction du payload JSON canonique.
+   - includes/class-submission-service.php : Construction du payload JSON canonique avec recalcul autoritaire côté serveur.
    - includes/class-google-apps-script-adapter.php : Adaptateur HTTP gérant les redirections 302 Google Apps Script et l'idempotence via session_id.
-   - backend/generic-google-apps-script.gs : Web App centralisée écrivant dans les onglets du Google Spreadsheet.
+   - Deux Web Apps Google Apps Script étanches et isolées :
+     * backend/google-apps-script.gs : Web App PSS-10 legacy dédiée (LMQ_PSS10_GOOGLE_ENDPOINT), écrivant 24 colonnes physiques enrichies dans l'onglet PSS10 ;
+     * backend/generic-google-apps-script.gs : Web App générique pour les 9 questionnaires propriétaires (LMQ_GOOGLE_ENDPOINT), écrivant dans leurs 9 onglets dédiés (31 à 36 colonnes).
 6. Interface Frontend Générique :
    - templates/questionnaire.php : Template DOM partagé à 3 écrans (intro, test, result).
    - assets/js/questionnaire-ui.js : Navigation, auto-avancement (400 ms), timeout 25s, gestion du retry.
    - assets/css/questionnaire.css : Système visuel partagé.
 7. Outillage & Tests :
-   - scripts/build-release-zip.sh : Script Bash de build du ZIP.
-   - 20 suites PHP et 11 suites JS exécutables localement.
+   - scripts/build-release-zip.sh : Script Bash de build du ZIP canonique (lifemetrics-questionnaires.zip).
+   - 23 suites PHP et 19 suites JS exécutables localement (42/42 suites PASS, 100% de succès).
 
 ---
 
@@ -151,7 +153,7 @@ Sur la page de résultat de TOUS les questionnaires LifeMetrics, il doit y avoir
 Cette règle est commune à tous les questionnaires des phases 4 à 12. Elle remplace les anciens CTA spécifiques ou destinations inventées dans les configurations (ex. `/vitascan/`, `/podos360/`).
 Les PDF restent la source de vérité pour les questions, réponses, points, dimensions, catégories, textes de résultat, Safety, guardrails et disclaimers, mais cette règle globale est prioritaire pour les deux CTA de la page de résultat.
 
-### 8. Règle de gel UI / UI Freeze after WORK-17
+### 9. Règle de gel UI / UI Freeze after WORK-17
 - Le frontend validé après le commit `75dc058` constitue la baseline UI officielle.
 - Phase 14+ ne doit pas modifier l’interface utilisateur (templates visuels, CSS, structure visuelle, jauge, cartes, boutons, CTAs, typographie, responsive, layout, animations, textes visibles validés).
 - Toute modification visuelle future doit faire l’objet d’une tâche explicitement dédiée.
@@ -1077,7 +1079,7 @@ Ce protocole régit l'exécution automatisée des sous-étapes de la Phase 14 lo
 - Tests exécutés : validation unitaire des 10 configurations et schémas (PASS), validation de l'ordre DOM générique et PSS-10 (PASS), `pss10-frontend-characterization.test.js` (PASS - 13 gardes de mutation), `frontend-restitution-phase13.test.js` (PASS), `php lifemetrics-questionnaires/tests/stage11-release-audit.test.php` (PASS), suite de régression complète 42/42 PASS (23 PHP, 19 JS).
 - Résultat : Phase 16 entièrement TERMINÉE avec succès. 10/10 questionnaires validés en runtime réel WordPress local MAMP. Archive ZIP de release prête pour distribution. Prêt pour WORK-19 (Réconciliation documentaire) et WORK-23.
 - NON DÉTERMINÉ : Aucun blocage technique de code.
-- Commit : dédié `docs(release): close phase 16 with 10/10 wordpress local validation`
+- Commits de clôture Phase 16 : 1a479e2 (`docs(release): close phase 16 with 10/10 wordpress local validation`) et 70be774 (`docs(release): correct phase 16 validation summary`)
 - Date : 2026-09-16
 
 
@@ -1089,10 +1091,22 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
 
 ### WORK-19 — Réconcilier la documentation avec l'état réel du code
 
-- Statut : À FAIRE
+- Statut : TERMINÉ (17 septembre 2026)
 - Position : après la Phase 16 et avant la revue finale WORK-23.
-- Objectif : remettre README, ARCHITECTURE, QUESTIONNAIRE_INVENTORY et CHANGELOG au niveau de l'inventaire, des scores, du runtime PSS-10 legacy et des résultats réellement validés.
-- Critères : les chiffres de tests, l'inventaire des 10 questionnaires et les règles de publication correspondent au code et aux configurations courantes ; aucun document obsolète ne remplace les PDF validés ou les configurations.
+- Objectif : remettre README, ARCHITECTURE, QUESTIONNAIRE_INVENTORY, CHANGELOG et le présent IMPLEMENTATION PLAN au niveau exact de l'inventaire des 10 questionnaires, des scores (12–60 propriétaires / 10–50 PSS-10), du runtime PSS-10 legacy isolé, des deux Apps Script, des correctifs UI finaux (jauge à gradient continu sans reste gris, suppression globale des cartes « Point d'attention », bloc Safety conservé) et des résultats validés en Phase 16.
+- Avancement WORK-19 au 17 septembre 2026 :
+  * [x] Audit documentaire global initial en lecture seule (PASS) ;
+  * [x] QUESTIONNAIRE_INVENTORY.md réconcilié (10 questionnaires, règles complètes, matrices, suppression globale des cartes attention) ;
+  * [x] README.md réconcilié (vue d'ensemble, installation, architecture, validation locale, restitution finale) ;
+  * [x] ARCHITECTURE.md réconcilié (dual-runtime, transport, scoring, guardrails, shortcodes, spécification technique de jauge et suppression des cartes attention) ;
+  * [x] CHANGELOG.md réconcilié (étiquetage [SUPERSEDED] / [REVERTED], historique clarifié, correctifs UI consolidés 7176816) ;
+  * [x] LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md synchronisé et validé ;
+  * [x] Contrôle global transversal en lecture seule et commit documentaire unique WORK-19 (PASS).
+- Critères validés :
+  - Les 5 documents de référence sont intégralement réconciliés avec le code HEAD ;
+  - Les correctifs UI finaux (gradient continu seuillé, score marker, suppression globale des cartes dimensionnelles séparées, préservation du bloc Safety) sont documentés ;
+  - Les chiffres de tests (23 PHP + 19 JS = 42/42 PASS), l'inventaire des 10 questionnaires, les deux Web Apps Google Apps Script et les règles de restitution correspondent rigoureusement au code et aux configurations courantes ;
+  - Aucun fichier runtime modifié pendant la clôture documentaire.
 - Tâche Notion : `WORK-19 — Réconcilier la documentation avec l'état réel du code`.
 
 ### WORK-20 — Corriger et sécuriser l'outil preview avant release
@@ -1160,12 +1174,13 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
 
 ### Ordre de sortie unique
 
-| Date planifiée | Élément | Dépendance |
-|---|---|---|
-| 2026-09-16 | PHASE 15 — Full Regression Test (WORK-21) | Phase 14 terminée |
-| 2026-09-17 | PHASE 16 — WordPress Release ZIP (WORK-22) + gate WORK-20 + mise à jour des deux Apps Script | Phase 15 PASS |
-| 2026-09-18 | WORK-19 — Réconciliation documentaire | Phase 16 terminée |
-| 2026-09-19 | WORK-23 — Revue finale, rapport et remise à Camille | Phase 16 + WORK-19 + WORK-20 terminées |
+| Date | Élément | Statut | Dépendance |
+|---|---|:---:|---|
+| 2026-09-15 | PHASE 15 — Full Regression Test (WORK-21) | TERMINÉ | Phase 14 terminée (42/42 PASS) |
+| 2026-09-15 | WORK-20 — Sécurisation outil preview avant release | TERMINÉ | Gate de Phase 16 validée |
+| 2026-09-16 | PHASE 16 — WordPress Release ZIP (WORK-22) | TERMINÉ | Validation 10/10 WordPress local MAMP |
+| 2026-09-17 | WORK-19 — Réconciliation documentaire | TERMINÉ | 5 documents réconciliés, correctifs UI finaux intégrés, HEAD aligné |
+| 2026-09-17+ | WORK-23 — Revue finale, rapport et remise à Camille | À FAIRE | Phase 16 + WORK-19 terminées |
 
 ---
 
@@ -1386,14 +1401,26 @@ Ces tâches existent dans la base Notion `Tâches` et appartiennent au projet `L
        * VitaScan (4 questionnaires) : `hydratation`, `nutrition`, `activite-physique`, `risque-nutritionnel` ;
        * Podos360 (1 questionnaire) : `pieds-confort-postural` ;
        * Services des pharmacies partenaires LifeMetrics / texte neutre (5 questionnaires, sans mention de VitaScan) : `pss10`, `sedentarite`, `fatigue-recuperation`, `sommeil`, `bien-etre` ;
-     - Suppression des cartes « Point de vigilance » sur l'écran résultat de `risque-nutritionnel` (guardrails métier conservés côté serveur).
+     - Suppression des cartes « Point de vigilance » sur l'écran résultat de `risque-nutritionnel` (guardrails métier conservés côté serveur, ultérieurement généralisée à l'ensemble des 9 questionnaires Generic V2).
   4. Packaging ZIP & Release Audit :
      - `lifemetrics-questionnaires.zip` généré proprement (61 fichiers de production, 449 153 octets non compressés) ;
      - `stage11-release-audit.test.php` PASS à 100% ;
      - Zéro fuite de `preview.php`, `tests/`, `.git*`, `~` ou `.DS_Store`.
   5. Tests automatisés : 42/42 suites passées (23 PHP + 19 JS, 100% PASS), dont 13 gardes de mutation PSS-10.
   6. Site de production LifeMetrics préservé à 100% intact.
-- Prochaine étape : WORK-19 (Réconciliation documentaire : README, ARCHITECTURE, QUESTIONNAIRE_INVENTORY, CHANGELOG), puis WORK-23 (Revue finale et remise à Camille).
+
+### 2026-09-17 — Clôture WORK-19 : Réconciliation documentaire complète
+
+- Statut : TERMINÉ (17 septembre 2026)
+- Livrables documentaires réconciliés :
+  1. `README.md` : aligné sur l'UX finale (jauge continue seuillée, suppression globale des cartes attention, intégration complétion, flux de transport).
+  2. `ARCHITECTURE.md` : spécification technique de la jauge semi-circulaire (mapping arc-to-gradient, découplage score marker / displayed_category pour les guardrails, suppression globale des cartes attention, dual-backend Apps Script).
+  3. `QUESTIONNAIRE_INVENTORY.md` : inventaire exhaustif des 10 instruments (1 legacy PSS-10 + 9 Generic V2 12–60), règles d'échelles, matrices, questions Safety distinctes, complétions.
+  4. `CHANGELOG.md` : historique unifié avec entrée pour les correctifs UI finaux (alignement gradient `7176816`, suppression globale cartes attention `01ded12`).
+  5. `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md` : statut mis à jour à TERMINÉ.
+- Périmètre runtime : strictement gelé et intact (0 fichier PHP/JS/CSS modifié lors de la réconciliation documentaire).
+- Suites de tests : 42/42 suites automatisées PASS (23 PHP, 19 JS).
+- Prochaine étape : WORK-23 — Revue finale / remise à Camille (À FAIRE).
 
 ---
 

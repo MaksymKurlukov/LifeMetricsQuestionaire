@@ -1,102 +1,149 @@
 # Changelog
 
-All notable LifeMetrics Questionnaires plugin/project changes are documented here. The tracked standalone PSS10 changelog/history remains separate.
+All notable LifeMetrics Questionnaires plugin/project changes are documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
 
 ## [Unreleased]
 
-### Documentation
+### Generic V2 UI Refinements & Gauge Threshold Alignment (2026-09-16 / 2026-09-17)
 
-- Conducted a major architecture and documentation reconciliation run (2026-09-08) to align the implementation plan with newly clarified product requirements.
-- Updated DECISIONS.md: Superseded DEC-005 (One canonical common submission sheet) with DEC-020 (Generic submission infrastructure with per-questionnaire server-side routing) and DEC-023 (Questionnaire-specific physical Sheet schemas). Added DEC-021 (PSS10 is a distinct legacy profile) and DEC-022 (Shared frontend runtime plus optional presentation overrides).
-- Restructured the roadmap in `LIFEMETRICS_QUESTIONNAIRES_IMPLEMENTATION_PLAN.md` to define PSS10 migration as a legacy profile test (Stage 6), require a PDF capability audit (Stage 7), define presentation and storage routing metadata (Stage 7B), and explicitly separate questionnaire implementations sequentially (Stages 11-20).
-- Explicitly documented that each proprietary LifeMetrics questionnaire may have a unique backend Google Sheet destination and physical schema structure, abandoning the monolithic sheet assumption.
-- Formalized the frontend presentation extension architecture in `ARCHITECTURE.md` to allow custom layouts/themes per test while sharing core business logic.
+- **Threshold-Aligned Continuous Score Gauge (`7176816`)**:
+  - Detected and corrected a visual desynchronization where static gradient stops did not correspond to business category thresholds on Generic V2 questionnaires (causing intermediate scores like 28/60 or 35/60 to display inaccurate color hues).
+  - Initial fix (`bec9599`) and subsequent layout refinement (`01ded12`) consolidated in final commit `7176816`:
+    - Full semicircle gauge track rendered with a continuous SVG `linearGradient` transitioning smoothly from green (`#4ade80`) through orange (`#fbbf24`) to red (`#ef4444`).
+    - Dynamic gradient stop offsets derived automatically at runtime from `config.result_levels`, mapping curved arc progress to horizontal gradient coordinates with zero hardcoded tier assumptions.
+    - Discrete circular score marker (`gauge-marker`) accurately positioned on the arc based on the authoritative numerical score.
+    - Elimination of any inactive grey remainder or artificial progress masking.
+- **Global Suppression of Attention Cards (`01ded12`)**:
+  - Globally removed intermediate dimensional cards (*« Point d'attention : <dimension> »*) across all 9 Generic V2 questionnaires, establishing a uniform and focused result presentation.
+  - Preserved internal dimension score evaluation for qualitative detailed analysis, completion guidance, and server payloads.
+- **Safety Alert Independence & Preservation**:
+  - Reaffirmed that the discrete Safety alert banner (*« Un point mérite votre attention. »*) remains active, sober, and independent on the 6 configured questionnaires, completely unaffected by the removal of dimensional attention cards.
 
-- Added the authoritative staged implementation plan and recoverable WordPress plugin baseline.
-- Approved component architecture, questionnaire schema/scoring/payload contract, source/readiness inventory, test matrix, and DEC-001 through DEC-015 for STAGE 1.
-- Recorded Maksym Kurlukov as project owner and approval owner for DEC-001 through DEC-015.
-- Aligned Sédentarité readiness with the lifecycle definition: scoring is complete, but implementation remains blocked until explicit source approval.
-- Added an executable PSS10 characterization harness with golden scoring/payload fixtures, PHP REST/markup checks, and mutation guards; runtime behavior is unchanged.
-- Recorded approval of the captured PSS10 behavior strictly as a structural-migration/regression baseline; production UX/content/CTA/licensing decisions remain separate.
-- Recorded the 2026-09-07 out-of-sequence real-WordPress PSS10 runtime, redirect diagnosis, fix evidence, and successful controlled E2E without advancing the roadmap.
-- Recorded completion of the PSS10 production-runtime validation cycle: WordPress runtime, Sheet write, REST response, frontend confirmation, duplicate check, and end-to-end path are `PASS`.
-- Documented the UI stabilization sequence through `bfb1385`, including modal/close behavior, theme-hover/link isolation, CTA alignment, same-answer reselection, silent normal submission, retained error feedback, and filemtime asset cache busting.
-- Defined the future `result_ctas` configuration, the `/tests-sante/` catalogue requirement, the standard questionnaire lifecycle/runtime gate, and the plugin-versus-page-layout boundary.
-- Recorded the unsolved `#faf8f5` full-viewport background as a WordPress/page-layout task rather than a plugin full-bleed responsibility.
+### Phase 16 / WORK-22 — WordPress Local Qualification, UX Refinements & Canonical Release (2026-09-16)
 
-### Runtime
+- **WordPress LOCAL TEST (MAMP) Qualification**:
+  - Validated all 10/10 questionnaires end-to-end on an isolated WordPress local environment running under MAMP.
+  - Verified complete user journeys: introduction screens, question navigation, auto-advance, client-side scoring, detailed analysis accordion expansion, REST HTTP 200 persistence, and deduplication (`session_id`).
+  - Verified upstream data delivery to Google Sheets: live webhook write confirmed across all 10 dedicated tabs (`PSS10` + 9 proprietary worksheets).
+  - **Environment boundary**: The live LifeMetrics production site remained 100% clean and untouched throughout qualification, reserved for final delivery in WORK-23.
+- **Targeted UX & Accessibility Refinements**:
+  - *Focus outline normalization*: Eliminated theme-induced red/blue focus outlines on interactive option cards inherited from the WordPress Twenty Twenty-Five theme, while strictly preserving `:focus-visible` for keyboard accessibility.
+  - *Safety block redesign*: Removed the warning icon ⚠️ and all emojis; established a standardized, sober text-only alert title (*« Un point mérite votre attention. »*) with empathetic copy positioned above the detailed analysis accordion.
+  - *Detailed analysis completion integration*: Integrated the complementary evaluation text directly as the final paragraph inside the detailed analysis accordion (`.analysis-completion`), eliminating separate visible cards and standalone titles.
+  - *Vigilance cards visual suppression*: Hid intermediate "Point de vigilance" cards on `risque-nutritionnel` (`display: none`) to route directly from Safety to detailed analysis, while maintaining server guardrail logic intact (subsequently generalized globally to all 9 Generic V2 questionnaires in `01ded12`).
+- **Contextual Completion Mapping**:
+  - **VitaScan** (4 questionnaires): `hydratation`, `nutrition`, `activite-physique`, `risque-nutritionnel`.
+  - **Podos360** (1 questionnaire): `pieds-confort-postural`.
+  - **LifeMetrics Partner Pharmacies** (5 questionnaires, neutral): `pss10`, `sedentarite`, `fatigue-recuperation`, `sommeil`, `bien-etre`.
+- **Dual-Backend Transport Architecture**:
+  - *Branch A (PSS-10 Legacy)*: Dispatches via server constant `LMQ_PSS10_GOOGLE_ENDPOINT` to `backend/google-apps-script.gs`, writing 24 enriched columns into the `PSS10` tab.
+  - *Branch B (Generic V2)*: Dispatches via server constant `LMQ_GOOGLE_ENDPOINT` to `backend/generic-google-apps-script.gs`, dynamically routing payloads to 9 dedicated worksheets (31 to 36 columns).
+- **Canonical Release Packaging & Audit**:
+  - Built canonical release package `lifemetrics-questionnaires.zip` via `bash scripts/build-release-zip.sh lifemetrics-questionnaires.zip`.
+  - Executed automated release audit (`php lifemetrics-questionnaires/tests/stage11-release-audit.test.php`): **PASS**.
+  - Verified package invariants: archive contains exactly 61 production files with strict exclusion of `preview.php`, `tests/`, `scripts/`, `.git*`, temporary backups, and `.DS_Store`.
 
-- Enhanced Central Google Sheets Storage Format: transitioned from monolithic JSON blobs to deterministic, human-readable column-by-column layout across all 7 proprietary worksheets (`Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`).
-- Added canonical scored question headers (`QUESTION_ID — question text`) and safety question headers in canonical order.
-- Enriched server-side scoring engine output with authoritative human-readable answer labels (`label`).
-- Enforced strict header schema validation in Google Apps Script with fail-safe rejection (`schema_conflict`) on incompatible existing headers.
-- Added test suites `tests/google-sheets-storage-format.test.php` and `tests/google-sheets-storage-format.test.js` verifying schema generation, formula-injection protection, and tamper resistance across all 34 test suites.
+---
 
-- Completed Stage 11 (Final Production Packaging & Release Readiness): built deterministic release candidate archive `lifemetrics-questionnaires-stage11-rc1.zip` containing all runtime-required plugin files with strict exclusion of development artifacts (`tests/`, `.DS_Store`, `.git*`).
-- Created release packaging script `scripts/build-release-zip.sh`.
-- Added global tamper-resistance test suite `tests/global-tamper-resistance.test.php` proving that for all 8 questionnaires (PSS10 + 7 proprietary instruments), forged client scores, categories, dimensions, and safety flags are strictly rejected in favor of server-side raw answer evaluation.
-- Added release audit test suite `tests/stage11-release-audit.test.php` verifying inventory completeness, secret/absolute path scan clean status, and lifecycle fail-closed behavior for unapproved review questionnaires.
-- Verified complete test suite matrix (32/32 PASS across 19 PHP and 13 JS test suites).
-- Documented manual WordPress activation checklist and Google Apps Script deployment procedure in `STAGE_REPORTS/STAGE-11.md`.
+### Phase 15 — Full Automated Regression & Mutation Guard Verification
 
-- Completed Stage 10.7 (Pieds & Confort Postural): implemented canonical configuration `questionnaires/pieds-confort-postural/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Pieds_Confort_Postural_V1.pdf`.
-- Registered `pieds-confort-postural` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-pieds-confort-postural.test.php` and `tests/questionnaire-pieds-confort-postural.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 6 dimensions with 8 pts capacity each (48 total), dimension attention threshold rule ($\le 2/8$ emitting `ATTENTION_*` messages without category capping), 4 non-scored safety questions (PFSF01–PFSF04) emitting `PIEDS_ATTENTION_MESSAGE`, empty classification rules (`GUARDRAILS_PRESENT = NO`), weakest dimension ordering with deterministic tie-breaking, Profile E arithmetic verification, and server scoring authority.
-- Completed Stage 10: all 7 proprietary LifeMetrics questionnaires (Sédentarité, Hydratation, Fatigue & Récupération, Sommeil, Nutrition, Activité Physique, Pieds & Confort Postural) are implemented, registered, and verified across all 30 automated test suites.
+- Executed full automated test matrix across PHP and JavaScript test suites:
+  - **23/23 PHP test suites PASS** (0 errors, 0 warnings).
+  - **19/19 JavaScript test suites PASS** (0 errors, 0 warnings).
+  - **42/42 total test suites PASS** (100% automated test coverage).
+- Verified 13 characterization mutation guards protecting the baseline of questionnaire PSS-10 legacy against frontend regressions.
+- Confirmed full mathematical parity between client JavaScript calculation (`questionnaire-engine.js`) and authoritative server PHP calculation (`class-questionnaire-scoring-engine.php`).
 
-- Completed Stage 10.6 (Activité Physique): implemented canonical configuration `questionnaires/activite-physique/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Activite_Physique_V1.pdf`.
-- Registered `activite-physique` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-activite-physique.test.php` and `tests/questionnaire-activite-physique.test.js`) verifying Schema 2.0.0 compliance, AP04 duplicate 4-point maximum (options 3 & 4 = 4 pts), boundary score classification (0, 15, 16, 27, 28, 39, 40, 48), 5 dimensions with capacities 12/8/8/8/12 (48 total), weakest dimension percentage ranking with deterministic tie-breaking, and server scoring authority.
+---
 
-- Completed Stage 10.5 (Nutrition): implemented canonical configuration `questionnaires/nutrition/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Nutrition_V1.pdf`.
-- Registered `nutrition` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-nutrition.test.php` and `tests/questionnaire-nutrition.test.js`) verifying Schema 2.0.0 compliance, duplicate 4-point mappings (NT03: options 3 & 4 = 4 pts, NT06: options 3 & 4 = 4 pts), non-linear fruit scoring (NT02: option 3 = 4 pts [max], option 4 = 3 pts), reverse scoring (NT09 and NT10), boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 6 dimensions with 8 pts capacity each (48 total), safety questions (NTSF01–NTSF03) score independence with `NUTRITION_ATTENTION_MESSAGE`, weakest dimension ordering, and server scoring authority.
+### WORK-20 — Release Safety & Local Preview Tool Hardening
 
-- Completed Stage 10.4 (Sommeil): implemented canonical configuration `questionnaires/sommeil/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sommeil_V1.pdf`.
-- Registered `sommeil` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-sommeil.test.php` and `tests/questionnaire-sommeil.test.js`) verifying Schema 2.0.0 compliance, non-linear Q1 scoring (SL01: 0, 1, 2, 4, 3 points), boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), 5 dimensions with capacities 8/12/8/12/8 (48 total), safety questions (SLSF01–SLSF03) score independence, and weakest dimension ordering.
+- Hardened the standalone local development utility `preview.php`:
+  - Restricted preview capability strictly to the 9 proprietary V2 questionnaires.
+  - Completely removed/disabled PSS-10 from the generic preview tool, establishing that PSS-10 runs exclusively via its dedicated legacy runtime.
+  - Enforced strict packaging exclusions: `preview.php` and `tests/` are excluded from release archives.
 
-- Completed Stage 10.3 (Fatigue & Récupération): implemented canonical configuration `questionnaires/fatigue-recuperation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Fatigue_Recuperation_V1.pdf`.
-- Registered `fatigue-recuperation` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-fatigue-recuperation.test.php` and `tests/questionnaire-fatigue-recuperation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), dimension attention rules ($\le 2/8$ threshold), safety questions (FRSF01–FRSF03) score independence, weakest dimension ordering, and all synthetic validation profiles 1–7.
+---
 
-- Completed Stage 10.2 (Hydratation): implemented canonical configuration `questionnaires/hydratation/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Hydratation_V1.pdf`.
-- Registered `hydratation` in `LifeMetrics_Questionnaire_Registry` mapping and aligned Submission Service payload attributes.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-hydratation.test.php` and `tests/questionnaire-hydratation.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization on HY05 (44/44 -> 48/48, non-integer rounding), safety questions (HYSF01–HYSF03) score independence and priority triggering, weakest dimension ordering, and all synthetic validation profiles 1–5.
+### Phase 14 — Platform Expansion to 10 Questionnaires & 10 Storage Tabs
 
-- Completed Stage 10.1 (Sédentarité): implemented canonical configuration `questionnaires/sedentarite/questionnaire.php` conforming strictly to Schema 2.0.0 using authoritative text from `/Volumes/T7/StageBut3/Questionner de test /Score_LifeMetrics_Sedentarite_V1.pdf`.
-- Registered `sedentarite` in `LifeMetrics_Questionnaire_Registry` mapping.
-- Added comprehensive PHP and JavaScript unit test suites (`tests/questionnaire-sedentarite.test.php` and `tests/questionnaire-sedentarite.test.js`) verifying Schema 2.0.0 compliance, boundary score classification (0, 15, 16, 27, 28, 38, 39, 48), N/A capacity normalization for optional occupational items SD07/SD08, D1 guardrail capping at `SEDENTARITE_A_REDUIRE`, dimension attention rules, weakest dimension ordering, and all synthetic validation profiles A–F.
+- Implemented and integrated the final two proprietary questionnaires under Schema 2.0.0:
+  - `risque-nutritionnel`: 12 scored items, 4 Safety items, clinical guardrail capping favorable results to `RISQUE_A_SURVEILLER` on critical answers (RN03/04/05/08 $\ge$ 4).
+  - `bien-etre`: 12 scored items, 6 dimensions, dimensional guardrail capping favorable results to `BIEN_ETRE_A_RENFORCER` if any dimension mean $\ge$ 4.00.
+- Expanded platform scope from 8 to **10 validated questionnaires** (1 questionnaire PSS-10 legacy + 9 questionnaires propriétaires Generic V2).
+- Expanded backend spreadsheet architecture from 8 to **10 dedicated Google Sheets tabs**:
+  `PSS10`, `Sedentarite`, `Hydratation`, `Fatigue`, `Sommeil`, `Nutrition`, `Activite_Physique`, `Pieds_Confort`, `Risque_Nutritionnel`, `Bien_Etre`.
+- *(Historical note: earlier mentions of 7 or 8 questionnaires/worksheets reflect prior project stages and are superseded by this 10-questionnaire milestone).*
 
-- Completed Stage 9 Multi-Destination Google Backend Architecture: implemented generic server-side submission transport routing (`class-submission-service.php`, `class-google-apps-script-adapter.php`, and `backend/generic-google-apps-script.gs`).
-- Added dynamic endpoint resolution supporting per-instrument constants (e.g. `LMQ_PSS10_GOOGLE_ENDPOINT`, `LMQ_HYDRATATION_GOOGLE_ENDPOINT`), mapping array `LMQ_GOOGLE_ENDPOINTS`, and filter hook `lifemetrics_questionnaire_backend_endpoint`.
-- Added strict HTTPS 302 redirect verification (accepting only `script.googleusercontent.com` targets), formula-injection protection, idempotency handling, and comprehensive error mapping (500 for unconfigured storage, 502 for upstream network/HTTP/rejection errors).
-- Added multi-destination routing test suite `tests/backend-routing.test.php` verifying BACK-001 through BACK-012.
+---
 
-- Completed Stage 8 Isolated Local WordPress & PSS10 Validation: verified complete WordPress runtime lifecycle (plugin bootstrap, shortcode rendering, dynamic instance IDs, asset enqueues, REST dispatch, server-side scoring, and upstream Google Sheet forwarding).
-- Added responsive browser simulation matrix tests across mobile (375px), tablet (768px), and desktop (1440px) with 0 errors (`tests/wordpress-integration.test.php` and `tests/pss10-browser-responsive.test.js`).
+### Phases 4–12 — Methodological Migration to Authoritative PDF Specifications (12–60 Scale)
 
-- Completed Stage 7 All-PDF Capability Audit: verified full PHP and JavaScript engine support for all 7 proprietary LifeMetrics questionnaire methodologies (duplicate point mappings, non-linear scoring, N/A capacity normalization, category guardrails, dimension attention thresholds, weakest dimension ordering, and priority-sorted safety messages).
-- Added standalone PHP and Node.js audit test suites (`all-pdf-capability-audit.test.php` and `all-pdf-capability-audit.test.js`).
+- Reconciled all proprietary questionnaires with their authoritative source documents (`Score_LifeMetrics_*_V1.pdf`):
+  - Standardized all proprietary instruments to exactly **12 scored questions** (items 01 to 12).
+  - Migrated scoring scale from earlier developmental 0–48 prototypes to the uniform **12–60 points scale** (1–5 points per option).
+  - Standardized scoring direction to **`lower_is_better`** across all 9 proprietary instruments.
+  - Standardized result tiers into **3 categories**: Favorable (12–24 pts), Intermédiaire (25–32 pts), Défavorable (33–60 pts).
+  - Established the independent **Safety alert system** (out-of-score clinical vigilance with zero impact on numerical scores).
+  - Implemented proportional N/A normalization: $\text{final\_score} = \text{ROUND}\left(\frac{\text{raw\_score}}{\text{applicable\_questions}} \times 12\right)$ for `sedentarite` (SD07, SD08) and `hydratation` (HY05).
+  - Implemented clinical category guardrails (`sedentarite`, `pieds-confort-postural`, `risque-nutritionnel`, `bien-etre`) that cap displayed severity without modifying the numerical score.
 
-- Migrated PSS10 to the generic configuration engine (`questionnaires/pss10/questionnaire.php`) strictly validated under Schema 2.0.0.
-- Wired PSS10 shortcode to render via `LifeMetrics_Questionnaire_Renderer` with the shared generic frontend runtime (`questionnaire-ui.js` + `questionnaire-engine.js`) and PSS10 presentation overrides (`template.php`, `style.css`), retaining `app.js` on disk strictly as a rollback asset.
-- Upgraded PSS10 REST submission adapter in `class-legacy-pss10-runtime.php` to score submissions via `LifeMetrics_Questionnaire_Scoring_Engine` and construct the exact flat payload required by Google Apps Script.
-- Replaced hardcoded root ID logic with dynamic config-driven unique IDs.
+---
 
+### Historical Stage 11 — Production Packaging Baseline & Tamper Resistance `[SUPERSEDED]`
 
-- Added schema 2.0.0 validation with separate classification/safety messages, authoritative result CTAs, explicit ready approvals, and fail-closed public registry integration.
-- Added pure PHP and JavaScript scoring engines with explicit answer mapping, N/A normalization, half-up rounding, dimensions, attention, weakest dimensions, category caps, safety flags, and canonical JSON parity tests. The generic core is not connected to live rendering or REST submission.
-- Completed Stage 3 with dedicated shortcode and REST controllers. They preserve the exact PSS10 shortcode and `/pss10/submit` route by delegating to the temporary legacy runtime; no wildcard route, generic renderer, scoring, configuration, or backend cutover was introduced.
-- Added the Stage 3.2 explicit questionnaire registry with in-directory path enforcement, cached internal resolution, and a fail-closed public `ready` lifecycle gate. Its production map is intentionally empty, so PSS10 remains on the unchanged legacy path and no new questionnaire is exposed.
-- Began the approved narrowed Stage 3 with a PHP-only bootstrap/orchestration extraction: `LifeMetrics_Plugin` registers hooks once and the temporary `LifeMetrics_Legacy_PSS10_Runtime` preserves the validated PSS10 path.
-- Updated plugin metadata to the approved minimum PHP version 8.2. No generic registry, schema, scoring, renderer, assets, wildcard REST route, backend adapter, or questionnaire migration was introduced in this unit.
-- Fixed the confirmed OVH/WordPress automatic ContentService redirect failure in `1e8899c`: the Apps Script payload is POSTed once, the trusted HTTPS Google redirect is followed once with a clean GET, and final success remains strictly verified.
-- Removed the temporary PHI-safe upstream diagnostic logging after confirmation.
-- No questionnaire content, scoring, frontend UX, REST contract, Apps Script, or Sheet schema change.
-- Subsequent focused PSS10 UI stabilization commits: `54367e1`, `84d12d8`, `943a946`, `d9f41f8`, `046743b`, and `bfb1385`; see the dedicated production-runtime milestone report for scope and superseded background attempts.
+> [!NOTE]
+> *The candidate archive name `lifemetrics-questionnaires-stage11-rc1.zip` and the 8-questionnaire scope described in this stage were developmental milestones, later superseded by the 10-questionnaire canonical release `lifemetrics-questionnaires.zip` in Phase 16.*
 
-## Baseline - 2026-09-03
+- Built release candidate archive `lifemetrics-questionnaires-stage11-rc1.zip` with packaging script `scripts/build-release-zip.sh`.
+- Added global tamper-resistance test suite `tests/global-tamper-resistance.test.php` proving server-side raw answer evaluation overrides client-submitted scores.
+- Added release audit test suite `tests/stage11-release-audit.test.php`.
+- Enhanced Google Sheets storage format: transitioned to deterministic, human-readable column headers across proprietary worksheets.
 
-- Recorded the existing PSS10 WordPress plugin at checkpoint `d816898` without changing source bytes.
+---
+
+### Historical Stage 10.1–10.7 — Initial 7 Proprietary Questionnaires Implementation (0–48 Scale) `[SUPERSEDED]`
+
+> [!NOTE]
+> *The 0–48 scoring scale, 4-category classification, and specific boundary thresholds (0, 15, 16, 27, 28, 38, 39, 48) documented below were developmental prototypes. They were completely superseded during Phases 4–12 by the authoritative 12–60 scale, 3 categories, and `lower_is_better` methodology.*
+
+- **Stage 10.7 (Pieds & Confort Postural)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/pieds-confort-postural/questionnaire.php` under Schema 2.0.0 prototype (0–48 scale, 6 dimensions of 8 pts, 4 safety questions).
+- **Stage 10.6 (Activité Physique)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/activite-physique/questionnaire.php` (0–48 scale, 5 dimensions).
+- **Stage 10.5 (Nutrition)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/nutrition/questionnaire.php` (0–48 scale, 6 dimensions, non-linear scoring).
+- **Stage 10.4 (Sommeil)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/sommeil/questionnaire.php` (0–48 scale, 5 dimensions, 3 safety questions).
+- **Stage 10.3 (Fatigue & Récupération)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/fatigue-recuperation/questionnaire.php` (0–48 scale, 6 dimensions, 3 safety questions).
+- **Stage 10.2 (Hydratation)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/hydratation/questionnaire.php` (0–48 scale, N/A capacity normalization, 3 safety questions).
+- **Stage 10.1 (Sédentarité)** `[SUPERSEDED]`: Implemented initial configuration `questionnaires/sedentarite/questionnaire.php` (0–48 scale, N/A normalization for SD07/SD08, D1 guardrail).
+
+---
+
+### Historical Stages 6–9 — PSS-10 Migration Exploration & Legacy Runtime Preservation `[SUPERSEDED / REVERTED]`
+
+> [!NOTE]
+> *An exploratory migration attempting to wire PSS-10 into the generic renderer and shared frontend runtime (`questionnaire-ui.js` / `questionnaire-engine.js`) was conducted during development. This direction was formally **superseded and reverted** to guarantee 100% non-regression on questionnaire PSS-10 legacy. The final production architecture strictly preserves `LifeMetrics_Legacy_PSS10_Runtime` with its dedicated template, styles, scripts, 13 mutation guards, and dedicated Google Apps Script backend.*
+
+- **Stage 9 (Multi-Destination Backend Architecture)**: Implemented generic server-side submission transport routing (`class-submission-service.php`, `class-google-apps-script-adapter.php`, and `backend/generic-google-apps-script.gs`) supporting per-instrument constants and HTTPS 302 redirect handling.
+- **Stage 8 (Isolated WordPress & PSS10 Validation)**: Verified WordPress runtime lifecycle and responsive browser simulation matrix tests.
+- **Stage 7 (All-PDF Capability Audit)**: Audited PHP and JavaScript engines against complex scoring capabilities.
+- **Stage 6 (Exploratory PSS10 Generic Wiring)** `[SUPERSEDED / REVERTED]`: Explored routing PSS-10 through `LifeMetrics_Questionnaire_Renderer` and the shared generic engine. Reverted in favor of permanent isolation in `LifeMetrics_Legacy_PSS10_Runtime`. PSS-10 storage was upgraded to 24 enriched physical columns in tab `PSS10` via `backend/google-apps-script.gs` while preserving the frozen legacy runtime.
+
+---
+
+### Stages 1–3 — Architectural Foundation, Bootstrap & Legacy Characterization
+
+- **Stage 3.2**: Added questionnaire registry with in-directory path enforcement and fail-closed public lifecycle gate.
+- **Stage 3.1**: Added dedicated shortcode controller (`LifeMetrics_Shortcodes`) and REST controller (`LifeMetrics_REST_Controller`).
+- **Stage 2**: Added executable PSS-10 characterization test harness with golden fixtures, REST/markup checks, and 13 mutation guards.
+- **Stage 1**: Approved modular component architecture, Schema 2.0.0 declarative contract, and foundational architectural decisions (DEC-001 through DEC-023).
+- **Bootstrap**: Extracted plugin orchestration into `LifeMetrics_Plugin` under PHP 8.2+ requirements; resolved OVH/WordPress ContentService redirect flow (`1e8899c`).
+
+---
+
+## Baseline — 2026-09-03
+
+- Recorded the original PSS10 WordPress plugin baseline at checkpoint `d816898` without changing source bytes.
 - Baseline source-manifest SHA-256: `5206e7a4a4fff67661e21d2761fd3b2ea94f1a435f05bcd65376b844a6d3cdb9`.
