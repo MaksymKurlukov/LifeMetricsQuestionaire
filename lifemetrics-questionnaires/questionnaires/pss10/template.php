@@ -74,30 +74,23 @@ $modal_title_id = $instance_id . '-modal-title';
           </div>
           <svg class="gauge" viewBox="0 0 200 120" aria-hidden="true">
             <defs>
-              <linearGradient id="<?php echo esc_attr($gradient_id); ?>" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#4ade80" />
-                <stop offset="50%" stop-color="#fbbf24" />
-                <stop offset="100%" stop-color="#ef4444" />
-              </linearGradient>
+              <linearGradient id="<?php echo esc_attr($gradient_id); ?>" data-lmq-role="gauge-gradient" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="180" y2="0"></linearGradient>
             </defs>
-            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#eee" stroke-width="12" />
-            <path class="gauge-fill" data-lmq-role="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
-            <line class="gauge-needle" data-lmq-role="gauge-needle" x1="100" y1="100" x2="100" y2="30" stroke="#333" stroke-width="2" stroke-linecap="round" />
+            <path class="gauge-track" data-lmq-role="gauge-track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#<?php echo esc_attr($gradient_id); ?>)" stroke-width="12" />
+            <circle class="gauge-marker gauge-marker--favorable" data-lmq-role="gauge-marker" cx="20" cy="100" r="6" />
           </svg>
         </div>
         <h3 class="interpretation-title" data-lmq-role="interpretation-title"></h3>
         <p class="analysis-meta">Le score est compris entre 10 et 50, sachant que 10 est le meilleur score possible et 50 le plus mauvais.</p>
-        <p class="analysis-meta">D'après vos réponses,</p>
+        <p class="analysis-meta" data-lmq-role="analysis-lead">D'après vos réponses,</p>
         <div class="analysis-block" data-lmq-role="analysis-block">
-          <p class="analysis-text" data-lmq-role="analysis-text"></p>
           <div class="analysis-details" data-lmq-role="analysis-details" id="<?php echo esc_attr($instance_id . '-analysis-details'); ?>" hidden>
+            <p class="analysis-text" data-lmq-role="analysis-text"></p>
             <p class="analysis-completion" data-lmq-role="analysis-completion">Ce questionnaire évalue votre niveau de stress perçu à partir de vos réponses. Si vous souhaitez aller plus loin, vous pouvez consulter les services disponibles dans les pharmacies partenaires LifeMetrics.</p>
           </div>
           <button type="button" class="analysis-toggle" data-lmq-role="analysis-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr($instance_id . '-analysis-details'); ?>">
             <span class="toggle-text">Lire l'analyse détaillée</span>
-            <svg class="toggle-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-            </svg>
+            <svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
         </div>
         <div class="result-save-alert" data-lmq-role="save-alert" hidden>

@@ -50,8 +50,9 @@
     const btnStart = find('[data-lmq-role="start"]');
     const resultScore = find('[data-lmq-role="result-score"]');
     const resultBadge = find('[data-lmq-role="result-badge"]');
-    const gaugeFill = find('[data-lmq-role="gauge-fill"]');
-    const gaugeNeedle = find('[data-lmq-role="gauge-needle"]');
+    const gaugeTrack = find('[data-lmq-role="gauge-track"]');
+    const gaugeMarker = find('[data-lmq-role="gauge-marker"]');
+    const gaugeGradient = find('[data-lmq-role="gauge-gradient"]');
     const interpretationTitle = find('[data-lmq-role="interpretation-title"]');
     const analysisText = find('[data-lmq-role="analysis-text"]');
     const analysisDetails = find('[data-lmq-role="analysis-details"]');
@@ -68,8 +69,8 @@
     if (
       !sections.intro || !sections.test || !sections.result ||
       !progressBar || !progressLabel || !testQuestion || !answersContainer ||
-      !btnBack || !btnStart || !resultScore || !resultBadge || !gaugeFill ||
-      !gaugeNeedle || !interpretationTitle || !analysisText || !modalOverlay
+      !btnBack || !btnStart || !resultScore || !resultBadge || !gaugeTrack ||
+      !gaugeMarker || !gaugeGradient || !interpretationTitle || !analysisText || !modalOverlay
     ) {
       return;
     }
@@ -309,6 +310,54 @@
       }
     }
 
+    function gaugePoint(ratio) {
+      var angle = Math.PI * (1 - ratio);
+      return {
+        x: 100 + 80 * Math.cos(angle),
+        y: 100 - 80 * Math.sin(angle)
+      };
+    }
+
+    function renderGaugeMarker(score, category) {
+      if (!gaugeMarker) return;
+      var ratio = Math.max(0, Math.min(1, (score - 10) / 40));
+      var point = gaugePoint(ratio);
+      gaugeMarker.setAttribute('cx', point.x.toFixed(3));
+      gaugeMarker.setAttribute('cy', point.y.toFixed(3));
+      gaugeMarker.classList.remove('gauge-marker--favorable', 'gauge-marker--intermediate', 'gauge-marker--unfavorable');
+      var semantic = category === 'low' ? 'favorable' : (category === 'medium' ? 'intermediate' : 'unfavorable');
+      gaugeMarker.classList.add('gauge-marker--' + semantic);
+    }
+
+    function renderGaugeGradient() {
+      if (!gaugeGradient) return;
+      gaugeGradient.innerHTML = '';
+      var clamp = function (v) { return Math.max(0, Math.min(1, v)); };
+      var thresholds = [
+        { scoreRatio: 0, color: '#4ade80' },
+        { scoreRatio: (21 - 10) / 40, color: '#fbbf24' },
+        { scoreRatio: (27 - 10) / 40, color: '#ef4444' }
+      ];
+      var stops = thresholds.map(function (item, index) {
+        var pt = gaugePoint(item.scoreRatio);
+        var offset = index === 0 ? 0 : clamp((pt.x - 20) / 160);
+        return { offset: offset, color: item.color };
+      });
+      stops.push({ offset: 1, color: '#ef4444' });
+
+      var doc = (root && root.ownerDocument) ? root.ownerDocument : document;
+      stops.forEach(function (stop) {
+        var el = typeof doc.createElementNS === 'function'
+          ? doc.createElementNS('http://www.w3.org/2000/svg', 'stop')
+          : (typeof doc.createElement === 'function' ? doc.createElement('stop') : null);
+        if (el) {
+          el.setAttribute('offset', (stop.offset * 100).toFixed(4) + '%');
+          el.setAttribute('stop-color', stop.color);
+          gaugeGradient.appendChild(el);
+        }
+      });
+    }
+
     function showResult(data) {
       showSection('result');
       var score = data.final_score;
@@ -324,10 +373,8 @@
       interpretationTitle.textContent = data.interpretation_title;
       analysisText.textContent = data.analysis_text;
 
-      var circumference = Math.PI * 80;
-      var ratio = score / 50;
-      gaugeFill.setAttribute('stroke-dashoffset', circumference * (1 - ratio));
-      gaugeNeedle.setAttribute('transform', 'rotate(' + (180 - ratio * 180) + ', 100, 100)');
+      renderGaugeGradient();
+      renderGaugeMarker(score, category);
       if (resultSaveAlert) resultSaveAlert.hidden = !state.saveFailed;
 
       if (analysisToggle) {

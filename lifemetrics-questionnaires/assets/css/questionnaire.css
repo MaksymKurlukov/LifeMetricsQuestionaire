@@ -456,7 +456,7 @@
   cursor: pointer;
   text-align: left;
   font-size: var(--text-base);
-  color: var(--color-text);
+  color: var(--color-text) !important;
   transition: border-color 0.2s, background 0.2s;
   font-family: inherit;
   box-sizing: border-box;
@@ -464,8 +464,9 @@
 
 .lmq-questionnaire .answer-card:hover,
 .lmq-questionnaire .answer-btn:hover {
-  background: #ebe6df;
-  border-color: transparent;
+  background: #ebe6df !important;
+  border-color: transparent !important;
+  color: var(--color-text) !important;
   transform: none;
   box-shadow: none;
 }
@@ -474,8 +475,18 @@
 .lmq-questionnaire .answer-card.selected,
 .lmq-questionnaire .answer-btn.selected,
 .lmq-questionnaire .answer-btn[aria-checked="true"] {
-  border-color: var(--color-primary);
-  background: rgba(232, 93, 44, 0.08);
+  border-color: var(--color-primary) !important;
+  background: rgba(232, 93, 44, 0.08) !important;
+  color: var(--color-text) !important;
+}
+
+.lmq-questionnaire .answer-card:hover *,
+.lmq-questionnaire .answer-btn:hover *,
+.lmq-questionnaire .answer-card--selected *,
+.lmq-questionnaire .answer-card.selected *,
+.lmq-questionnaire .answer-btn.selected *,
+.lmq-questionnaire .answer-btn[aria-checked="true"] * {
+  color: var(--color-text) !important;
 }
 
 .lmq-questionnaire .answer-card input {
@@ -509,10 +520,11 @@
   margin-top: var(--space-md);
 }
 
+.lmq-questionnaire .btn.btn--secondary.btn--back,
 .lmq-questionnaire .btn--back {
-  background: var(--color-cream);
-  color: var(--color-text);
-  border: none;
+  background: var(--color-cream) !important;
+  color: var(--color-text) !important;
+  border: none !important;
   border-radius: var(--radius);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-base);
@@ -526,12 +538,20 @@
   font-family: inherit;
 }
 
-.lmq-questionnaire .btn--back:hover:not(:disabled) {
-  background: #ebe6df;
+.lmq-questionnaire .btn.btn--secondary.btn--back:hover:not(:disabled),
+.lmq-questionnaire .btn.btn--secondary.btn--back:focus:not(:disabled),
+.lmq-questionnaire .btn.btn--secondary.btn--back:active:not(:disabled),
+.lmq-questionnaire .btn--back:hover:not(:disabled),
+.lmq-questionnaire .btn--back:focus:not(:disabled),
+.lmq-questionnaire .btn--back:active:not(:disabled) {
+  background: #ebe6df !important;
+  color: var(--color-text) !important;
+  border: none !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+.lmq-questionnaire .btn.btn--secondary.btn--back:disabled,
 .lmq-questionnaire .btn--back:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -755,18 +775,23 @@
   align-items: center;
   gap: 0.35rem;
   margin-top: var(--space-xs);
-  background: transparent;
-  border: none;
-  color: var(--color-primary);
+  background: transparent !important;
+  border: none !important;
+  color: var(--color-primary) !important;
   font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
   font-family: inherit;
   transition: color 0.2s;
+  outline: none;
 }
 
-.lmq-questionnaire .analysis-toggle:hover {
+.lmq-questionnaire .analysis-toggle:hover,
+.lmq-questionnaire .analysis-toggle:focus,
+.lmq-questionnaire .analysis-toggle:active {
+  color: var(--color-primary-hover, var(--color-primary)) !important;
+  background: transparent !important;
   text-decoration: underline;
 }
 
