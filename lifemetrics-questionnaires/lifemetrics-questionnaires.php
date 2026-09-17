@@ -16,14 +16,14 @@ define('LMQ_PLUGIN_URL', plugin_dir_url(__FILE__));
 if (!defined('LMQ_PSS10_GOOGLE_ENDPOINT')) {
     define(
         'LMQ_PSS10_GOOGLE_ENDPOINT',
-        'https://script.google.com/macros/s/AKfycbwBoW3UFzmKhZ3SYMttlx3VAqmYvk9n8gn2_WrimwhKqxafr5ajDuoo_px0CmdDfWzc/exec'
+        'https://script.google.com/macros/s/AKfycby9bjCrFBTRQYLIPMabIsGJXkC-3-RU6hC3scqgkgqv3Sq-FPNwdkUW8pg1bY1b6SI/exec'
     );
 }
 
 if (!defined('LMQ_GOOGLE_ENDPOINT')) {
     define(
         'LMQ_GOOGLE_ENDPOINT',
-        'https://script.google.com/macros/s/AKfycbzmkJ2X4Wu4AK0XDywnZw178rCEu1Fv1hgctOYlD46nblg-MJ78_vosYu_zzm6CyFaL/exec'
+        'https://script.google.com/macros/s/AKfycbwSleAicEBsAbJQhkzzpqa6J3AW1YdgJlRuvVokJheGLTbfBZBManIWGpYsi-XV3ZH-/exec'
     );
 }
 
