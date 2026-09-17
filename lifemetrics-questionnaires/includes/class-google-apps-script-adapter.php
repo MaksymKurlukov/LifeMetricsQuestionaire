@@ -5,6 +5,22 @@ defined('ABSPATH') || exit;
 final class LifeMetrics_Google_Apps_Script_Adapter
 {
     /**
+     * Resolve HTTP timeout for Google Apps Script requests.
+     * Default: 25 seconds (optimized for Apps Script cold starts).
+     */
+    public function get_timeout(): int
+    {
+        $timeout = 25;
+        if (defined('LMQ_GAS_TIMEOUT')) {
+            $timeout = (int)constant('LMQ_GAS_TIMEOUT');
+        }
+        if (function_exists('apply_filters')) {
+            $timeout = (int)apply_filters('lifemetrics_gas_timeout', $timeout);
+        }
+        return $timeout > 0 ? $timeout : 25;
+    }
+
+    /**
      * Send payload to Google Apps Script endpoint.
      *
      * @param string $endpoint The Apps Script Web App URL.
@@ -22,12 +38,14 @@ final class LifeMetrics_Google_Apps_Script_Adapter
             );
         }
 
+        $timeout = $this->get_timeout();
+
         $response = wp_remote_post(
             $endpoint,
             array(
                 'headers' => array('Content-Type' => 'application/json; charset=utf-8'),
                 'body' => wp_json_encode($payload),
-                'timeout' => 15,
+                'timeout' => $timeout,
                 'redirection' => 0,
                 'data_format' => 'body',
             )
@@ -69,7 +87,7 @@ final class LifeMetrics_Google_Apps_Script_Adapter
 
             $response = wp_remote_get(
                 $location,
-                array('timeout' => 15, 'redirection' => 0, 'sslverify' => true)
+                array('timeout' => $timeout, 'redirection' => 0, 'sslverify' => true)
             );
 
             if (is_wp_error($response)) {
